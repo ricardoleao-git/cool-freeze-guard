@@ -17,7 +17,7 @@ export default function Alerts() {
   const { acknowledgeAlert, addOccurrence, activeTenantId } = useDemo();
 
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ employee_id: "", type: "missing_exit", description: "" });
+  const [form, setForm] = useState<{ employee_id: string; type: "missing_exit" | "device_failure" | "manual_correction" | "missing_entry" | "other"; description: string }>({ employee_id: "", type: "missing_exit", description: "" });
 
   const severityColor = (s: string) => s === "critical" ? "border-status-red/60 bg-status-red/10" : s === "warning" ? "border-status-orange/50 bg-status-orange/10" : "border-primary/40 bg-primary/10";
 
