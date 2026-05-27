@@ -3,7 +3,7 @@ import { useTenantScoped, useDemo } from "@/lib/demo-store";
 import { Occurrence, OccurrenceCategory, OccurrencePriority } from "@/lib/demo-data";
 import {
   FileWarning, Plus, Paperclip, MessageSquarePlus, CheckCircle2, Filter, Search,
-  AlertTriangle, ShieldAlert, ShieldCheck, Cpu, PencilLine, EyeOff, FileText, Download, Trash2,
+  AlertTriangle, ShieldAlert, ShieldCheck, Cpu, PencilLine, EyeOff, FileText, Download, Trash2, Image as ImageIcon, Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,9 @@ function fmtSize(n: number) {
 
 export default function Occurrences() {
   const { occurrences, employees, units, departments } = useTenantScoped();
-  const { addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment, activeTenantId } = useDemo();
+  const { addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment, removeOccurrenceAttachment, getAttachmentDownloadUrl, activeTenantId } = useDemo();
+  const [uploadingFiles, setUploadingFiles] = useState<string[]>([]);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const [statusFilter, setStatusFilter] = useState<"all" | Occurrence["status"]>("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | OccurrenceCategory>("all");
@@ -111,13 +113,45 @@ export default function Occurrences() {
 
   const handleAttach = async (files: FileList | null) => {
     if (!detail || !files || files.length === 0) return;
-    for (const f of Array.from(files)) {
-      if (f.size > 5 * 1024 * 1024) { toast.error(`${f.name} excede 5 MB`); continue; }
-      await addOccurrenceAttachment(detail.id, f);
+    const arr = Array.from(files);
+    for (const f of arr) {
+      if (f.size > 10 * 1024 * 1024) { toast.error(`${f.name} excede 10 MB`); continue; }
+      setUploadingFiles(prev => [...prev, f.name]);
+      try {
+        await addOccurrenceAttachment(detail.id, f);
+        toast.success(`${f.name} enviado`);
+      } catch (err: any) {
+        toast.error(`Falha ao enviar ${f.name}: ${err?.message || "erro"}`);
+      } finally {
+        setUploadingFiles(prev => prev.filter(n => n !== f.name));
+      }
     }
-    toast.success("Anexo(s) adicionado(s)");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  const handleDownload = async (storagePath: string, fileName: string) => {
+    try {
+      const url = await getAttachmentDownloadUrl(storagePath, fileName);
+      // Open in a new tab; the signed URL has content-disposition=attachment when fileName is set
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err: any) {
+      toast.error("Falha ao gerar link: " + (err?.message || "erro"));
+    }
+  };
+
+  const handleRemoveAttachment = async (attachmentId: string, storagePath: string, name: string) => {
+    if (!detail) return;
+    setRemovingId(attachmentId);
+    try {
+      await removeOccurrenceAttachment(detail.id, attachmentId, storagePath);
+      toast.success(`${name} removido`);
+    } catch (err: any) {
+      toast.error("Falha ao remover: " + (err?.message || "erro"));
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
 
   return (
     <div className="container py-6 md:py-8">
