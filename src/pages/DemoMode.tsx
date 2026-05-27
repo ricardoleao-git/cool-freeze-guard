@@ -19,11 +19,12 @@ export default function DemoMode() {
     <div className="container py-6 md:py-8">
       <PageHeader
         eyebrow="Apresentação"
-        title="Modo Demonstração"
-        description="Conduza uma demo ao vivo: simule entradas, avance o tempo, dispare alertas, observe o bloqueio preventivo e a pausa térmica."
+        title="Modo Experimentação"
+        description="Ambiente paralelo para testes e demonstrações ao vivo: simule entradas, avance o tempo, dispare alertas e observe o bloqueio preventivo com a pausa térmica — sem afetar dados de produção."
         icon={<Sparkles className="h-5 w-5" />}
         actions={<Button asChild variant="outline"><Link to="/painel">Abrir Painel Operacional</Link></Button>}
       />
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="glass-card lg:col-span-2">
