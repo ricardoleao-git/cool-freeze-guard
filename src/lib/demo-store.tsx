@@ -38,11 +38,16 @@ type Ctx = State & {
   resolveOccurrence: (id: string, resolution: string, resolvedBy?: string) => Promise<void>;
   addOccurrenceNote: (id: string, text: string, author?: string) => Promise<void>;
   addOccurrenceAttachment: (id: string, file: File) => Promise<void>;
+  createEmployee: (data: Omit<Employee, "id" | "current_status" | "accumulated_minutes" | "inside_since" | "current_area_id" | "break_started_at">) => Promise<Employee>;
+  updateEmployee: (id: string, patch: Partial<Employee>) => Promise<void>;
+  deleteEmployee: (id: string) => Promise<void>;
+  uploadEmployeeAvatar: (employeeId: string, file: File) => Promise<string>;
 };
 
 const DemoContext = createContext<Ctx | null>(null);
 
 const ATTACHMENT_BUCKET = "occurrence-attachments";
+const AVATAR_BUCKET = "employee-avatars";
 
 // ---------- mapping helpers (DB row <-> client) ----------
 const toMs = (s?: string | null) => (s ? new Date(s).getTime() : null);
@@ -568,6 +573,50 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  const uploadEmployeeAvatar: Ctx["uploadEmployeeAvatar"] = useCallback(async (employeeId, file) => {
+    const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+    const storage_path = `${employeeId}/${Date.now()}.${ext}`;
+    const up = await supabase.storage.from(AVATAR_BUCKET).upload(storage_path, file, {
+      contentType: file.type || "image/png",
+      upsert: true,
+    });
+    if (up.error) throw up.error;
+    const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(storage_path);
+    return data.publicUrl;
+  }, []);
+
+  const createEmployee: Ctx["createEmployee"] = useCallback(async (data) => {
+    const id = `e_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+    const row = {
+      id, tenant_id: data.tenant_id, unit_id: data.unit_id, department_id: data.department_id,
+      name: data.name, registration_number: data.registration_number, position: data.position,
+      avatar: data.avatar || "", status: data.status,
+      current_status: "outside", accumulated_minutes: 0,
+      inside_since: null, current_area_id: null, break_started_at: null,
+    };
+    const { data: inserted, error } = await supabase.from("employees").insert(row).select("*").single();
+    if (error) throw error;
+    const emp = mapEmployee(inserted);
+    setState(prev => prev.employees.some(e => e.id === emp.id) ? prev : { ...prev, employees: [...prev.employees, emp] });
+    return emp;
+  }, []);
+
+  const updateEmployee: Ctx["updateEmployee"] = useCallback(async (id, patch) => {
+    const payload: any = { updated_at: new Date().toISOString() };
+    ["name", "registration_number", "position", "avatar", "status", "unit_id", "department_id", "tenant_id"].forEach(k => {
+      if ((patch as any)[k] !== undefined) payload[k] = (patch as any)[k];
+    });
+    const { error } = await supabase.from("employees").update(payload).eq("id", id);
+    if (error) throw error;
+    setState(prev => ({ ...prev, employees: prev.employees.map(e => e.id === id ? { ...e, ...patch } : e) }));
+  }, []);
+
+  const deleteEmployee: Ctx["deleteEmployee"] = useCallback(async (id) => {
+    const { error } = await supabase.from("employees").delete().eq("id", id);
+    if (error) throw error;
+    setState(prev => ({ ...prev, employees: prev.employees.filter(e => e.id !== id) }));
+  }, []);
+
   const value: Ctx = useMemo(() => ({
     ...state,
     setActiveTenantId: (id) => setState(p => ({ ...p, activeTenantId: id })),
@@ -575,8 +624,10 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSoundEnabled: (b) => setState(p => ({ ...p, soundEnabled: b })),
     simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert,
     addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment,
+    createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar,
   }), [state, simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert,
-       addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment]);
+       addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment,
+       createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 };
