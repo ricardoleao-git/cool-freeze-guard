@@ -1,13 +1,15 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, MonitorPlay, Users, Snowflake, Cpu, Activity, Timer,
-  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning,
+  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning, UserCog,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/auth";
+import { canAccess, ROLE_LABELS } from "@/lib/permissions";
 
 const groups = [
   {
@@ -34,6 +36,7 @@ const groups = [
     items: [
       { to: "/relatorios", title: "Relatórios", icon: FileBarChart2 },
       { to: "/integracoes", title: "Integrações / API", icon: PlugZap },
+      { to: "/usuarios", title: "Usuários & Permissões", icon: UserCog },
       { to: "/empresas", title: "Empresas (Multi-tenant)", icon: Building2 },
     ],
   },
@@ -44,7 +47,6 @@ const groups = [
       { to: "/como-funciona", title: "Como Funciona", icon: BookOpenCheck },
     ],
   },
-
 ];
 
 export function AppSidebar() {
