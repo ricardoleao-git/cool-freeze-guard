@@ -1,13 +1,15 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, MonitorPlay, Users, Snowflake, Cpu, Activity, Timer,
-  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning,
+  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning, UserCog,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/auth";
+import { canAccess, ROLE_LABELS } from "@/lib/permissions";
 
 const groups = [
   {
@@ -34,6 +36,7 @@ const groups = [
     items: [
       { to: "/relatorios", title: "Relatórios", icon: FileBarChart2 },
       { to: "/integracoes", title: "Integrações / API", icon: PlugZap },
+      { to: "/usuarios", title: "Usuários & Permissões", icon: UserCog },
       { to: "/empresas", title: "Empresas (Multi-tenant)", icon: Building2 },
     ],
   },
@@ -44,11 +47,15 @@ const groups = [
       { to: "/como-funciona", title: "Como Funciona", icon: BookOpenCheck },
     ],
   },
-
 ];
 
 export function AppSidebar() {
   const { pathname } = useLocation();
+  const { roles } = useAuth();
+  const visibleGroups = groups
+    .map(g => ({ ...g, items: g.items.filter(i => i.to === "/demo" || canAccess(i.to, roles)) }))
+    .filter(g => g.items.length > 0);
+  const primaryRole = roles[0];
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="px-4 py-5">
@@ -60,11 +67,15 @@ export function AppSidebar() {
             <div className="font-display font-bold text-[15px]">FrioSafe</div>
             <div className="text-[10.5px] text-muted-foreground uppercase tracking-wider">Controle Térmico</div>
           </div>
-          <Badge variant="outline" className="ml-auto border-primary/40 text-primary text-[9px] px-1.5">EXPERIMENTO</Badge>
+          {primaryRole && (
+            <Badge variant="outline" className="ml-auto border-primary/40 text-primary text-[9px] px-1.5">
+              {ROLE_LABELS[primaryRole].toUpperCase()}
+            </Badge>
+          )}
         </div>
       </SidebarHeader>
       <SidebarContent className="px-2">
-        {groups.map(g => (
+        {visibleGroups.map(g => (
           <SidebarGroup key={g.label}>
             <SidebarGroupLabel className="text-[10.5px] uppercase tracking-wider text-muted-foreground/80">{g.label}</SidebarGroupLabel>
             <SidebarGroupContent>

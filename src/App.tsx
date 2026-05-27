@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DemoProvider } from "@/lib/demo-store";
-import { AuthProvider, ProtectedRoute } from "@/lib/auth";
+import { AuthProvider, ProtectedRoute, RoleGuard } from "@/lib/auth";
 import AppLayout from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import OperationalPanel from "./pages/OperationalPanel";
@@ -18,9 +18,11 @@ import Occurrences from "./pages/Occurrences";
 import Reports from "./pages/Reports";
 import Integrations from "./pages/Integrations";
 import Tenants from "./pages/Tenants";
+import Users from "./pages/Users";
 import DemoMode from "./pages/DemoMode";
 import HowItWorks from "./pages/HowItWorks";
 import Login from "./pages/Login";
+import NoPermission from "./pages/NoPermission";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,7 +38,8 @@ const App = () => (
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/demo" element={<DemoMode />} />
-              <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route path="/sem-permissao" element={<ProtectedRoute><NoPermission /></ProtectedRoute>} />
+              <Route element={<ProtectedRoute><RoleGuard><AppLayout /></RoleGuard></ProtectedRoute>}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/painel" element={<OperationalPanel />} />
                 <Route path="/colaboradores" element={<Employees />} />
@@ -49,6 +52,7 @@ const App = () => (
                 <Route path="/relatorios" element={<Reports />} />
                 <Route path="/integracoes" element={<Integrations />} />
                 <Route path="/empresas" element={<Tenants />} />
+                <Route path="/usuarios" element={<Users />} />
                 <Route path="/como-funciona" element={<HowItWorks />} />
               </Route>
               <Route path="*" element={<NotFound />} />
