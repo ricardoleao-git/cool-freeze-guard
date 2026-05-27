@@ -1,1 +1,4 @@
 project_id = "ipserapauilkiwpzsshk"
+
+[functions.ingest-access-event]
+verify_jwt = false
