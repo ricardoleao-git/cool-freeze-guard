@@ -1,16 +1,21 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TenantSwitcher } from "@/components/TenantSwitcher";
 import { SoundToggle } from "@/components/SoundToggle";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, LogOut, User as UserIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useTenantScoped } from "@/lib/demo-store";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function AppLayout() {
   const { alerts } = useTenantScoped();
+  const { user, signOut } = useAuth();
+  const nav = useNavigate();
+  const handleLogout = async () => { await signOut(); nav("/login", { replace: true }); };
   const open = alerts.filter(a => a.status === "open").length;
   return (
     <SidebarProvider>
