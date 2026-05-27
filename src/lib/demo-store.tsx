@@ -212,8 +212,72 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setState(prev => ({ ...prev, alerts: prev.alerts.map(a => a.id === id ? { ...a, status: "acknowledged" } : a) }));
   }, []);
 
+  const CATEGORY_TITLES: Record<Occurrence["category"], string> = {
+    missing_exit: "Saída não registrada",
+    missing_entry: "Entrada não registrada",
+    device_failure: "Falha no leitor facial",
+    manual_correction: "Correção manual de evento",
+    false_reading: "Leitura inválida / falsa",
+    other: "Ocorrência diversa",
+  };
+
   const addOccurrence: Ctx["addOccurrence"] = useCallback((o) => {
-    setState(prev => ({ ...prev, occurrences: [{ id: uid(), created_at: Date.now(), status: "open", ...o }, ...prev.occurrences] }));
+    const id = uid();
+    const occ: Occurrence = {
+      id,
+      tenant_id: o.tenant_id,
+      employee_id: o.employee_id,
+      category: o.category,
+      priority: o.priority ?? "medium",
+      title: o.title ?? CATEGORY_TITLES[o.category],
+      description: o.description,
+      status: o.status ?? "open",
+      created_at: Date.now(),
+      created_by: o.created_by ?? "gestor.demo",
+      related_event_id: o.related_event_id,
+      attachments: o.attachments ?? [],
+      notes: o.notes ?? [],
+    };
+    setState(prev => ({ ...prev, occurrences: [occ, ...prev.occurrences] }));
+    return id;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const updateOccurrence: Ctx["updateOccurrence"] = useCallback((id, patch) => {
+    setState(prev => ({ ...prev, occurrences: prev.occurrences.map(o => o.id === id ? { ...o, ...patch } : o) }));
+  }, []);
+
+  const resolveOccurrence: Ctx["resolveOccurrence"] = useCallback((id, resolution, resolvedBy = "gestor.demo") => {
+    setState(prev => ({
+      ...prev,
+      occurrences: prev.occurrences.map(o => o.id === id
+        ? { ...o, status: "resolved", resolution, resolved_by: resolvedBy, resolved_at: Date.now() }
+        : o),
+    }));
+  }, []);
+
+  const addOccurrenceNote: Ctx["addOccurrenceNote"] = useCallback((id, text, author = "gestor.demo") => {
+    setState(prev => ({
+      ...prev,
+      occurrences: prev.occurrences.map(o => o.id === id
+        ? { ...o, notes: [...o.notes, { id: uid(), author, created_at: Date.now(), text }] }
+        : o),
+    }));
+  }, []);
+
+  const addOccurrenceAttachment: Ctx["addOccurrenceAttachment"] = useCallback(async (id, file) => {
+    const data_url = await new Promise<string>((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(String(r.result));
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+    setState(prev => ({
+      ...prev,
+      occurrences: prev.occurrences.map(o => o.id === id
+        ? { ...o, attachments: [...o.attachments, { id: uid(), name: file.name, size: file.size, mime: file.type, data_url }] }
+        : o),
+    }));
   }, []);
 
   // seed: place a few inside on mount to make demo lively
