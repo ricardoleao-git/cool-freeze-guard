@@ -19,8 +19,8 @@ export default function Dashboard() {
     return { inside, yellow, orange, blocked };
   }, [employees]);
 
-  const today = new Date(); today.setHours(0,0,0,0);
-  const eventsToday = events.filter(e => e.occurred_at >= today.getTime()).length;
+  const todayMs = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }, []);
+  const eventsToday = events.filter(e => e.occurred_at >= todayMs).length;
   const onlineDevices = devices.filter(d => d.status === "online").length;
   const offlineDevices = devices.length - onlineDevices;
 
