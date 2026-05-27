@@ -188,53 +188,59 @@ export default function OperationalPanel() {
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-background via-background to-primary/5 text-foreground flex flex-col z-50">
       {/* Header bar */}
-      <header className="flex items-center justify-between px-8 py-4 border-b border-border/60 backdrop-blur-sm bg-background/60">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-primary/15 border border-primary/40 flex items-center justify-center">
-            <Snowflake className="h-6 w-6 text-primary" />
+      <header className="flex items-center justify-between gap-3 px-3 sm:px-5 md:px-8 py-2.5 md:py-4 border-b border-border/60 backdrop-blur-sm bg-background/60">
+        <div className="flex items-center gap-2 md:gap-4 min-w-0">
+          <div className="h-9 w-9 md:h-12 md:w-12 rounded-xl bg-primary/15 border border-primary/40 flex items-center justify-center shrink-0">
+            <Snowflake className="h-4 w-4 md:h-6 md:w-6 text-primary" />
           </div>
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.25em] text-primary font-semibold">Painel Operacional · Tempo Real</div>
-            <h1 className="font-display text-2xl xl:text-3xl font-bold leading-tight">Controle de Exposição ao Frio</h1>
+          <div className="min-w-0">
+            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] md:tracking-[0.25em] text-primary font-semibold">Painel · Tempo Real</div>
+            <h1 className="font-display text-base sm:text-xl md:text-2xl xl:text-3xl font-bold leading-tight truncate">Exposição ao Frio</h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
-          <div className="text-right">
-            <div className="font-display text-3xl xl:text-4xl font-bold tabular-nums leading-none">{timeStr}</div>
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mt-1 capitalize">{dateStr}</div>
+        <div className="flex items-center gap-2 md:gap-6 shrink-0">
+          <div className="text-right hidden sm:block">
+            <div className="font-display text-xl md:text-3xl xl:text-4xl font-bold tabular-nums leading-none">{timeStr}</div>
+            <div className="text-[10px] md:text-[11px] uppercase tracking-wider text-muted-foreground mt-1 capitalize hidden md:block">{dateStr}</div>
           </div>
-          <div className="h-10 w-px bg-border" />
-          <div className="flex items-center gap-2">
+          <div className="h-8 md:h-10 w-px bg-border hidden sm:block" />
+          <div className="flex items-center gap-1.5 md:gap-2">
             <select
               value={unitFilter}
               onChange={(e) => setUnitFilter(e.target.value)}
-              className="h-9 rounded-md border border-border bg-card px-3 text-sm"
+              className="h-8 md:h-9 rounded-md border border-border bg-card px-2 md:px-3 text-xs md:text-sm max-w-[120px] md:max-w-none"
             >
-              <option value="all">Todas as unidades</option>
+              <option value="all">Todas</option>
               {units.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>
-            <Button variant={audio ? "default" : "outline"} size="sm" onClick={() => setAudio(a => !a)} title="Alarme sonoro persistente">
+            <Button variant={audio ? "default" : "outline"} size="sm" onClick={() => setAudio(a => !a)} title="Alarme sonoro persistente" className="h-8 w-8 md:h-9 md:w-auto md:px-3 p-0 md:p-2">
               {audio ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
             </Button>
-            <Button variant={autoRotate ? "default" : "outline"} size="sm" onClick={() => setAutoRotate(r => !r)} title="Auto-rotacionar visões">
+            <Button variant={autoRotate ? "default" : "outline"} size="sm" onClick={() => setAutoRotate(r => !r)} title="Auto-rotacionar visões" className="h-8 w-8 md:h-9 md:w-auto md:px-3 p-0 md:p-2">
               {autoRotate ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </Button>
-            <Button variant="outline" size="sm" onClick={toggleFullscreen}>
+            <Button variant="outline" size="sm" onClick={toggleFullscreen} className="h-8 w-8 md:h-9 md:w-auto md:px-3 p-0 md:p-2">
               <Minimize2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </header>
 
+      {/* Mobile clock row */}
+      <div className="sm:hidden px-3 py-1.5 flex items-center justify-between border-b border-border/40 bg-background/40">
+        <span className="font-display text-lg font-bold tabular-nums">{timeStr}</span>
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground capitalize">{dateStr}</span>
+      </div>
+
       {/* View tabs + rotation progress */}
-      <div className="px-8 pt-3 pb-2 flex items-center gap-3">
+      <div className="px-3 sm:px-5 md:px-8 pt-2 md:pt-3 pb-1.5 md:pb-2 flex items-center gap-2 md:gap-3 overflow-x-auto">
         {VIEWS.map(v => (
           <button
             key={v.id}
             onClick={() => { setView(v.id); setRotateTick(0); }}
             className={cn(
-              "px-4 py-1.5 rounded-full text-xs uppercase tracking-wider font-medium border transition-colors",
+              "shrink-0 px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[10px] md:text-xs uppercase tracking-wider font-medium border transition-colors",
               view === v.id ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:text-foreground",
             )}
           >
@@ -242,7 +248,7 @@ export default function OperationalPanel() {
           </button>
         ))}
         {autoRotate && (
-          <div className="flex-1 flex items-center gap-2 ml-2">
+          <div className="flex-1 hidden sm:flex items-center gap-2 ml-2 min-w-[120px]">
             <Clock className="h-3 w-3 text-muted-foreground" />
             <div className="flex-1 h-1 rounded-full bg-muted/50 overflow-hidden">
               <div
@@ -255,8 +261,8 @@ export default function OperationalPanel() {
         )}
       </div>
 
-      {/* KPI strip */}
-      <div className="px-8 py-3 grid grid-cols-6 gap-3">
+      {/* KPI strip — 3 cols mobile, 6 cols desktop */}
+      <div className="px-3 sm:px-5 md:px-8 py-2 md:py-3 grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
         {GROUPS.map(g => {
           const count = g.key.reduce((acc, k) => acc + counts[k], 0);
           const isAlert = g.key.includes("blocked") || g.key.includes("orange");
@@ -264,19 +270,20 @@ export default function OperationalPanel() {
             <div
               key={g.title}
               className={cn(
-                "rounded-2xl border bg-gradient-to-br p-4 backdrop-blur-sm flex flex-col",
+                "rounded-xl md:rounded-2xl border bg-gradient-to-br p-2.5 md:p-4 backdrop-blur-sm flex flex-col",
                 g.tile,
                 isAlert && count > 0 && "pulse-ring",
               )}
             >
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider font-semibold">
+              <div className="flex items-center gap-1.5 md:gap-2 text-[9px] md:text-[10px] uppercase tracking-wider font-semibold">
                 {g.icon}<span className="truncate">{g.title}</span>
               </div>
-              <div className="font-display text-5xl xl:text-6xl font-black mt-2 tabular-nums">{count}</div>
+              <div className="font-display text-2xl md:text-5xl xl:text-6xl font-black mt-1 md:mt-2 tabular-nums">{count}</div>
             </div>
           );
         })}
       </div>
+
 
       {/* Main content area — large status layout */}
       <main className="flex-1 overflow-auto px-8 pb-6">
