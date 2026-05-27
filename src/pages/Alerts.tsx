@@ -92,28 +92,59 @@ export default function Alerts() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="glass-card">
-          <CardHeader><CardTitle className="font-display flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Alertas em tempo real</CardTitle></CardHeader>
-          <CardContent className="space-y-2 max-h-[600px] overflow-y-auto">
-            {alerts.length === 0 && <div className="text-sm text-muted-foreground">Nenhum alerta ativo.</div>}
-            {alerts.map(a => {
+          <CardHeader className="pb-3">
+            <CardTitle className="font-display flex items-center gap-2 flex-wrap">
+              <AlertTriangle className="h-4 w-4" /> Alertas em tempo real
+              <Badge variant="outline" className="ml-1">{openAlerts.length} abertos</Badge>
+              <Button
+                size="sm"
+                variant="outline"
+                className="ml-auto"
+                disabled={openAlerts.length === 0}
+                onClick={() => bulkResolve(openAlerts)}
+              >
+                <CheckCheck className="h-3.5 w-3.5 mr-1" /> Resolver todos
+              </Button>
+            </CardTitle>
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {([
+                { id: "all", label: "Todos" },
+                { id: "critical", label: "Crítico" },
+                { id: "warning", label: "Atenção" },
+                { id: "info", label: "Info" },
+              ] as { id: SevFilter; label: string }[]).map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setSevFilter(f.id)}
+                  className={`px-2.5 py-1 rounded-full text-[11px] uppercase tracking-wider font-medium border transition-colors ${sevFilter === f.id ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2 max-h-[560px] overflow-y-auto">
+            {filteredAlerts.length === 0 && <div className="text-sm text-muted-foreground">Nenhum alerta neste filtro.</div>}
+            {filteredAlerts.map(a => {
               const emp = employees.find(e => e.id === a.employee_id);
               return (
                 <div key={a.id} className={`rounded-xl border p-3 ${severityColor(a.severity)}`}>
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-semibold">{emp?.name}</div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold truncate">{emp?.name}</div>
                       <div className="text-xs text-muted-foreground">{format(new Date(a.triggered_at), "dd/MM HH:mm:ss")} · {a.alert_type}</div>
                       <p className="text-sm mt-1">{a.message}</p>
                     </div>
                     {a.status === "open" ? (
-                      <Button size="sm" variant="outline" onClick={() => acknowledgeAlert(a.id)}><Check className="h-3.5 w-3.5 mr-1" /> Ciente</Button>
-                    ) : <span className="text-xs text-muted-foreground">Reconhecido</span>}
+                      <Button size="sm" variant="outline" onClick={() => acknowledgeAlert(a.id)}><Check className="h-3.5 w-3.5 mr-1" /> Resolver</Button>
+                    ) : <span className="text-xs text-muted-foreground whitespace-nowrap">Resolvido</span>}
                   </div>
                 </div>
               );
             })}
           </CardContent>
         </Card>
+
         <Card className="glass-card">
           <CardHeader><CardTitle className="font-display flex items-center gap-2"><FileWarning className="h-4 w-4" /> Ocorrências / Justificativas</CardTitle></CardHeader>
           <CardContent className="space-y-2 max-h-[600px] overflow-y-auto">
