@@ -40,10 +40,11 @@ const groups = [
   {
     label: "Apresentação",
     items: [
-      { to: "/demo", title: "Modo Demonstração", icon: Sparkles },
+      { to: "/demo", title: "Modo Experimentação", icon: Sparkles },
       { to: "/como-funciona", title: "Como Funciona", icon: BookOpenCheck },
     ],
   },
+
 ];
 
 export function AppSidebar() {
