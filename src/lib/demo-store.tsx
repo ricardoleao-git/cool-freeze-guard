@@ -29,7 +29,11 @@ type Ctx = State & {
   forceStatus: (employeeId: string, target: "yellow" | "orange" | "blocked") => void;
   resetDemo: () => void;
   acknowledgeAlert: (id: string) => void;
-  addOccurrence: (o: Omit<Occurrence, "id" | "created_at" | "status"> & { status?: Occurrence["status"] }) => void;
+  addOccurrence: (o: Partial<Occurrence> & { tenant_id: string; employee_id: string; category: Occurrence["category"]; description: string; }) => string;
+  updateOccurrence: (id: string, patch: Partial<Occurrence>) => void;
+  resolveOccurrence: (id: string, resolution: string, resolvedBy?: string) => void;
+  addOccurrenceNote: (id: string, text: string, author?: string) => void;
+  addOccurrenceAttachment: (id: string, file: File) => Promise<void>;
 };
 
 const DemoContext = createContext<Ctx | null>(null);
