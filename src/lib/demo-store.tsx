@@ -100,6 +100,7 @@ const mapAttachment = (r: any): OccurrenceAttachment => {
   const { data } = supabase.storage.from(ATTACHMENT_BUCKET).getPublicUrl(r.storage_path);
   return {
     id: r.id, name: r.name, size: Number(r.size) || 0, mime: r.mime,
+    storage_path: r.storage_path,
     data_url: data.publicUrl,
   };
 };
