@@ -16,6 +16,7 @@ const groups = [
       { to: "/", title: "Dashboard", icon: LayoutDashboard },
       { to: "/painel", title: "Painel Operacional", icon: MonitorPlay },
       { to: "/alertas", title: "Alertas & Ocorrências", icon: AlertTriangle },
+      { to: "/ocorrencias", title: "Ocorrências (RH/SST)", icon: FileWarning },
       { to: "/pausas", title: "Pausas Térmicas", icon: Timer },
       { to: "/eventos", title: "Eventos de Acesso", icon: Activity },
     ],
