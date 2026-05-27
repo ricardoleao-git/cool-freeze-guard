@@ -576,6 +576,28 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  const removeOccurrenceAttachment: Ctx["removeOccurrenceAttachment"] = useCallback(async (occurrenceId, attachmentId, storagePath) => {
+    const rm = await supabase.storage.from(ATTACHMENT_BUCKET).remove([storagePath]);
+    if (rm.error && !/not found/i.test(rm.error.message)) throw rm.error;
+    const { error } = await supabase.from("occurrence_attachments").delete().eq("id", attachmentId);
+    if (error) throw error;
+    setState(prev => ({
+      ...prev,
+      occurrences: prev.occurrences.map(o => o.id === occurrenceId
+        ? { ...o, attachments: o.attachments.filter(a => a.id !== attachmentId) } : o),
+    }));
+  }, []);
+
+  const getAttachmentDownloadUrl: Ctx["getAttachmentDownloadUrl"] = useCallback(async (storagePath, fileName) => {
+    const { data, error } = await supabase.storage
+      .from(ATTACHMENT_BUCKET)
+      .createSignedUrl(storagePath, 60, fileName ? { download: fileName } : undefined);
+    if (error || !data) {
+      return supabase.storage.from(ATTACHMENT_BUCKET).getPublicUrl(storagePath).data.publicUrl;
+    }
+    return data.signedUrl;
+  }, []);
+
   const uploadEmployeeAvatar: Ctx["uploadEmployeeAvatar"] = useCallback(async (employeeId, file) => {
     const ext = file.name.split(".").pop()?.toLowerCase() || "png";
     const storage_path = `${employeeId}/${Date.now()}.${ext}`;
@@ -627,9 +649,11 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSoundEnabled: (b) => setState(p => ({ ...p, soundEnabled: b })),
     simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert,
     addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment,
+    removeOccurrenceAttachment, getAttachmentDownloadUrl,
     createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar,
   }), [state, simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert,
        addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment,
+       removeOccurrenceAttachment, getAttachmentDownloadUrl,
        createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
