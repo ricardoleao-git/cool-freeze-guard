@@ -21,6 +21,7 @@ import Tenants from "./pages/Tenants";
 import Users from "./pages/Users";
 import DemoMode from "./pages/DemoMode";
 import HowItWorks from "./pages/HowItWorks";
+import History from "./pages/History";
 import Login from "./pages/Login";
 import NoPermission from "./pages/NoPermission";
 import NotFound from "./pages/NotFound";
