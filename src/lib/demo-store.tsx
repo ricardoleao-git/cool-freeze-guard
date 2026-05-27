@@ -29,7 +29,11 @@ type Ctx = State & {
   forceStatus: (employeeId: string, target: "yellow" | "orange" | "blocked") => void;
   resetDemo: () => void;
   acknowledgeAlert: (id: string) => void;
-  addOccurrence: (o: Omit<Occurrence, "id" | "created_at" | "status"> & { status?: Occurrence["status"] }) => void;
+  addOccurrence: (o: Partial<Occurrence> & { tenant_id: string; employee_id: string; category: Occurrence["category"]; description: string; }) => string;
+  updateOccurrence: (id: string, patch: Partial<Occurrence>) => void;
+  resolveOccurrence: (id: string, resolution: string, resolvedBy?: string) => void;
+  addOccurrenceNote: (id: string, text: string, author?: string) => void;
+  addOccurrenceAttachment: (id: string, file: File) => Promise<void>;
 };
 
 const DemoContext = createContext<Ctx | null>(null);
@@ -208,8 +212,72 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setState(prev => ({ ...prev, alerts: prev.alerts.map(a => a.id === id ? { ...a, status: "acknowledged" } : a) }));
   }, []);
 
+  const CATEGORY_TITLES: Record<Occurrence["category"], string> = {
+    missing_exit: "Saída não registrada",
+    missing_entry: "Entrada não registrada",
+    device_failure: "Falha no leitor facial",
+    manual_correction: "Correção manual de evento",
+    false_reading: "Leitura inválida / falsa",
+    other: "Ocorrência diversa",
+  };
+
   const addOccurrence: Ctx["addOccurrence"] = useCallback((o) => {
-    setState(prev => ({ ...prev, occurrences: [{ id: uid(), created_at: Date.now(), status: "open", ...o }, ...prev.occurrences] }));
+    const id = uid();
+    const occ: Occurrence = {
+      id,
+      tenant_id: o.tenant_id,
+      employee_id: o.employee_id,
+      category: o.category,
+      priority: o.priority ?? "medium",
+      title: o.title ?? CATEGORY_TITLES[o.category],
+      description: o.description,
+      status: o.status ?? "open",
+      created_at: Date.now(),
+      created_by: o.created_by ?? "gestor.demo",
+      related_event_id: o.related_event_id,
+      attachments: o.attachments ?? [],
+      notes: o.notes ?? [],
+    };
+    setState(prev => ({ ...prev, occurrences: [occ, ...prev.occurrences] }));
+    return id;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const updateOccurrence: Ctx["updateOccurrence"] = useCallback((id, patch) => {
+    setState(prev => ({ ...prev, occurrences: prev.occurrences.map(o => o.id === id ? { ...o, ...patch } : o) }));
+  }, []);
+
+  const resolveOccurrence: Ctx["resolveOccurrence"] = useCallback((id, resolution, resolvedBy = "gestor.demo") => {
+    setState(prev => ({
+      ...prev,
+      occurrences: prev.occurrences.map(o => o.id === id
+        ? { ...o, status: "resolved", resolution, resolved_by: resolvedBy, resolved_at: Date.now() }
+        : o),
+    }));
+  }, []);
+
+  const addOccurrenceNote: Ctx["addOccurrenceNote"] = useCallback((id, text, author = "gestor.demo") => {
+    setState(prev => ({
+      ...prev,
+      occurrences: prev.occurrences.map(o => o.id === id
+        ? { ...o, notes: [...o.notes, { id: uid(), author, created_at: Date.now(), text }] }
+        : o),
+    }));
+  }, []);
+
+  const addOccurrenceAttachment: Ctx["addOccurrenceAttachment"] = useCallback(async (id, file) => {
+    const data_url = await new Promise<string>((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(String(r.result));
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+    setState(prev => ({
+      ...prev,
+      occurrences: prev.occurrences.map(o => o.id === id
+        ? { ...o, attachments: [...o.attachments, { id: uid(), name: file.name, size: file.size, mime: file.type, data_url }] }
+        : o),
+    }));
   }, []);
 
   // seed: place a few inside on mount to make demo lively
@@ -230,7 +298,37 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
         emp.current_status = minutes >= 90 ? "orange" : minutes >= 80 ? "yellow" : "inside";
         events.push(mkEvent(emp, area.id, "entry", "facial_reader"));
       });
-      return { ...prev, employees, events };
+      const occurrences: Occurrence[] = [
+        {
+          id: uid(), tenant_id: "t1", employee_id: "e4",
+          category: "missing_exit", priority: "high",
+          title: "Saída não registrada — Câmara do Açougue",
+          description: "Colaboradora João Silva entrou às 08:14 mas o leitor de saída não capturou o registro. Confirmado por encarregado que ela saiu às 08:42.",
+          status: "open", created_at: Date.now() - 3 * 3600_000, created_by: "supervisor.rh",
+          attachments: [], notes: [
+            { id: uid(), author: "supervisor.rh", created_at: Date.now() - 2.5 * 3600_000, text: "Aguardando confirmação do líder de turno." },
+          ],
+        },
+        {
+          id: uid(), tenant_id: "t1", employee_id: "e7",
+          category: "device_failure", priority: "medium",
+          title: "Leitor FR-CF-OUT-01 offline",
+          description: "Dispositivo de saída ficou offline durante o turno da manhã, gerando registros pendentes.",
+          status: "in_review", created_at: Date.now() - 26 * 3600_000, created_by: "ti.suporte",
+          attachments: [], notes: [],
+        },
+        {
+          id: uid(), tenant_id: "t1", employee_id: "e2",
+          category: "manual_correction", priority: "low",
+          title: "Ajuste manual de exposição",
+          description: "Maria Souza teve 12 minutos descontados após validação de pausa para reposição.",
+          status: "resolved", created_at: Date.now() - 48 * 3600_000, created_by: "sst.gestor",
+          resolved_at: Date.now() - 47 * 3600_000, resolved_by: "sst.gestor",
+          resolution: "Correção aplicada após assinatura física da justificativa pelo encarregado.",
+          attachments: [], notes: [],
+        },
+      ];
+      return { ...prev, employees, events, occurrences };
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -240,8 +338,9 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActiveTenantId: (id) => setState(p => ({ ...p, activeTenantId: id })),
     setTimeScale: (n) => setState(p => ({ ...p, timeScale: n })),
     setSoundEnabled: (b) => setState(p => ({ ...p, soundEnabled: b })),
-    simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert, addOccurrence,
-  }), [state, simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert, addOccurrence]);
+    simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert,
+    addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment,
+  }), [state, simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert, addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 };

@@ -17,7 +17,7 @@ export default function Alerts() {
   const { acknowledgeAlert, addOccurrence, activeTenantId } = useDemo();
 
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ employee_id: "", type: "missing_exit", description: "" });
+  const [form, setForm] = useState<{ employee_id: string; type: "missing_exit" | "device_failure" | "manual_correction" | "missing_entry" | "other"; description: string }>({ employee_id: "", type: "missing_exit", description: "" });
 
   const severityColor = (s: string) => s === "critical" ? "border-status-red/60 bg-status-red/10" : s === "warning" ? "border-status-orange/50 bg-status-orange/10" : "border-primary/40 bg-primary/10";
 
@@ -43,13 +43,13 @@ export default function Alerts() {
                 </div>
                 <div>
                   <Label>Tipo</Label>
-                  <Select value={form.type} onValueChange={(v) => setForm(f => ({ ...f, type: v }))}>
+                  <Select value={form.type} onValueChange={(v) => setForm(f => ({ ...f, type: v as typeof f.type }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="missing_exit">Saída não registrada</SelectItem>
+                      <SelectItem value="missing_entry">Entrada não registrada</SelectItem>
                       <SelectItem value="device_failure">Falha no leitor facial</SelectItem>
-                      <SelectItem value="manual_adjustment">Lançamento manual</SelectItem>
-                      <SelectItem value="forgotten_registration">Esquecimento de registro</SelectItem>
+                      <SelectItem value="manual_correction">Correção manual</SelectItem>
                       <SelectItem value="other">Outro</SelectItem>
                     </SelectContent>
                   </Select>
@@ -62,7 +62,7 @@ export default function Alerts() {
               <DialogFooter>
                 <Button onClick={() => {
                   if (!form.employee_id) return toast.error("Selecione um colaborador");
-                  addOccurrence({ tenant_id: activeTenantId, employee_id: form.employee_id, type: form.type, description: form.description, created_by: "gestor.demo" } as any);
+                  addOccurrence({ tenant_id: activeTenantId, employee_id: form.employee_id, category: form.type, description: form.description });
                   toast.success("Ocorrência registrada");
                   setOpen(false);
                   setForm({ employee_id: "", type: "missing_exit", description: "" });
@@ -105,7 +105,7 @@ export default function Alerts() {
               const emp = employees.find(e => e.id === o.employee_id);
               return (
                 <div key={o.id} className="rounded-xl border border-border bg-card/60 p-3">
-                  <div className="text-sm font-semibold">{emp?.name} — <span className="font-normal text-muted-foreground">{o.type}</span></div>
+                  <div className="text-sm font-semibold">{emp?.name} — <span className="font-normal text-muted-foreground">{o.title || o.category}</span></div>
                   <div className="text-xs text-muted-foreground">{format(new Date(o.created_at), "dd/MM HH:mm")}</div>
                   <p className="text-sm mt-1">{o.description || <span className="italic text-muted-foreground">Sem descrição</span>}</p>
                 </div>
