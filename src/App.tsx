@@ -50,6 +50,7 @@ const App = () => (
                 <Route path="/pausas" element={<ThermalBreaks />} />
                 <Route path="/alertas" element={<Alerts />} />
                 <Route path="/ocorrencias" element={<Occurrences />} />
+                <Route path="/historico" element={<History />} />
                 <Route path="/relatorios" element={<Reports />} />
                 <Route path="/integracoes" element={<Integrations />} />
                 <Route path="/empresas" element={<Tenants />} />
