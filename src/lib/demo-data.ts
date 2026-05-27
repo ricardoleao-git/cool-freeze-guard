@@ -38,7 +38,21 @@ export interface Alert {
   message: string; triggered_at: number; status: "open" | "acknowledged" | "resolved";
 }
 export interface ThermalBreak { id: string; tenant_id: string; employee_id: string; started_at: number; ended_at: number | null; completed: boolean; source: "automatic" | "manual"; }
-export interface Occurrence { id: string; tenant_id: string; employee_id: string; type: string; description: string; status: "open" | "resolved"; created_at: number; }
+export type OccurrenceCategory = "missing_exit" | "missing_entry" | "device_failure" | "manual_correction" | "false_reading" | "other";
+export type OccurrencePriority = "low" | "medium" | "high";
+export interface OccurrenceAttachment { id: string; name: string; size: number; mime: string; data_url?: string; }
+export interface OccurrenceNote { id: string; author: string; created_at: number; text: string; }
+export interface Occurrence {
+  id: string; tenant_id: string; employee_id: string;
+  category: OccurrenceCategory; priority: OccurrencePriority;
+  title: string; description: string;
+  status: "open" | "in_review" | "resolved";
+  created_at: number; created_by: string;
+  resolved_at?: number; resolved_by?: string; resolution?: string;
+  related_event_id?: string;
+  attachments: OccurrenceAttachment[];
+  notes: OccurrenceNote[];
+}
 
 export const TENANTS: Tenant[] = [
   { id: "t1", name: "Supermercado Modelo Brasil", legal_name: "Modelo Brasil Comércio Ltda", document_number: "12.345.678/0001-90", status: "active", plan: "Enterprise" },
