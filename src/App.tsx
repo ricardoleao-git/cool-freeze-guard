@@ -13,6 +13,7 @@ import Devices from "./pages/Devices";
 import Events from "./pages/Events";
 import ThermalBreaks from "./pages/ThermalBreaks";
 import Alerts from "./pages/Alerts";
+import Occurrences from "./pages/Occurrences";
 import Reports from "./pages/Reports";
 import Integrations from "./pages/Integrations";
 import Tenants from "./pages/Tenants";
