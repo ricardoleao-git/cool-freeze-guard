@@ -1,25 +1,42 @@
 import { PageHeader } from "@/components/PageHeader";
 import { useTenantScoped, useDemo } from "@/lib/demo-store";
-import { AlertTriangle, Check, FileWarning, Plus } from "lucide-react";
+import { AlertTriangle, Check, CheckCheck, FileWarning, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
+
+type SevFilter = "all" | "critical" | "warning" | "info";
 
 export default function Alerts() {
   const { alerts, employees, occurrences } = useTenantScoped();
   const { acknowledgeAlert, addOccurrence, activeTenantId } = useDemo();
 
   const [open, setOpen] = useState(false);
+  const [sevFilter, setSevFilter] = useState<SevFilter>("all");
   const [form, setForm] = useState<{ employee_id: string; type: "missing_exit" | "device_failure" | "manual_correction" | "missing_entry" | "other"; description: string }>({ employee_id: "", type: "missing_exit", description: "" });
 
+  const filteredAlerts = useMemo(
+    () => alerts.filter(a => sevFilter === "all" ? true : a.severity === sevFilter),
+    [alerts, sevFilter],
+  );
+  const openAlerts = useMemo(() => filteredAlerts.filter(a => a.status === "open"), [filteredAlerts]);
+
+  const bulkResolve = async (subset: typeof alerts) => {
+    if (subset.length === 0) return toast.info("Nenhum alerta para resolver.");
+    await Promise.all(subset.map(a => acknowledgeAlert(a.id)));
+    toast.success(`${subset.length} alerta(s) marcados como reconhecidos`);
+  };
+
   const severityColor = (s: string) => s === "critical" ? "border-status-red/60 bg-status-red/10" : s === "warning" ? "border-status-orange/50 bg-status-orange/10" : "border-primary/40 bg-primary/10";
+
 
   return (
     <div className="container py-6 md:py-8">
