@@ -286,7 +286,7 @@ export default function OperationalPanel() {
 
 
       {/* Main content area — large status layout */}
-      <main className="flex-1 overflow-auto px-8 pb-6">
+      <main className="flex-1 overflow-auto px-3 sm:px-5 md:px-8 pb-4 md:pb-6">
         {view === "focus" && (
           <FocusView counts={counts} criticalEmployees={criticalEmployees} />
         )}
