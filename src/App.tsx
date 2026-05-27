@@ -42,6 +42,7 @@ const App = () => (
               <Route path="/eventos" element={<Events />} />
               <Route path="/pausas" element={<ThermalBreaks />} />
               <Route path="/alertas" element={<Alerts />} />
+              <Route path="/ocorrencias" element={<Occurrences />} />
               <Route path="/relatorios" element={<Reports />} />
               <Route path="/integracoes" element={<Integrations />} />
               <Route path="/empresas" element={<Tenants />} />
