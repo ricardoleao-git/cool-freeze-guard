@@ -176,7 +176,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
         departments: (departments.data || []) as Department[],
         coldAreas: (coldAreas.data || []) as ColdArea[],
         employees: (employees.data || []).map(mapEmployee),
-        devices: (devices.data || []) as Device[],
+        devices: (devices.data || []).map((d: any) => ({ ...d, last_seen_at: toMs(d.last_seen_at) || Date.now() })) as Device[],
         events: (events.data || []).map(mapEvent),
         alerts: (alerts.data || []).map(mapAlert),
         breaks: (breaks.data || []).map(mapBreak),
