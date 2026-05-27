@@ -43,6 +43,21 @@ export default function AppLayout() {
                 </Link>
               </Button>
               <TenantSwitcher />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <UserIcon className="h-4 w-4" />
+                    <span className="hidden md:inline text-xs max-w-[140px] truncate">{user?.email}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="truncate">{user?.email}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-status-red focus:text-status-red">
+                    <LogOut className="h-4 w-4 mr-2" /> Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
           <main className="flex-1 min-w-0">
