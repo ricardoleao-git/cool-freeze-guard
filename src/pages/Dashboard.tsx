@@ -73,7 +73,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-        <StatCard label="Pausas hoje" value={breaks.filter(b => b.started_at >= today.getTime()).length} icon={<Timer className="h-4 w-4" />} accent="break" />
+        <StatCard label="Pausas hoje" value={breaks.filter(b => b.started_at >= todayMs).length} icon={<Timer className="h-4 w-4" />} accent="break" />
         <StatCard label="Eventos hoje" value={eventsToday} icon={<Activity className="h-4 w-4" />} accent="primary" />
         <StatCard label="Dispositivos online" value={`${onlineDevices}/${devices.length}`} hint={`${offlineDevices} offline`} icon={<Wifi className="h-4 w-4" />} accent={offlineDevices > 0 ? "orange" : "ok"} />
         <StatCard label="Alertas abertos" value={alerts.filter(a => a.status === "open").length} icon={<AlertTriangle className="h-4 w-4" />} accent="orange" />
