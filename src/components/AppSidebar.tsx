@@ -40,10 +40,11 @@ const groups = [
   {
     label: "Apresentação",
     items: [
-      { to: "/demo", title: "Modo Demonstração", icon: Sparkles },
+      { to: "/demo", title: "Modo Experimentação", icon: Sparkles },
       { to: "/como-funciona", title: "Como Funciona", icon: BookOpenCheck },
     ],
   },
+
 ];
 
 export function AppSidebar() {
@@ -59,7 +60,7 @@ export function AppSidebar() {
             <div className="font-display font-bold text-[15px]">FrioSafe</div>
             <div className="text-[10.5px] text-muted-foreground uppercase tracking-wider">Controle Térmico</div>
           </div>
-          <Badge variant="outline" className="ml-auto border-primary/40 text-primary text-[10px]">DEMO</Badge>
+          <Badge variant="outline" className="ml-auto border-primary/40 text-primary text-[9px] px-1.5">EXPERIMENTO</Badge>
         </div>
       </SidebarHeader>
       <SidebarContent className="px-2">

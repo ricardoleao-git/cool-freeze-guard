@@ -304,6 +304,32 @@ export default function Reports() {
               <Input type="date" value={toDate} onChange={e => setToDate(e.target.value)} />
             </div>
           </div>
+          <div className="flex flex-wrap items-center gap-1.5 mt-3">
+            {([
+              { id: "today", label: "Hoje", days: 0 },
+              { id: "7d", label: "Últimos 7 dias", days: 6 },
+              { id: "30d", label: "Últimos 30 dias", days: 29 },
+              { id: "month", label: "Mês atual", days: -1 },
+              { id: "clear", label: "Limpar", days: -2 },
+            ]).map(p => (
+              <button
+                key={p.id}
+                onClick={() => {
+                  if (p.days === -2) { setFromDate(""); setToDate(""); return; }
+                  const to = new Date();
+                  let from = new Date();
+                  if (p.days === -1) from = new Date(to.getFullYear(), to.getMonth(), 1);
+                  else from.setDate(to.getDate() - p.days);
+                  const iso = (d: Date) => d.toISOString().slice(0, 10);
+                  setFromDate(iso(from));
+                  setToDate(iso(to));
+                }}
+                className="px-2.5 py-1 rounded-full text-[11px] uppercase tracking-wider font-medium border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
           <div className="flex flex-wrap items-center gap-2 mt-3 text-xs text-muted-foreground">
             <Badge variant="outline" className="border-primary/40 text-primary">{scopeLabel}</Badge>
             <Badge variant="outline">{period}</Badge>
@@ -311,6 +337,7 @@ export default function Reports() {
           </div>
         </CardContent>
       </Card>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {reportDefs.map(def => {

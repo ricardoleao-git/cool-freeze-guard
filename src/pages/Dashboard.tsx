@@ -19,15 +19,25 @@ export default function Dashboard() {
     return { inside, yellow, orange, blocked };
   }, [employees]);
 
-  const today = new Date(); today.setHours(0,0,0,0);
-  const eventsToday = events.filter(e => e.occurred_at >= today.getTime()).length;
+  const todayMs = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }, []);
+  const eventsToday = events.filter(e => e.occurred_at >= todayMs).length;
   const onlineDevices = devices.filter(d => d.status === "online").length;
   const offlineDevices = devices.length - onlineDevices;
 
   const hourly = useMemo(() => {
-    const buckets = Array.from({ length: 12 }, (_, i) => ({ h: `${(new Date().getHours() - 11 + i + 24) % 24}h`, eventos: Math.floor(2 + Math.random() * 14) }));
+    const nowH = new Date().getHours();
+    const buckets = Array.from({ length: 12 }, (_, i) => {
+      const h = (nowH - 11 + i + 24) % 24;
+      return { h: `${h}h`, hour: h, eventos: 0 };
+    });
+    events.forEach(e => {
+      if (e.occurred_at < todayMs) return;
+      const h = new Date(e.occurred_at).getHours();
+      const b = buckets.find(x => x.hour === h);
+      if (b) b.eventos++;
+    });
     return buckets;
-  }, [events.length]);
+  }, [events, todayMs]);
 
   const ranking = useMemo(() => {
     const map = new Map<string, number>();
@@ -43,17 +53,26 @@ export default function Dashboard() {
   return (
     <div className="container py-6 md:py-8">
       <PageHeader
-        eyebrow="Dashboard do Gestor"
+        eyebrow={
+          <span className="inline-flex items-center gap-1.5">
+            <span className="relative inline-flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-status-ok opacity-75 animate-ping" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-status-ok" />
+            </span>
+            Dashboard do Gestor · Ao vivo
+          </span>
+        }
         title="Visão geral em tempo real"
         description="Indicadores operacionais consolidados de exposição ao frio, pausas térmicas e estado dos dispositivos."
         icon={<Activity className="h-5 w-5" />}
         actions={
           <>
             <Button asChild variant="outline"><Link to="/painel">Abrir Painel Operacional</Link></Button>
-            <Button asChild><Link to="/demo">Modo Demonstração</Link></Button>
+            <Button asChild><Link to="/demo">Modo Experimentação</Link></Button>
           </>
         }
       />
+
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Dentro de áreas frias" value={counts.inside} hint="ativos agora" icon={<Snowflake className="h-4 w-4" />} accent="primary" />
@@ -63,7 +82,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-        <StatCard label="Pausas hoje" value={breaks.filter(b => b.started_at >= today.getTime()).length} icon={<Timer className="h-4 w-4" />} accent="break" />
+        <StatCard label="Pausas hoje" value={breaks.filter(b => b.started_at >= todayMs).length} icon={<Timer className="h-4 w-4" />} accent="break" />
         <StatCard label="Eventos hoje" value={eventsToday} icon={<Activity className="h-4 w-4" />} accent="primary" />
         <StatCard label="Dispositivos online" value={`${onlineDevices}/${devices.length}`} hint={`${offlineDevices} offline`} icon={<Wifi className="h-4 w-4" />} accent={offlineDevices > 0 ? "orange" : "ok"} />
         <StatCard label="Alertas abertos" value={alerts.filter(a => a.status === "open").length} icon={<AlertTriangle className="h-4 w-4" />} accent="orange" />
