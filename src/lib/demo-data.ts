@@ -40,7 +40,7 @@ export interface Alert {
 export interface ThermalBreak { id: string; tenant_id: string; employee_id: string; started_at: number; ended_at: number | null; completed: boolean; source: "automatic" | "manual"; }
 export type OccurrenceCategory = "missing_exit" | "missing_entry" | "device_failure" | "manual_correction" | "false_reading" | "other";
 export type OccurrencePriority = "low" | "medium" | "high";
-export interface OccurrenceAttachment { id: string; name: string; size: number; mime: string; data_url?: string; }
+export interface OccurrenceAttachment { id: string; name: string; size: number; mime: string; storage_path: string; data_url?: string; }
 export interface OccurrenceNote { id: string; author: string; created_at: number; text: string; }
 export interface Occurrence {
   id: string; tenant_id: string; employee_id: string;
