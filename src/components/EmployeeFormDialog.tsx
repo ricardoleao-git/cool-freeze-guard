@@ -99,11 +99,19 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }: Props) {
     setErrors({});
     setSaving(true);
     try {
+      const data = {
+        name: parsed.data.name,
+        registration_number: parsed.data.registration_number,
+        position: parsed.data.position || "",
+        unit_id: parsed.data.unit_id,
+        department_id: parsed.data.department_id,
+        status: parsed.data.status,
+      };
       if (employee) {
-        await updateEmployee(employee.id, { ...parsed.data, avatar });
+        await updateEmployee(employee.id, { ...data, avatar });
         toast.success("Colaborador atualizado");
       } else {
-        await createEmployee({ ...parsed.data, tenant_id: activeTenantId, avatar });
+        await createEmployee({ ...data, tenant_id: activeTenantId, avatar });
         toast.success("Colaborador criado");
       }
       onOpenChange(false);
