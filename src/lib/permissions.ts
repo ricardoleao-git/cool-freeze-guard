@@ -22,6 +22,7 @@ export const ROUTE_ACCESS: Record<string, AppRole[]> = {
   "/painel": ["administrador", "gestor", "rh_sst", "visualizador"],
   "/alertas": ["administrador", "gestor", "rh_sst", "visualizador"],
   "/ocorrencias": ["administrador", "gestor", "rh_sst"],
+  "/historico": ["administrador", "gestor", "rh_sst"],
   "/pausas": ["administrador", "gestor", "rh_sst", "visualizador"],
   "/eventos": ["administrador", "gestor", "rh_sst", "visualizador"],
   "/colaboradores": ["administrador", "gestor", "rh_sst"],

@@ -21,6 +21,7 @@ import Tenants from "./pages/Tenants";
 import Users from "./pages/Users";
 import DemoMode from "./pages/DemoMode";
 import HowItWorks from "./pages/HowItWorks";
+import History from "./pages/History";
 import Login from "./pages/Login";
 import NoPermission from "./pages/NoPermission";
 import NotFound from "./pages/NotFound";
@@ -49,6 +50,7 @@ const App = () => (
                 <Route path="/pausas" element={<ThermalBreaks />} />
                 <Route path="/alertas" element={<Alerts />} />
                 <Route path="/ocorrencias" element={<Occurrences />} />
+                <Route path="/historico" element={<History />} />
                 <Route path="/relatorios" element={<Reports />} />
                 <Route path="/integracoes" element={<Integrations />} />
                 <Route path="/empresas" element={<Tenants />} />
