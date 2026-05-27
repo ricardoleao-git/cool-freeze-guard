@@ -38,7 +38,8 @@ const App = () => (
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/demo" element={<DemoMode />} />
-              <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route path="/sem-permissao" element={<ProtectedRoute><NoPermission /></ProtectedRoute>} />
+              <Route element={<ProtectedRoute><RoleGuard><AppLayout /></RoleGuard></ProtectedRoute>}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/painel" element={<OperationalPanel />} />
                 <Route path="/colaboradores" element={<Employees />} />
@@ -51,6 +52,7 @@ const App = () => (
                 <Route path="/relatorios" element={<Reports />} />
                 <Route path="/integracoes" element={<Integrations />} />
                 <Route path="/empresas" element={<Tenants />} />
+                <Route path="/usuarios" element={<Users />} />
                 <Route path="/como-funciona" element={<HowItWorks />} />
               </Route>
               <Route path="*" element={<NotFound />} />
