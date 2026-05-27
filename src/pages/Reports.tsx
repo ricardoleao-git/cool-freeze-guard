@@ -16,12 +16,10 @@ import { toast } from "sonner";
 type Scope = "all" | "employee" | "unit";
 
 export default function Reports() {
-  const { employees, breaks, events, alerts, units, departments, coldAreas, tenants, activeTenantId } = {
-    ...useTenantScoped(),
-    tenants: useDemo().tenants,
-    activeTenantId: useDemo().activeTenantId,
-  };
-  const tenant = tenants.find(t => t.id === activeTenantId);
+  const scoped = useTenantScoped();
+  const demo = useDemo();
+  const { employees, breaks, events, alerts, units, departments, coldAreas } = scoped;
+  const tenant = demo.tenants.find(t => t.id === demo.activeTenantId);
 
   const [scope, setScope] = useState<Scope>("all");
   const [employeeId, setEmployeeId] = useState<string>("");
