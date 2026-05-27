@@ -25,9 +25,19 @@ export default function Dashboard() {
   const offlineDevices = devices.length - onlineDevices;
 
   const hourly = useMemo(() => {
-    const buckets = Array.from({ length: 12 }, (_, i) => ({ h: `${(new Date().getHours() - 11 + i + 24) % 24}h`, eventos: Math.floor(2 + Math.random() * 14) }));
+    const nowH = new Date().getHours();
+    const buckets = Array.from({ length: 12 }, (_, i) => {
+      const h = (nowH - 11 + i + 24) % 24;
+      return { h: `${h}h`, hour: h, eventos: 0 };
+    });
+    events.forEach(e => {
+      if (e.occurred_at < todayMs) return;
+      const h = new Date(e.occurred_at).getHours();
+      const b = buckets.find(x => x.hour === h);
+      if (b) b.eventos++;
+    });
     return buckets;
-  }, [events.length]);
+  }, [events, todayMs]);
 
   const ranking = useMemo(() => {
     const map = new Map<string, number>();
