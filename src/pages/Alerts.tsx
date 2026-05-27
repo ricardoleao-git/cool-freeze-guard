@@ -43,13 +43,13 @@ export default function Alerts() {
                 </div>
                 <div>
                   <Label>Tipo</Label>
-                  <Select value={form.type} onValueChange={(v) => setForm(f => ({ ...f, type: v }))}>
+                  <Select value={form.type} onValueChange={(v) => setForm(f => ({ ...f, type: v as typeof f.type }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="missing_exit">Saída não registrada</SelectItem>
+                      <SelectItem value="missing_entry">Entrada não registrada</SelectItem>
                       <SelectItem value="device_failure">Falha no leitor facial</SelectItem>
-                      <SelectItem value="manual_adjustment">Lançamento manual</SelectItem>
-                      <SelectItem value="forgotten_registration">Esquecimento de registro</SelectItem>
+                      <SelectItem value="manual_correction">Correção manual</SelectItem>
                       <SelectItem value="other">Outro</SelectItem>
                     </SelectContent>
                   </Select>
