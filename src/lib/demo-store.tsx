@@ -38,6 +38,8 @@ type Ctx = State & {
   resolveOccurrence: (id: string, resolution: string, resolvedBy?: string) => Promise<void>;
   addOccurrenceNote: (id: string, text: string, author?: string) => Promise<void>;
   addOccurrenceAttachment: (id: string, file: File) => Promise<void>;
+  removeOccurrenceAttachment: (occurrenceId: string, attachmentId: string, storagePath: string) => Promise<void>;
+  getAttachmentDownloadUrl: (storagePath: string, fileName?: string) => Promise<string>;
   createEmployee: (data: Omit<Employee, "id" | "current_status" | "accumulated_minutes" | "inside_since" | "current_area_id" | "break_started_at">) => Promise<Employee>;
   updateEmployee: (id: string, patch: Partial<Employee>) => Promise<void>;
   deleteEmployee: (id: string) => Promise<void>;
@@ -100,6 +102,7 @@ const mapAttachment = (r: any): OccurrenceAttachment => {
   const { data } = supabase.storage.from(ATTACHMENT_BUCKET).getPublicUrl(r.storage_path);
   return {
     id: r.id, name: r.name, size: Number(r.size) || 0, mime: r.mime,
+    storage_path: r.storage_path,
     data_url: data.publicUrl,
   };
 };
@@ -573,6 +576,28 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  const removeOccurrenceAttachment: Ctx["removeOccurrenceAttachment"] = useCallback(async (occurrenceId, attachmentId, storagePath) => {
+    const rm = await supabase.storage.from(ATTACHMENT_BUCKET).remove([storagePath]);
+    if (rm.error && !/not found/i.test(rm.error.message)) throw rm.error;
+    const { error } = await supabase.from("occurrence_attachments").delete().eq("id", attachmentId);
+    if (error) throw error;
+    setState(prev => ({
+      ...prev,
+      occurrences: prev.occurrences.map(o => o.id === occurrenceId
+        ? { ...o, attachments: o.attachments.filter(a => a.id !== attachmentId) } : o),
+    }));
+  }, []);
+
+  const getAttachmentDownloadUrl: Ctx["getAttachmentDownloadUrl"] = useCallback(async (storagePath, fileName) => {
+    const { data, error } = await supabase.storage
+      .from(ATTACHMENT_BUCKET)
+      .createSignedUrl(storagePath, 60, fileName ? { download: fileName } : undefined);
+    if (error || !data) {
+      return supabase.storage.from(ATTACHMENT_BUCKET).getPublicUrl(storagePath).data.publicUrl;
+    }
+    return data.signedUrl;
+  }, []);
+
   const uploadEmployeeAvatar: Ctx["uploadEmployeeAvatar"] = useCallback(async (employeeId, file) => {
     const ext = file.name.split(".").pop()?.toLowerCase() || "png";
     const storage_path = `${employeeId}/${Date.now()}.${ext}`;
@@ -624,9 +649,11 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSoundEnabled: (b) => setState(p => ({ ...p, soundEnabled: b })),
     simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert,
     addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment,
+    removeOccurrenceAttachment, getAttachmentDownloadUrl,
     createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar,
   }), [state, simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert,
        addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment,
+       removeOccurrenceAttachment, getAttachmentDownloadUrl,
        createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;

@@ -3,7 +3,7 @@ import { useTenantScoped, useDemo } from "@/lib/demo-store";
 import { Occurrence, OccurrenceCategory, OccurrencePriority } from "@/lib/demo-data";
 import {
   FileWarning, Plus, Paperclip, MessageSquarePlus, CheckCircle2, Filter, Search,
-  AlertTriangle, ShieldAlert, ShieldCheck, Cpu, PencilLine, EyeOff, FileText, Download, Trash2,
+  AlertTriangle, ShieldAlert, ShieldCheck, Cpu, PencilLine, EyeOff, FileText, Download, Trash2, Image as ImageIcon, Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,9 @@ function fmtSize(n: number) {
 
 export default function Occurrences() {
   const { occurrences, employees, units, departments } = useTenantScoped();
-  const { addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment, activeTenantId } = useDemo();
+  const { addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment, removeOccurrenceAttachment, getAttachmentDownloadUrl, activeTenantId } = useDemo();
+  const [uploadingFiles, setUploadingFiles] = useState<string[]>([]);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const [statusFilter, setStatusFilter] = useState<"all" | Occurrence["status"]>("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | OccurrenceCategory>("all");
@@ -111,13 +113,45 @@ export default function Occurrences() {
 
   const handleAttach = async (files: FileList | null) => {
     if (!detail || !files || files.length === 0) return;
-    for (const f of Array.from(files)) {
-      if (f.size > 5 * 1024 * 1024) { toast.error(`${f.name} excede 5 MB`); continue; }
-      await addOccurrenceAttachment(detail.id, f);
+    const arr = Array.from(files);
+    for (const f of arr) {
+      if (f.size > 10 * 1024 * 1024) { toast.error(`${f.name} excede 10 MB`); continue; }
+      setUploadingFiles(prev => [...prev, f.name]);
+      try {
+        await addOccurrenceAttachment(detail.id, f);
+        toast.success(`${f.name} enviado`);
+      } catch (err: any) {
+        toast.error(`Falha ao enviar ${f.name}: ${err?.message || "erro"}`);
+      } finally {
+        setUploadingFiles(prev => prev.filter(n => n !== f.name));
+      }
     }
-    toast.success("Anexo(s) adicionado(s)");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  const handleDownload = async (storagePath: string, fileName: string) => {
+    try {
+      const url = await getAttachmentDownloadUrl(storagePath, fileName);
+      // Open in a new tab; the signed URL has content-disposition=attachment when fileName is set
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err: any) {
+      toast.error("Falha ao gerar link: " + (err?.message || "erro"));
+    }
+  };
+
+  const handleRemoveAttachment = async (attachmentId: string, storagePath: string, name: string) => {
+    if (!detail) return;
+    setRemovingId(attachmentId);
+    try {
+      await removeOccurrenceAttachment(detail.id, attachmentId, storagePath);
+      toast.success(`${name} removido`);
+    } catch (err: any) {
+      toast.error("Falha ao remover: " + (err?.message || "erro"));
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
 
   return (
     <div className="container py-6 md:py-8">
@@ -348,28 +382,57 @@ export default function Occurrences() {
                       </>
                     )}
                   </div>
-                  {detail.attachments.length === 0 ? (
+                  {detail.attachments.length === 0 && uploadingFiles.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic">Nenhum anexo. Suba foto do leitor, planilha de turno ou PDF assinado pelo encarregado.</p>
                   ) : (
                     <div className="grid gap-2">
-                      {detail.attachments.map(a => (
-                        <div key={a.id} className="flex items-center gap-2 rounded-lg border border-border p-2 bg-card/40">
-                          <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm truncate">{a.name}</div>
-                            <div className="text-[10.5px] text-muted-foreground">{a.mime || "arquivo"} · {fmtSize(a.size)}</div>
-                          </div>
-                          {a.data_url && (
-                            <a href={a.data_url} download={a.name} className="text-muted-foreground hover:text-foreground">
-                              <Download className="h-4 w-4" />
-                            </a>
-                          )}
-                          {detail.status !== "resolved" && (
+                      {detail.attachments.map(a => {
+                        const isImage = a.mime?.startsWith("image/");
+                        const isRemoving = removingId === a.id;
+                        return (
+                          <div key={a.id} className="flex items-center gap-2 rounded-lg border border-border p-2 bg-card/40">
+                            {isImage && a.data_url ? (
+                              <a href={a.data_url} target="_blank" rel="noopener noreferrer" className="h-9 w-9 rounded overflow-hidden ring-1 ring-border shrink-0">
+                                <img src={a.data_url} alt={a.name} className="h-full w-full object-cover" />
+                              </a>
+                            ) : (
+                              <div className="h-9 w-9 rounded grid place-items-center bg-muted shrink-0">
+                                {isImage ? <ImageIcon className="h-4 w-4 text-muted-foreground" /> : <FileText className="h-4 w-4 text-muted-foreground" />}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm truncate">{a.name}</div>
+                              <div className="text-[10.5px] text-muted-foreground">{a.mime || "arquivo"} · {fmtSize(a.size)}</div>
+                            </div>
                             <button
-                              onClick={() => updateOccurrence(detail.id, { attachments: detail.attachments.filter(x => x.id !== a.id) })}
-                              className="text-muted-foreground hover:text-status-red"
-                            ><Trash2 className="h-4 w-4" /></button>
-                          )}
+                              type="button"
+                              onClick={() => handleDownload(a.storage_path, a.name)}
+                              className="text-muted-foreground hover:text-foreground p-1"
+                              title="Baixar arquivo"
+                            >
+                              <Download className="h-4 w-4" />
+                            </button>
+                            {detail.status !== "resolved" && (
+                              <button
+                                type="button"
+                                disabled={isRemoving}
+                                onClick={() => handleRemoveAttachment(a.id, a.storage_path, a.name)}
+                                className="text-muted-foreground hover:text-status-red p-1 disabled:opacity-50"
+                                title="Remover do storage"
+                              >
+                                {isRemoving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                      {uploadingFiles.map(name => (
+                        <div key={name} className="flex items-center gap-2 rounded-lg border border-dashed border-primary/40 p-2 bg-primary/5">
+                          <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm truncate">{name}</div>
+                            <div className="text-[10.5px] text-muted-foreground">Enviando para o storage…</div>
+                          </div>
                         </div>
                       ))}
                     </div>
