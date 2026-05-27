@@ -105,7 +105,7 @@ export default function Alerts() {
               const emp = employees.find(e => e.id === o.employee_id);
               return (
                 <div key={o.id} className="rounded-xl border border-border bg-card/60 p-3">
-                  <div className="text-sm font-semibold">{emp?.name} — <span className="font-normal text-muted-foreground">{o.type}</span></div>
+                  <div className="text-sm font-semibold">{emp?.name} — <span className="font-normal text-muted-foreground">{o.title || o.category}</span></div>
                   <div className="text-xs text-muted-foreground">{format(new Date(o.created_at), "dd/MM HH:mm")}</div>
                   <p className="text-sm mt-1">{o.description || <span className="italic text-muted-foreground">Sem descrição</span>}</p>
                 </div>
