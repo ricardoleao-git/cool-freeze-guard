@@ -53,17 +53,26 @@ export default function Dashboard() {
   return (
     <div className="container py-6 md:py-8">
       <PageHeader
-        eyebrow="Dashboard do Gestor"
+        eyebrow={
+          <span className="inline-flex items-center gap-1.5">
+            <span className="relative inline-flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-status-ok opacity-75 animate-ping" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-status-ok" />
+            </span>
+            Dashboard do Gestor · Ao vivo
+          </span>
+        }
         title="Visão geral em tempo real"
         description="Indicadores operacionais consolidados de exposição ao frio, pausas térmicas e estado dos dispositivos."
         icon={<Activity className="h-5 w-5" />}
         actions={
           <>
             <Button asChild variant="outline"><Link to="/painel">Abrir Painel Operacional</Link></Button>
-            <Button asChild><Link to="/demo">Modo Demonstração</Link></Button>
+            <Button asChild><Link to="/demo">Modo Experimentação</Link></Button>
           </>
         }
       />
+
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Dentro de áreas frias" value={counts.inside} hint="ativos agora" icon={<Snowflake className="h-4 w-4" />} accent="primary" />
