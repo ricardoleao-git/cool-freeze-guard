@@ -308,8 +308,9 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActiveTenantId: (id) => setState(p => ({ ...p, activeTenantId: id })),
     setTimeScale: (n) => setState(p => ({ ...p, timeScale: n })),
     setSoundEnabled: (b) => setState(p => ({ ...p, soundEnabled: b })),
-    simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert, addOccurrence,
-  }), [state, simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert, addOccurrence]);
+    simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert,
+    addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment,
+  }), [state, simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert, addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 };
