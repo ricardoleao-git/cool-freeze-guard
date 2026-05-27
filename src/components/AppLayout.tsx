@@ -1,16 +1,21 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TenantSwitcher } from "@/components/TenantSwitcher";
 import { SoundToggle } from "@/components/SoundToggle";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, LogOut, User as UserIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useTenantScoped } from "@/lib/demo-store";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function AppLayout() {
   const { alerts } = useTenantScoped();
+  const { user, signOut } = useAuth();
+  const nav = useNavigate();
+  const handleLogout = async () => { await signOut(); nav("/login", { replace: true }); };
   const open = alerts.filter(a => a.status === "open").length;
   return (
     <SidebarProvider>
@@ -38,6 +43,21 @@ export default function AppLayout() {
                 </Link>
               </Button>
               <TenantSwitcher />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <UserIcon className="h-4 w-4" />
+                    <span className="hidden md:inline text-xs max-w-[140px] truncate">{user?.email}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="truncate">{user?.email}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-status-red focus:text-status-red">
+                    <LogOut className="h-4 w-4 mr-2" /> Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
           <main className="flex-1 min-w-0">
