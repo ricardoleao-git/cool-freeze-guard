@@ -54,7 +54,7 @@ export default function DemoMode() {
             </div>
 
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => { resetDemo(); toast.success("Demo resetada"); }}><RotateCcw className="h-4 w-4 mr-2" /> Resetar demo</Button>
+              <Button variant="outline" onClick={() => { resetDemo(); toast.success("Experimento resetado"); }}><RotateCcw className="h-4 w-4 mr-2" /> Resetar experimento</Button>
               <Button variant="ghost" asChild><Link to="/como-funciona"><Play className="h-4 w-4 mr-2" /> Roteiro de apresentação</Link></Button>
             </div>
           </CardContent>
