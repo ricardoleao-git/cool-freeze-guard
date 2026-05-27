@@ -298,7 +298,37 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
         emp.current_status = minutes >= 90 ? "orange" : minutes >= 80 ? "yellow" : "inside";
         events.push(mkEvent(emp, area.id, "entry", "facial_reader"));
       });
-      return { ...prev, employees, events };
+      const occurrences: Occurrence[] = [
+        {
+          id: uid(), tenant_id: "t1", employee_id: "e4",
+          category: "missing_exit", priority: "high",
+          title: "Saída não registrada — Câmara do Açougue",
+          description: "Colaboradora João Silva entrou às 08:14 mas o leitor de saída não capturou o registro. Confirmado por encarregado que ela saiu às 08:42.",
+          status: "open", created_at: Date.now() - 3 * 3600_000, created_by: "supervisor.rh",
+          attachments: [], notes: [
+            { id: uid(), author: "supervisor.rh", created_at: Date.now() - 2.5 * 3600_000, text: "Aguardando confirmação do líder de turno." },
+          ],
+        },
+        {
+          id: uid(), tenant_id: "t1", employee_id: "e7",
+          category: "device_failure", priority: "medium",
+          title: "Leitor FR-CF-OUT-01 offline",
+          description: "Dispositivo de saída ficou offline durante o turno da manhã, gerando registros pendentes.",
+          status: "in_review", created_at: Date.now() - 26 * 3600_000, created_by: "ti.suporte",
+          attachments: [], notes: [],
+        },
+        {
+          id: uid(), tenant_id: "t1", employee_id: "e2",
+          category: "manual_correction", priority: "low",
+          title: "Ajuste manual de exposição",
+          description: "Maria Souza teve 12 minutos descontados após validação de pausa para reposição.",
+          status: "resolved", created_at: Date.now() - 48 * 3600_000, created_by: "sst.gestor",
+          resolved_at: Date.now() - 47 * 3600_000, resolved_by: "sst.gestor",
+          resolution: "Correção aplicada após assinatura física da justificativa pelo encarregado.",
+          attachments: [], notes: [],
+        },
+      ];
+      return { ...prev, employees, events, occurrences };
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
