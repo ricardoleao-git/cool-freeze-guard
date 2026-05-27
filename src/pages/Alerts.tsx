@@ -62,7 +62,7 @@ export default function Alerts() {
               <DialogFooter>
                 <Button onClick={() => {
                   if (!form.employee_id) return toast.error("Selecione um colaborador");
-                  addOccurrence({ tenant_id: activeTenantId, employee_id: form.employee_id, type: form.type, description: form.description, created_by: "gestor.demo" } as any);
+                  addOccurrence({ tenant_id: activeTenantId, employee_id: form.employee_id, category: form.type, description: form.description });
                   toast.success("Ocorrência registrada");
                   setOpen(false);
                   setForm({ employee_id: "", type: "missing_exit", description: "" });
