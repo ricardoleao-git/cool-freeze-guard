@@ -94,6 +94,9 @@ const mapBreak = (r: any): ThermalBreak => ({
   id: r.id, tenant_id: r.tenant_id, employee_id: r.employee_id,
   started_at: toMs(r.started_at) || Date.now(),
   ended_at: toMs(r.ended_at), completed: r.completed, source: r.source,
+  interrupted: !!r.interrupted,
+  interrupted_at: toMs(r.interrupted_at),
+  interruption_reason: r.interruption_reason ?? null,
 });
 const mapOccurrence = (r: any, notes: OccurrenceNote[], attachments: OccurrenceAttachment[]): Occurrence => ({
   id: r.id, tenant_id: r.tenant_id, employee_id: r.employee_id,
