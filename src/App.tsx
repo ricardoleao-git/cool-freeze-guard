@@ -27,6 +27,7 @@ import NoPermission from "./pages/NoPermission";
 import NotFound from "./pages/NotFound";
 import LgpdPrivacy from "./pages/LgpdPrivacy";
 import TimeAdjustments from "./pages/TimeAdjustments";
+import MyDay from "./pages/MyDay";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
                 <Route path="/como-funciona" element={<HowItWorks />} />
                 <Route path="/lgpd" element={<LgpdPrivacy />} />
                 <Route path="/ajustes" element={<TimeAdjustments />} />
+                <Route path="/meu-dia" element={<MyDay />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
