@@ -16,7 +16,8 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ShieldCheck, FileLock2, Trash2, RotateCcw, Save, UserCheck, AlertTriangle } from "lucide-react";
+import { ShieldCheck, FileLock2, Trash2, RotateCcw, Save, UserCheck, AlertTriangle, FileDown } from "lucide-react";
+import { EmployeeDataExportDialog } from "@/components/EmployeeDataExportDialog";
 import { useDemo, useTenantScoped } from "@/lib/demo-store";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,6 +89,10 @@ export default function LgpdPrivacy() {
   const [captureEmp, setCaptureEmp] = useState<string>("");
   const [captureScope, setCaptureScope] = useState<string[]>(["biometric_facial", "access_logs"]);
   const [signatureText, setSignatureText] = useState("");
+
+  // Diálogo de exportação de dados do titular
+  const [openExport, setOpenExport] = useState(false);
+  const [exportEmp, setExportEmp] = useState<string>("");
 
   useEffect(() => {
     let cancelled = false;
@@ -224,11 +229,16 @@ export default function LgpdPrivacy() {
         title="Privacidade & Retenção"
         description="Defina a política de retenção dos dados biométricos e de logs, registre o consentimento dos titulares e mantenha rastreabilidade dos aceites."
         actions={
-          canManage && (
-            <Button onClick={saveSettings} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" /> Salvar alterações
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" onClick={() => { setExportEmp(""); setOpenExport(true); }}>
+              <FileDown className="h-4 w-4 mr-2" /> Exportar dados do titular
             </Button>
-          )
+            {canManage && (
+              <Button onClick={saveSettings} disabled={saving}>
+                <Save className="h-4 w-4 mr-2" /> Salvar alterações
+              </Button>
+            )}
+          </div>
         }
       />
 
@@ -394,20 +404,27 @@ export default function LgpdPrivacy() {
                           {c?.scope?.length ? c.scope.join(", ") : "—"}
                         </TableCell>
                         <TableCell className="text-right">
-                          {canManage && (
-                            <div className="flex justify-end gap-1">
-                              <Button size="sm" variant="outline"
-                                onClick={() => { setCaptureEmp(emp.id); setOpenCapture(true); }}>
-                                {c ? "Renovar" : "Registrar"}
-                              </Button>
-                              {c?.status === "active" && (
-                                <Button size="sm" variant="ghost" className="text-status-red"
-                                  onClick={() => revokeConsent(c)}>
-                                  <Trash2 className="h-4 w-4" />
+                          <div className="flex justify-end gap-1">
+                            <Button size="sm" variant="ghost"
+                              title="Gerar arquivo do titular"
+                              onClick={() => { setExportEmp(emp.id); setOpenExport(true); }}>
+                              <FileDown className="h-4 w-4" />
+                            </Button>
+                            {canManage && (
+                              <>
+                                <Button size="sm" variant="outline"
+                                  onClick={() => { setCaptureEmp(emp.id); setOpenCapture(true); }}>
+                                  {c ? "Renovar" : "Registrar"}
                                 </Button>
-                              )}
-                            </div>
-                          )}
+                                {c?.status === "active" && (
+                                  <Button size="sm" variant="ghost" className="text-status-red"
+                                    onClick={() => revokeConsent(c)}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -476,6 +493,14 @@ export default function LgpdPrivacy() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <EmployeeDataExportDialog
+        open={openExport}
+        onOpenChange={setOpenExport}
+        settings={settings}
+        defaultEmployeeId={exportEmp}
+        requestedBy={profile?.full_name || profile?.email || "operação"}
+      />
     </div>
   );
 }
