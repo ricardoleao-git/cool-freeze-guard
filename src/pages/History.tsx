@@ -22,7 +22,8 @@ import {
   ClipboardList, Download, FileText, Filter, ImageIcon, Paperclip, Search, X, Eye,
   ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
 } from "lucide-react";
-import type { Occurrence, OccurrencePriority, OccurrenceCategory } from "@/lib/demo-data";
+import type { Occurrence, OccurrencePriority, OccurrenceCategory, OccurrenceAttachment } from "@/lib/demo-data";
+import { AttachmentPreviewDialog } from "@/components/AttachmentPreviewDialog";
 
 const CATEGORY_LABELS: Record<OccurrenceCategory, string> = {
   missing_exit: "Saída não registrada",
