@@ -98,6 +98,7 @@ export default function History() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(getStoredPageSize());
   const [sort, setSort] = useState<SortState>(getStoredSort());
+  const [previewAtt, setPreviewAtt] = useState<OccurrenceAttachment | null>(null);
 
   const employeeMap = useMemo(() => new Map(employees.map(e => [e.id, e])), [employees]);
   const unitMap = useMemo(() => new Map(units.map(u => [u.id, u])), [units]);
