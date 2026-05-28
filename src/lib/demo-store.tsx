@@ -201,6 +201,10 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
         alerts: (alerts.data || []).map(mapAlert),
         breaks: (breaks.data || []).map(mapBreak),
         occurrences: (occurrences.data || []).map(o => mapOccurrence(o, notesByOcc.get(o.id) || [], attByOcc.get(o.id) || [])),
+        employeeColdAreaAuth: (ecaRows.data || []).map((r: any) => ({
+          id: r.id, employee_id: r.employee_id, cold_area_id: r.cold_area_id, tenant_id: r.tenant_id,
+          authorized_by: r.authorized_by, authorized_at: toMs(r.authorized_at) || Date.now(),
+        })),
         loading: false,
       }));
     })();
