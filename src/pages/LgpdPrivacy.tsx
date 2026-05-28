@@ -493,6 +493,9 @@ export default function LgpdPrivacy() {
         <TabsContent value="purge" className="space-y-4">
           <PurgeAuditPanel tenantId={activeTenantId} canManage={canManage} />
         </TabsContent>
+        <TabsContent value="trail" className="space-y-4">
+          <ConsentAuditTrail tenantId={activeTenantId} employees={employees} />
+        </TabsContent>
       </Tabs>
 
       <Dialog open={openCapture} onOpenChange={setOpenCapture}>
