@@ -163,7 +163,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [tenants, units, departments, coldAreas, employees, devices, events, alerts, breaks, occurrences, notes, attachments] = await Promise.all([
+      const [tenants, units, departments, coldAreas, employees, devices, events, alerts, breaks, occurrences, notes, attachments, ecaRows] = await Promise.all([
         supabase.from("tenants").select("*").order("name"),
         supabase.from("units").select("*").order("name"),
         supabase.from("departments").select("*").order("name"),
