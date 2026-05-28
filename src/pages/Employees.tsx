@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/PageHeader";
 import { useTenantScoped, useDemo } from "@/lib/demo-store";
-import { Users, LogIn, LogOut, AlertTriangle, ShieldAlert, Plus, Pencil, Trash2 } from "lucide-react";
+import { Users, LogIn, LogOut, AlertTriangle, ShieldAlert, Plus, Pencil, Trash2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,18 +9,20 @@ import { useState } from "react";
 import { STATUS_LABEL, STATUS_COLOR, type Employee } from "@/lib/demo-data";
 import { toast } from "sonner";
 import { EmployeeFormDialog } from "@/components/EmployeeFormDialog";
+import { EmployeeAreaAuthDialog } from "@/components/EmployeeAreaAuthDialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
 export default function Employees() {
-  const { employees, units, departments } = useTenantScoped();
+  const { employees, units, departments, employeeColdAreaAuth } = useTenantScoped();
   const { simulateEntry, simulateExit, forceStatus, deleteEmployee } = useDemo();
   const [q, setQ] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [deleting, setDeleting] = useState<Employee | null>(null);
+  const [authFor, setAuthFor] = useState<Employee | null>(null);
 
   const filtered = employees.filter(e =>
     e.name.toLowerCase().includes(q.toLowerCase()) || e.registration_number.includes(q),
@@ -105,7 +107,12 @@ export default function Employees() {
                       {STATUS_LABEL[e.current_status]}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">{e.accumulated_minutes.toFixed(0)} min</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    <div>{e.accumulated_minutes.toFixed(0)} min</div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {employeeColdAreaAuth.filter(a => a.employee_id === e.id).length} áreas autorizadas
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1 flex-wrap">
                       <Button size="sm" variant="outline" onClick={() => { simulateEntry(e.id); toast.success(`Entrada: ${e.name}`); }}><LogIn className="h-3.5 w-3.5 mr-1" /> Entrada</Button>
@@ -114,6 +121,7 @@ export default function Employees() {
                       <Button size="sm" variant="ghost" className="text-status-orange" onClick={() => forceStatus(e.id, "orange")} title="Forçar laranja"><AlertTriangle className="h-3.5 w-3.5" /></Button>
                       <Button size="sm" variant="ghost" className="text-status-red" onClick={() => forceStatus(e.id, "blocked")} title="Bloquear"><ShieldAlert className="h-3.5 w-3.5" /></Button>
                       <div className="w-px h-5 bg-border mx-1" />
+                      <Button size="sm" variant="ghost" onClick={() => setAuthFor(e)} title="Autorizar áreas frias"><ShieldCheck className="h-3.5 w-3.5" /></Button>
                       <Button size="sm" variant="ghost" onClick={() => openEdit(e)} title="Editar"><Pencil className="h-3.5 w-3.5" /></Button>
                       <Button size="sm" variant="ghost" className="text-status-red" onClick={() => setDeleting(e)} title="Excluir"><Trash2 className="h-3.5 w-3.5" /></Button>
                     </div>
@@ -126,6 +134,7 @@ export default function Employees() {
       </div>
 
       <EmployeeFormDialog open={formOpen} onOpenChange={setFormOpen} employee={editing} />
+      <EmployeeAreaAuthDialog open={!!authFor} onOpenChange={(o) => !o && setAuthFor(null)} employee={authFor} />
 
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>

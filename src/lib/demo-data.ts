@@ -24,6 +24,10 @@ export interface Device {
   name: string; device_type: "entry" | "exit"; external_device_id: string;
   status: "online" | "offline" | "maintenance"; last_seen_at: number;
 }
+export interface EmployeeColdAreaAuthorization {
+  id: string; employee_id: string; cold_area_id: string; tenant_id: string;
+  authorized_by: string; authorized_at: number;
+}
 export interface AccessEvent {
   id: string; tenant_id: string; unit_id: string; cold_area_id: string;
   device_id: string; employee_id: string; event_type: "entry" | "exit";

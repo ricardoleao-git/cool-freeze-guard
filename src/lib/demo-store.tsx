@@ -1,7 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  AccessEvent, Alert, ColdArea, Department, Device, Employee, EmployeeStatus,
+  AccessEvent, Alert, ColdArea, Department, Device, Employee, EmployeeColdAreaAuthorization, EmployeeStatus,
   Occurrence, OccurrenceAttachment, OccurrenceCategory, OccurrenceNote, OccurrencePriority,
   Tenant, ThermalBreak, Unit,
 } from "./demo-data";
@@ -17,6 +18,7 @@ type State = {
   alerts: Alert[];
   breaks: ThermalBreak[];
   occurrences: Occurrence[];
+  employeeColdAreaAuth: EmployeeColdAreaAuthorization[];
   activeTenantId: string;
   timeScale: number;
   soundEnabled: boolean;
@@ -44,6 +46,8 @@ type Ctx = State & {
   updateEmployee: (id: string, patch: Partial<Employee>) => Promise<void>;
   deleteEmployee: (id: string) => Promise<void>;
   uploadEmployeeAvatar: (employeeId: string, file: File) => Promise<string>;
+  isEmployeeAuthorizedForArea: (employeeId: string, areaId: string) => boolean;
+  setEmployeeAreaAuthorizations: (employeeId: string, areaIds: string[]) => Promise<void>;
 };
 
 const DemoContext = createContext<Ctx | null>(null);
@@ -124,14 +128,16 @@ const CATEGORY_TITLES: Record<OccurrenceCategory, string> = {
 export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<State>({
     tenants: [], units: [], departments: [], coldAreas: [], employees: [], devices: [],
-    events: [], alerts: [], breaks: [], occurrences: [],
+    events: [], alerts: [], breaks: [], occurrences: [], employeeColdAreaAuth: [],
     activeTenantId: "t1", timeScale: 1, soundEnabled: false, loading: true,
   });
 
   // dirty employees to flush periodically
   const dirtyEmployeesRef = useRef<Set<string>>(new Set());
   const employeesRef = useRef<Employee[]>([]);
+  const ecaRef = useRef<EmployeeColdAreaAuthorization[]>([]);
   useEffect(() => { employeesRef.current = state.employees; }, [state.employees]);
+  useEffect(() => { ecaRef.current = state.employeeColdAreaAuth; }, [state.employeeColdAreaAuth]);
 
   // ---------- cycle reset tracking ----------
   // Tempo (em minutos simulados) que cada colaborador está fora do ambiente frio
@@ -162,7 +168,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [tenants, units, departments, coldAreas, employees, devices, events, alerts, breaks, occurrences, notes, attachments] = await Promise.all([
+      const [tenants, units, departments, coldAreas, employees, devices, events, alerts, breaks, occurrences, notes, attachments, ecaRows] = await Promise.all([
         supabase.from("tenants").select("*").order("name"),
         supabase.from("units").select("*").order("name"),
         supabase.from("departments").select("*").order("name"),
@@ -175,6 +181,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
         supabase.from("occurrences").select("*").order("created_at", { ascending: false }),
         supabase.from("occurrence_notes").select("*").order("created_at", { ascending: true }),
         supabase.from("occurrence_attachments").select("*").order("created_at", { ascending: true }),
+        supabase.from("employee_cold_areas").select("*"),
       ]);
       if (cancelled) return;
       const notesByOcc = new Map<string, OccurrenceNote[]>();
@@ -199,6 +206,10 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
         alerts: (alerts.data || []).map(mapAlert),
         breaks: (breaks.data || []).map(mapBreak),
         occurrences: (occurrences.data || []).map(o => mapOccurrence(o, notesByOcc.get(o.id) || [], attByOcc.get(o.id) || [])),
+        employeeColdAreaAuth: (ecaRows.data || []).map((r: any) => ({
+          id: r.id, employee_id: r.employee_id, cold_area_id: r.cold_area_id, tenant_id: r.tenant_id,
+          authorized_by: r.authorized_by, authorized_at: toMs(r.authorized_at) || Date.now(),
+        })),
         loading: false,
       }));
     })();
@@ -475,10 +486,28 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const emp = employeesRef.current.find(e => e.id === employeeId); if (!emp) return;
     if (emp.current_status === "blocked" || emp.current_status === "thermal_break") return;
     outsideMinutesRef.current.delete(employeeId);
+    const candidateAreaId = areaId || emp.current_area_id || undefined;
     let area: ColdArea | undefined;
+    // synchronous lookup via current state snapshot through setState callback
     setState(prev => {
-      area = prev.coldAreas.find(a => a.id === (areaId || emp.current_area_id || "")) || pickAreaForEmployee(emp, prev.coldAreas);
+      area = prev.coldAreas.find(a => a.id === (candidateAreaId || "")) || pickAreaForEmployee(emp, prev.coldAreas);
       if (!area) return prev;
+      // Autorização colaborador × área fria
+      const authorized = ecaRef.current.some(
+        x => x.employee_id === emp.id && x.cold_area_id === area!.id,
+      );
+      if (!authorized) {
+        // não autoriza entrada, registra ocorrência operacional via alerta
+        const a: Alert = {
+          id: crypto.randomUUID(), tenant_id: emp.tenant_id, employee_id: emp.id,
+          alert_type: "missing_entry" as any,
+          severity: "warning",
+          message: `Acesso negado: ${emp.name} não está autorizado a entrar em "${area!.name}".`,
+          triggered_at: Date.now(), status: "open",
+        };
+        persistAlert(a).catch(() => {});
+        return { ...prev, alerts: [a, ...prev.alerts].slice(0, 300) };
+      }
       const employees = prev.employees.map(x => x.id === emp.id ? {
         ...x,
         current_area_id: area!.id,
@@ -490,10 +519,18 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { ...prev, employees };
     });
     if (!area) return;
+    const isAuthorized = ecaRef.current.some(
+      x => x.employee_id === emp.id && x.cold_area_id === area!.id,
+    );
+    if (!isAuthorized) {
+      toast.error(`Acesso negado: ${emp.name} não está autorizado em ${area.name}.`);
+      return;
+    }
     const updated = employeesRef.current.find(e => e.id === employeeId)!;
     await flushEmployee(updated);
     await persistEvent(mkEvent(updated, area.id, "entry", "demo_simulation"));
   }, []);
+
 
   const simulateExit = useCallback(async (employeeId: string) => {
     const emp = employeesRef.current.find(e => e.id === employeeId); if (!emp || !emp.current_area_id) return;
@@ -695,7 +732,48 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deleteEmployee: Ctx["deleteEmployee"] = useCallback(async (id) => {
     const { error } = await supabase.from("employees").delete().eq("id", id);
     if (error) throw error;
-    setState(prev => ({ ...prev, employees: prev.employees.filter(e => e.id !== id) }));
+    setState(prev => ({
+      ...prev,
+      employees: prev.employees.filter(e => e.id !== id),
+      employeeColdAreaAuth: prev.employeeColdAreaAuth.filter(a => a.employee_id !== id),
+    }));
+  }, []);
+
+  const isEmployeeAuthorizedForArea: Ctx["isEmployeeAuthorizedForArea"] = useCallback(
+    (employeeId, areaId) => ecaRef.current.some(x => x.employee_id === employeeId && x.cold_area_id === areaId),
+    [],
+  );
+
+  const setEmployeeAreaAuthorizations: Ctx["setEmployeeAreaAuthorizations"] = useCallback(async (employeeId, areaIds) => {
+    const emp = employeesRef.current.find(e => e.id === employeeId);
+    if (!emp) throw new Error("Colaborador não encontrado");
+    const current = ecaRef.current.filter(x => x.employee_id === employeeId);
+    const currentIds = new Set(current.map(x => x.cold_area_id));
+    const nextIds = new Set(areaIds);
+    const toAdd = areaIds.filter(id => !currentIds.has(id));
+    const toRemoveIds = current.filter(x => !nextIds.has(x.cold_area_id)).map(x => x.id);
+
+    if (toRemoveIds.length > 0) {
+      const { error } = await supabase.from("employee_cold_areas").delete().in("id", toRemoveIds);
+      if (error) throw error;
+    }
+    let inserted: any[] = [];
+    if (toAdd.length > 0) {
+      const rows = toAdd.map(areaId => ({
+        employee_id: employeeId, cold_area_id: areaId, tenant_id: emp.tenant_id, authorized_by: "gestor.demo",
+      }));
+      const { data, error } = await supabase.from("employee_cold_areas").insert(rows).select("*");
+      if (error) throw error;
+      inserted = data || [];
+    }
+    setState(prev => {
+      const remaining = prev.employeeColdAreaAuth.filter(a => a.employee_id !== employeeId || nextIds.has(a.cold_area_id));
+      const insertedMapped: EmployeeColdAreaAuthorization[] = inserted.map((r: any) => ({
+        id: r.id, employee_id: r.employee_id, cold_area_id: r.cold_area_id, tenant_id: r.tenant_id,
+        authorized_by: r.authorized_by, authorized_at: toMs(r.authorized_at) || Date.now(),
+      }));
+      return { ...prev, employeeColdAreaAuth: [...remaining, ...insertedMapped] };
+    });
   }, []);
 
   const value: Ctx = useMemo(() => ({
@@ -707,10 +785,12 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment,
     removeOccurrenceAttachment, getAttachmentDownloadUrl,
     createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar,
+    isEmployeeAuthorizedForArea, setEmployeeAreaAuthorizations,
   }), [state, simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert,
        addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment,
        removeOccurrenceAttachment, getAttachmentDownloadUrl,
-       createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar]);
+       createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar,
+       isEmployeeAuthorizedForArea, setEmployeeAreaAuthorizations]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 };
@@ -746,6 +826,7 @@ export const useTenantScoped = () => {
     alerts: s.alerts.filter(a => a.tenant_id === t),
     breaks: s.breaks.filter(b => b.tenant_id === t),
     occurrences: s.occurrences.filter(o => o.tenant_id === t),
+    employeeColdAreaAuth: s.employeeColdAreaAuth.filter(a => a.tenant_id === t),
   };
 };
 
