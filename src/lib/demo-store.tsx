@@ -65,6 +65,7 @@ type Ctx = State & {
   uploadEmployeeAvatar: (employeeId: string, file: File) => Promise<string>;
   isEmployeeAuthorizedForArea: (employeeId: string, areaId: string) => boolean;
   setEmployeeAreaAuthorizations: (employeeId: string, areaIds: string[]) => Promise<void>;
+  getConsentStatus: (employeeId: string) => ConsentStatus;
 };
 
 const DemoContext = createContext<Ctx | null>(null);
