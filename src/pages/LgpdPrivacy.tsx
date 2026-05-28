@@ -333,9 +333,77 @@ export default function LgpdPrivacy() {
         previous_status: previous?.status ?? null,
       },
     });
+
+    // Marca notificações pendentes desse colaborador (versão atual ou anteriores) como reconhecidas.
+    try {
+      const { data: ackRows } = await supabase
+        .from("consent_renewal_notifications")
+        .update({
+          status: "acknowledged",
+          acknowledged_at: new Date().toISOString(),
+          acknowledged_consent_id: (data as any).id,
+        } as any)
+        .eq("tenant_id", activeTenantId)
+        .eq("employee_id", captureEmp)
+        .in("status", ["pending", "sent"])
+        .lte("consent_version", settings.consent_version)
+        .select();
+      if (ackRows && (ackRows as any[]).length) {
+        const ackedIds = new Set((ackRows as any[]).map(r => r.id));
+        setNotifications(prev => prev.map(n => ackedIds.has(n.id)
+          ? { ...n, status: "acknowledged", acknowledged_at: new Date().toISOString(), acknowledged_consent_id: (data as any).id }
+          : n));
+      }
+    } catch (e) {
+      console.error("Falha ao reconciliar notificações de renovação", e);
+    }
+
     setOpenCapture(false);
     setCaptureEmp(""); setSignatureText(""); setCaptureScope(["biometric_facial", "access_logs"]);
-    toast.success("Consentimento registrado.");
+    toast.success(isRenewal ? "Consentimento renovado e notificação atendida." : "Consentimento registrado.");
+  };
+
+  const markNotificationSent = async (ids: string[]) => {
+    if (!ids.length) return;
+    setNotifying(true);
+    try {
+      const { error } = await supabase
+        .from("consent_renewal_notifications")
+        .update({ status: "sent", sent_at: new Date().toISOString() } as any)
+        .in("id", ids)
+        .eq("status", "pending");
+      if (error) throw error;
+      setNotifications(prev => prev.map(n =>
+        ids.includes(n.id) && n.status === "pending"
+          ? { ...n, status: "sent", sent_at: new Date().toISOString() }
+          : n));
+      toast.success(`${ids.length} notificação(ões) marcadas como enviadas.`);
+    } catch (e: any) {
+      toast.error("Falha ao registrar envio: " + (e?.message || "tente novamente"));
+    } finally {
+      setNotifying(false);
+    }
+  };
+
+  const cancelNotification = async (id: string) => {
+    const { error } = await supabase
+      .from("consent_renewal_notifications")
+      .update({ status: "cancelled" } as any)
+      .eq("id", id);
+    if (error) { toast.error("Falha ao cancelar: " + error.message); return; }
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, status: "cancelled" } : n));
+    toast.success("Solicitação cancelada.");
+  };
+
+  const requestRenewalNow = async (employeeId: string) => {
+    if (!settings) return;
+    const created = await enqueueRenewalNotifications(
+      settings.consent_version,
+      null,
+      "manual_request",
+      [employeeId],
+    );
+    toast.success(created > 0 ? "Renovação solicitada." : "Já existe uma solicitação pendente para este colaborador.");
   };
 
   const revokeConsent = async (c: EmployeeConsent) => {
