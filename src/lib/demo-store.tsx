@@ -529,6 +529,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetDemo = useCallback(async () => {
     // wipe ephemeral data and reset employees
+    outsideMinutesRef.current.clear();
     await Promise.all([
       supabase.from("access_events").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
       supabase.from("alerts").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
