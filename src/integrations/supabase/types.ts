@@ -14,6 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_event_corrections: {
+        Row: {
+          approved_at: string | null
+          approved_by_name: string | null
+          approved_by_user_id: string | null
+          created_at: string
+          employee_id: string
+          employee_notified_at: string | null
+          employee_responded_at: string | null
+          employee_response: string | null
+          event_id: string
+          evidence_attachments: Json
+          id: string
+          new_event_type: string | null
+          new_occurred_at: string | null
+          original_event_type: string
+          original_occurred_at: string
+          reason_category: string
+          reason_detail: string
+          rejection_reason: string | null
+          requested_by_name: string
+          requested_by_user_id: string | null
+          status: string
+          supervisor_validation: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by_name?: string | null
+          approved_by_user_id?: string | null
+          created_at?: string
+          employee_id: string
+          employee_notified_at?: string | null
+          employee_responded_at?: string | null
+          employee_response?: string | null
+          event_id: string
+          evidence_attachments?: Json
+          id?: string
+          new_event_type?: string | null
+          new_occurred_at?: string | null
+          original_event_type: string
+          original_occurred_at: string
+          reason_category?: string
+          reason_detail?: string
+          rejection_reason?: string | null
+          requested_by_name?: string
+          requested_by_user_id?: string | null
+          status?: string
+          supervisor_validation?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by_name?: string | null
+          approved_by_user_id?: string | null
+          created_at?: string
+          employee_id?: string
+          employee_notified_at?: string | null
+          employee_responded_at?: string | null
+          employee_response?: string | null
+          event_id?: string
+          evidence_attachments?: Json
+          id?: string
+          new_event_type?: string | null
+          new_occurred_at?: string | null
+          original_event_type?: string
+          original_occurred_at?: string
+          reason_category?: string
+          reason_detail?: string
+          rejection_reason?: string | null
+          requested_by_name?: string
+          requested_by_user_id?: string | null
+          status?: string
+          supervisor_validation?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       access_events: {
         Row: {
           accumulated_at_event: number | null
