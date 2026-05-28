@@ -17,6 +17,7 @@ type State = {
   alerts: Alert[];
   breaks: ThermalBreak[];
   occurrences: Occurrence[];
+  employeeColdAreaAuth: EmployeeColdAreaAuthorization[];
   activeTenantId: string;
   timeScale: number;
   soundEnabled: boolean;
