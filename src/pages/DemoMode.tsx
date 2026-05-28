@@ -1,19 +1,23 @@
 import { PageHeader } from "@/components/PageHeader";
 import { useDemo, useTenantScoped } from "@/lib/demo-store";
-import { Sparkles, LogIn, LogOut, FastForward, AlertTriangle, ShieldAlert, RotateCcw, Play } from "lucide-react";
+import { Sparkles, LogIn, LogOut, FastForward, AlertTriangle, ShieldAlert, RotateCcw, Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
 export default function DemoMode() {
-  const { simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, timeScale, setTimeScale } = useDemo();
+  const { simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, timeScale, setTimeScale, setActiveTenantId, loading } = useDemo();
+  // O modo Experimentação opera SEMPRE no tenant público "demo-tenant"
+  // (policies anon liberam leitura/escrita apenas neste escopo).
+  useEffect(() => { setActiveTenantId("demo-tenant"); }, [setActiveTenantId]);
   const { employees } = useTenantScoped();
-  const [emp, setEmp] = useState<string>(employees[0]?.id ?? "");
+  const [emp, setEmp] = useState<string>("");
+  useEffect(() => { if (!emp && employees[0]) setEmp(employees[0].id); }, [employees, emp]);
 
   return (
     <div className="container py-6 md:py-8">
