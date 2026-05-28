@@ -90,6 +90,10 @@ export default function LgpdPrivacy() {
   const [captureScope, setCaptureScope] = useState<string[]>(["biometric_facial", "access_logs"]);
   const [signatureText, setSignatureText] = useState("");
 
+  // Diálogo de exportação de dados do titular
+  const [openExport, setOpenExport] = useState(false);
+  const [exportEmp, setExportEmp] = useState<string>("");
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
