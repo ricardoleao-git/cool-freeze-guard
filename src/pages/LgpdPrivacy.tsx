@@ -229,11 +229,16 @@ export default function LgpdPrivacy() {
         title="Privacidade & Retenção"
         description="Defina a política de retenção dos dados biométricos e de logs, registre o consentimento dos titulares e mantenha rastreabilidade dos aceites."
         actions={
-          canManage && (
-            <Button onClick={saveSettings} disabled={saving}>
-              <Save className="h-4 w-4 mr-2" /> Salvar alterações
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" onClick={() => { setExportEmp(""); setOpenExport(true); }}>
+              <FileDown className="h-4 w-4 mr-2" /> Exportar dados do titular
             </Button>
-          )
+            {canManage && (
+              <Button onClick={saveSettings} disabled={saving}>
+                <Save className="h-4 w-4 mr-2" /> Salvar alterações
+              </Button>
+            )}
+          </div>
         }
       />
 
