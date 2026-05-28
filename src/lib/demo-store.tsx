@@ -125,7 +125,7 @@ const CATEGORY_TITLES: Record<OccurrenceCategory, string> = {
 export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<State>({
     tenants: [], units: [], departments: [], coldAreas: [], employees: [], devices: [],
-    events: [], alerts: [], breaks: [], occurrences: [],
+    events: [], alerts: [], breaks: [], occurrences: [], employeeColdAreaAuth: [],
     activeTenantId: "t1", timeScale: 1, soundEnabled: false, loading: true,
   });
 
