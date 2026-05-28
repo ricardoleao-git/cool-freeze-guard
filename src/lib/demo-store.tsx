@@ -135,7 +135,9 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // dirty employees to flush periodically
   const dirtyEmployeesRef = useRef<Set<string>>(new Set());
   const employeesRef = useRef<Employee[]>([]);
+  const ecaRef = useRef<EmployeeColdAreaAuthorization[]>([]);
   useEffect(() => { employeesRef.current = state.employees; }, [state.employees]);
+  useEffect(() => { ecaRef.current = state.employeeColdAreaAuth; }, [state.employeeColdAreaAuth]);
 
   // ---------- cycle reset tracking ----------
   // Tempo (em minutos simulados) que cada colaborador está fora do ambiente frio
