@@ -168,7 +168,7 @@ export default function History() {
       if (error) { toast.error("Falha ao carregar presets: " + error.message); setPresetsLoaded(true); return; }
       const items = (data || []).map(d => ({
         id: d.id, name: d.name, tenant_id: d.tenant_id,
-        filters: (d.filters || {}) as FilterSnapshot, is_default: !!d.is_default,
+        filters: ((d.filters || {}) as unknown) as FilterSnapshot, is_default: !!d.is_default,
       }));
       setPresets(items);
       // Auto-apply default scoped to current tenant (or global) if no preset chosen yet
