@@ -275,7 +275,7 @@ export default function DailySummary() {
         employee_id: a.employee_id,
         employee_name: emp.name,
         registration_number: emp.registration_number,
-        severity: a.severity === "high" ? "high" : a.severity === "medium" ? "medium" : "low",
+        severity: a.severity === "critical" ? "high" : a.severity === "warning" ? "medium" : "low",
         type: "open_alert",
         title: `Alerta aberto: ${a.alert_type}`,
         detail: a.message,
