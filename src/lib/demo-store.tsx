@@ -324,7 +324,11 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
       employee_id: e.employee_id, event_type: e.event_type, source: e.source,
       occurred_at: toIso(e.occurred_at), validation_status: e.validation_status,
       confidence_score: e.confidence_score,
-    });
+      status_before: e.status_before ?? null,
+      status_after: e.status_after ?? null,
+      accumulated_at_event: e.accumulated_at_event ?? null,
+      user_agent: e.user_agent ?? (typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null),
+    } as any);
   };
   const persistBreak = async (b: ThermalBreak) => {
     await supabase.from("thermal_breaks").insert({
