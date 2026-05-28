@@ -440,6 +440,9 @@ export default function LgpdPrivacy() {
             </CardContent>
           </Card>
         </TabsContent>
+        <TabsContent value="purge" className="space-y-4">
+          <PurgeAuditPanel tenantId={activeTenantId} canManage={canManage} />
+        </TabsContent>
       </Tabs>
 
       <Dialog open={openCapture} onOpenChange={setOpenCapture}>
