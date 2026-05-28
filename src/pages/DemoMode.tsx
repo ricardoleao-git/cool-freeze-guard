@@ -1,19 +1,23 @@
 import { PageHeader } from "@/components/PageHeader";
 import { useDemo, useTenantScoped } from "@/lib/demo-store";
-import { Sparkles, LogIn, LogOut, FastForward, AlertTriangle, ShieldAlert, RotateCcw, Play } from "lucide-react";
+import { Sparkles, LogIn, LogOut, FastForward, AlertTriangle, ShieldAlert, RotateCcw, Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
 export default function DemoMode() {
-  const { simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, timeScale, setTimeScale } = useDemo();
+  const { simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, timeScale, setTimeScale, setActiveTenantId, loading } = useDemo();
+  // O modo Experimentação opera SEMPRE no tenant público "demo-tenant"
+  // (policies anon liberam leitura/escrita apenas neste escopo).
+  useEffect(() => { setActiveTenantId("demo-tenant"); }, [setActiveTenantId]);
   const { employees } = useTenantScoped();
-  const [emp, setEmp] = useState<string>(employees[0]?.id ?? "");
+  const [emp, setEmp] = useState<string>("");
+  useEffect(() => { if (!emp && employees[0]) setEmp(employees[0].id); }, [employees, emp]);
 
   return (
     <div className="container py-6 md:py-8">
@@ -32,10 +36,16 @@ export default function DemoMode() {
           <CardContent className="space-y-5">
             <div>
               <Label>Colaborador alvo</Label>
-              <Select value={emp} onValueChange={setEmp}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
-              </Select>
+              {loading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground py-2"><Loader2 className="h-4 w-4 animate-spin" /> Carregando ambiente de experimentação…</div>
+              ) : employees.length === 0 ? (
+                <div className="text-sm text-muted-foreground py-2">Nenhum colaborador disponível no tenant de demonstração.</div>
+              ) : (
+                <Select value={emp} onValueChange={setEmp}>
+                  <SelectTrigger><SelectValue placeholder="Selecione um colaborador" /></SelectTrigger>
+                  <SelectContent>{employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
+                </Select>
+              )}
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
