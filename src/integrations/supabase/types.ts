@@ -312,6 +312,36 @@ export type Database = {
           },
         ]
       }
+      employee_cold_areas: {
+        Row: {
+          authorized_at: string
+          authorized_by: string
+          cold_area_id: string
+          created_at: string
+          employee_id: string
+          id: string
+          tenant_id: string
+        }
+        Insert: {
+          authorized_at?: string
+          authorized_by?: string
+          cold_area_id: string
+          created_at?: string
+          employee_id: string
+          id?: string
+          tenant_id: string
+        }
+        Update: {
+          authorized_at?: string
+          authorized_by?: string
+          cold_area_id?: string
+          created_at?: string
+          employee_id?: string
+          id?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       employees: {
         Row: {
           accumulated_minutes: number
