@@ -943,6 +943,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     removeOccurrenceAttachment, getAttachmentDownloadUrl,
     createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar,
     isEmployeeAuthorizedForArea, setEmployeeAreaAuthorizations,
+    getConsentStatus: computeConsentStatus,
   }), [state, simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert,
        addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment,
        removeOccurrenceAttachment, getAttachmentDownloadUrl,
