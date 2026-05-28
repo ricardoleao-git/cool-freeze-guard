@@ -494,23 +494,34 @@ export default function History() {
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {openOcc.attachments.map(a => (
                           <div key={a.id} className="rounded-md border overflow-hidden bg-muted/30">
-                            {a.mime.startsWith("image/") ? (
-                              <a href={a.data_url} target="_blank" rel="noreferrer">
+                            <button
+                              type="button"
+                              onClick={() => setPreviewAtt(a)}
+                              className="block w-full text-left focus:outline-none focus:ring-2 focus:ring-primary"
+                              title="Pré-visualizar"
+                            >
+                              {a.mime.startsWith("image/") ? (
                                 <img src={a.data_url} alt={a.name} className="h-32 w-full object-cover" />
-                              </a>
-                            ) : (
-                              <div className="h-32 grid place-items-center bg-muted">
-                                <FileText className="h-10 w-10 text-muted-foreground" />
-                              </div>
-                            )}
+                              ) : (
+                                <div className="h-32 grid place-items-center bg-muted">
+                                  <FileText className="h-10 w-10 text-muted-foreground" />
+                                </div>
+                              )}
+                            </button>
                             <div className="p-2 text-xs">
                               <div className="truncate font-medium" title={a.name}>{a.name}</div>
                               <div className="flex items-center justify-between mt-1">
                                 <span className="text-muted-foreground">{(a.size / 1024).toFixed(0)} KB</span>
-                                <Button size="sm" variant="ghost" className="h-7 px-2"
-                                  onClick={() => handleDownload(a.storage_path!, a.name)}>
-                                  <Download className="h-3.5 w-3.5" />
-                                </Button>
+                                <div className="flex items-center gap-0.5">
+                                  <Button size="sm" variant="ghost" className="h-7 px-2"
+                                    onClick={() => setPreviewAtt(a)} title="Pré-visualizar">
+                                    <Eye className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button size="sm" variant="ghost" className="h-7 px-2"
+                                    onClick={() => handleDownload(a.storage_path!, a.name)} title="Baixar">
+                                    <Download className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           </div>
