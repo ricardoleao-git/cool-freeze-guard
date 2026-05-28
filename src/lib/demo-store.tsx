@@ -364,6 +364,39 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }),
         }));
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "tenant_settings" }, (p) => {
+        if (p.eventType === "DELETE") {
+          setState(s => ({ ...s, tenantSettings: s.tenantSettings.filter(t => t.tenant_id !== (p.old as any).tenant_id) }));
+          return;
+        }
+        const r: any = p.new;
+        const next: TenantPrivacySettings = {
+          tenant_id: r.tenant_id,
+          require_consent_before_capture: r.require_consent_before_capture !== false,
+          consent_version: Number(r.consent_version) || 1,
+        };
+        setState(s => {
+          const exists = s.tenantSettings.some(t => t.tenant_id === next.tenant_id);
+          return { ...s, tenantSettings: exists ? s.tenantSettings.map(t => t.tenant_id === next.tenant_id ? next : t) : [...s.tenantSettings, next] };
+        });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "employee_consents" }, (p) => {
+        if (p.eventType === "DELETE") {
+          setState(s => ({ ...s, employeeConsents: s.employeeConsents.filter(c => c.id !== (p.old as any).id) }));
+          return;
+        }
+        const r: any = p.new;
+        const next: EmployeeConsentRecord = {
+          id: r.id, tenant_id: r.tenant_id, employee_id: r.employee_id,
+          consent_version: Number(r.consent_version) || 1,
+          status: r.status === "revoked" ? "revoked" : "active",
+          accepted_at: toMs(r.accepted_at) || Date.now(),
+        };
+        setState(s => {
+          const exists = s.employeeConsents.some(c => c.id === next.id);
+          return { ...s, employeeConsents: exists ? s.employeeConsents.map(c => c.id === next.id ? next : c) : [...s.employeeConsents, next] };
+        });
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
