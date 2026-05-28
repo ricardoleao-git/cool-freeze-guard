@@ -460,18 +460,41 @@ export default function LgpdPrivacy() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <StatTile label="Colaboradores" value={stats.total} />
         <StatTile label="Consentimento ativo" value={stats.activeCount} tone="ok" />
         <StatTile label="Pendentes" value={stats.missing} tone={stats.missing ? "warn" : "muted"} />
         <StatTile label="Versão desatualizada" value={stats.outdated} tone={stats.outdated ? "warn" : "muted"} />
+        <StatTile label="Renovações em aberto" value={stats.pendingNotif} tone={stats.pendingNotif ? "warn" : "muted"} />
       </div>
+
+      {stats.pendingNotif > 0 && (
+        <div className="rounded-lg border border-status-orange/40 bg-status-orange/10 p-3 flex items-start gap-3">
+          <BellRing className="h-5 w-5 text-status-orange shrink-0 mt-0.5" />
+          <div className="flex-1 text-sm">
+            <div className="font-medium text-status-orange">
+              {stats.pendingNotif} colaborador(es) aguardando reaceite do termo v{settings?.consent_version}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Enquanto a renovação não for registrada, o sistema bloqueia novas capturas biométricas para esses titulares.
+            </div>
+          </div>
+        </div>
+      )}
 
       <Tabs defaultValue="retention" className="w-full">
         <TabsList>
           <TabsTrigger value="retention"><FileLock2 className="h-4 w-4 mr-2" /> Retenção</TabsTrigger>
           <TabsTrigger value="consent"><ShieldCheck className="h-4 w-4 mr-2" /> Consentimento</TabsTrigger>
           <TabsTrigger value="registry"><UserCheck className="h-4 w-4 mr-2" /> Registros</TabsTrigger>
+          <TabsTrigger value="notifications">
+            <BellRing className="h-4 w-4 mr-2" /> Notificações
+            {stats.pendingNotif > 0 && (
+              <Badge className="ml-2 bg-status-orange/20 text-status-orange border border-status-orange/40">
+                {stats.pendingNotif}
+              </Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="purge"><Trash2 className="h-4 w-4 mr-2" /> Purga & Auditoria</TabsTrigger>
           <TabsTrigger value="trail"><FileLock2 className="h-4 w-4 mr-2" /> Trilha de consentimentos</TabsTrigger>
         </TabsList>
