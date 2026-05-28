@@ -578,14 +578,32 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.error(`Acesso negado: ${emp.name} não está autorizado em ${area.name}.`);
       return;
     }
-    const before = emp.current_status;
     const updated = employeesRef.current.find(e => e.id === employeeId)!;
     await flushEmployee(updated);
     await persistEvent(mkEvent(updated, area.id, "entry", "demo_simulation", undefined, {
-      status_before: before, status_after: updated.current_status,
+      status_before: originalStatus, status_after: updated.current_status,
       accumulated_at_event: updated.accumulated_minutes,
     }));
-  }, []);
+
+    // Persistência + alerta da pausa interrompida
+    if (interruptedBreak) {
+      const reason = `Reentrada após ${interruptedBreak.elapsedMin.toFixed(1)} min (mínimo ${interruptedBreak.required} min). Acumulado preservado.`;
+      updateBreakById(interruptedBreak.id, {
+        ended_at: Date.now(), completed: false,
+        interrupted: true, interrupted_at: Date.now(), interruption_reason: reason,
+      }).catch(() => {});
+      const alert: Alert = {
+        id: crypto.randomUUID(), tenant_id: emp.tenant_id, employee_id: emp.id,
+        alert_type: "break_interrupted", severity: "warning",
+        message: `Pausa interrompida: ${emp.name} retornou em ${interruptedBreak.elapsedMin.toFixed(1)} min. Exposição acumulada (${updated.accumulated_minutes.toFixed(0)} min) mantida.`,
+        triggered_at: Date.now(), status: "open",
+      };
+      persistAlert(alert).catch(() => {});
+      setState(prev => ({ ...prev, alerts: [alert, ...prev.alerts].slice(0, 300) }));
+      toast.warning(`Pausa interrompida — acumulado de ${emp.name} preservado.`);
+      beep(880, 0.3);
+    }
+  }, [beep]);
 
 
   const simulateExit = useCallback(async (employeeId: string) => {
