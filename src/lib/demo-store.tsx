@@ -486,10 +486,32 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const emp = employeesRef.current.find(e => e.id === employeeId); if (!emp) return;
     if (emp.current_status === "blocked" || emp.current_status === "thermal_break") return;
     outsideMinutesRef.current.delete(employeeId);
+    // Resolve area first to validate authorization before any state change
+    const candidateAreaId = areaId || emp.current_area_id || undefined;
+    const candidateArea = candidateAreaId
+      ? (await Promise.resolve()).valueOf() && undefined // placeholder, real lookup below
+      : undefined;
     let area: ColdArea | undefined;
+    // synchronous lookup via current state snapshot through setState callback
     setState(prev => {
-      area = prev.coldAreas.find(a => a.id === (areaId || emp.current_area_id || "")) || pickAreaForEmployee(emp, prev.coldAreas);
+      area = prev.coldAreas.find(a => a.id === (candidateAreaId || "")) || pickAreaForEmployee(emp, prev.coldAreas);
       if (!area) return prev;
+      // Autorização colaborador × área fria
+      const authorized = ecaRef.current.some(
+        x => x.employee_id === emp.id && x.cold_area_id === area!.id,
+      );
+      if (!authorized) {
+        // não autoriza entrada, registra ocorrência operacional via alerta
+        const a: Alert = {
+          id: crypto.randomUUID(), tenant_id: emp.tenant_id, employee_id: emp.id,
+          alert_type: "missing_entry" as any,
+          severity: "warning",
+          message: `Acesso negado: ${emp.name} não está autorizado a entrar em "${area!.name}".`,
+          triggered_at: Date.now(), status: "open",
+        };
+        persistAlert(a).catch(() => {});
+        return { ...prev, alerts: [a, ...prev.alerts].slice(0, 300) };
+      }
       const employees = prev.employees.map(x => x.id === emp.id ? {
         ...x,
         current_area_id: area!.id,
@@ -501,10 +523,18 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { ...prev, employees };
     });
     if (!area) return;
+    const isAuthorized = ecaRef.current.some(
+      x => x.employee_id === emp.id && x.cold_area_id === area!.id,
+    );
+    if (!isAuthorized) {
+      toast.error(`Acesso negado: ${emp.name} não está autorizado em ${area.name}.`);
+      return;
+    }
     const updated = employeesRef.current.find(e => e.id === employeeId)!;
     await flushEmployee(updated);
     await persistEvent(mkEvent(updated, area.id, "entry", "demo_simulation"));
   }, []);
+
 
   const simulateExit = useCallback(async (employeeId: string) => {
     const emp = employeesRef.current.find(e => e.id === employeeId); if (!emp || !emp.current_area_id) return;
