@@ -775,6 +775,69 @@ export type Database = {
           },
         ]
       }
+      monthly_report_signatures: {
+        Row: {
+          clickwrap_text: string
+          clickwrap_text_hash: string
+          clickwrap_version: number
+          content_hash: string
+          created_at: string
+          employee_id: string
+          id: string
+          ip_origin: unknown
+          pdf_filename: string
+          reference_month: number
+          reference_year: number
+          signature_method: string
+          signed_at: string
+          signed_by_name: string
+          signed_by_user_id: string | null
+          tenant_id: string
+          totals: Json
+          user_agent: string | null
+        }
+        Insert: {
+          clickwrap_text?: string
+          clickwrap_text_hash: string
+          clickwrap_version?: number
+          content_hash: string
+          created_at?: string
+          employee_id: string
+          id?: string
+          ip_origin?: unknown
+          pdf_filename?: string
+          reference_month: number
+          reference_year: number
+          signature_method?: string
+          signed_at?: string
+          signed_by_name?: string
+          signed_by_user_id?: string | null
+          tenant_id: string
+          totals?: Json
+          user_agent?: string | null
+        }
+        Update: {
+          clickwrap_text?: string
+          clickwrap_text_hash?: string
+          clickwrap_version?: number
+          content_hash?: string
+          created_at?: string
+          employee_id?: string
+          id?: string
+          ip_origin?: unknown
+          pdf_filename?: string
+          reference_month?: number
+          reference_year?: number
+          signature_method?: string
+          signed_at?: string
+          signed_by_name?: string
+          signed_by_user_id?: string | null
+          tenant_id?: string
+          totals?: Json
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       occurrence_attachments: {
         Row: {
           created_at: string
