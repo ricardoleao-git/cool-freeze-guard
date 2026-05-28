@@ -25,6 +25,7 @@ import History from "./pages/History";
 import Login from "./pages/Login";
 import NoPermission from "./pages/NoPermission";
 import NotFound from "./pages/NotFound";
+import LgpdPrivacy from "./pages/LgpdPrivacy";
 
 const queryClient = new QueryClient();
 
