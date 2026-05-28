@@ -133,6 +133,16 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const employeesRef = useRef<Employee[]>([]);
   useEffect(() => { employeesRef.current = state.employees; }, [state.employees]);
 
+  // ---------- cycle reset tracking ----------
+  // Tempo (em minutos simulados) que cada colaborador está fora do ambiente frio
+  // com exposição acumulada > 0. Ao atingir MEAL_RESET_MINUTES o ciclo é reiniciado
+  // (regra do intervalo de refeição — PDF Seção 3 / regra dos 20 min).
+  const outsideMinutesRef = useRef<Map<string, number>>(new Map());
+  // Última hora-do-dia em que avaliamos virada de turno (wall clock).
+  const lastShiftHourRef = useRef<number>(new Date().getHours());
+  const MEAL_RESET_MINUTES = 20;
+  const SHIFT_BOUNDARIES = [6, 14, 22]; // 1º, 2º, 3º turno
+
   // ---------- audio ----------
   const audioCtxRef = useRef<AudioContext | null>(null);
   const soundRef = useRef(state.soundEnabled);
