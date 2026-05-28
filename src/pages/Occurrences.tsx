@@ -72,6 +72,7 @@ export default function Occurrences() {
   const [noteText, setNoteText] = useState("");
   const [resolution, setResolution] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewAtt, setPreviewAtt] = useState<OccurrenceAttachment | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
