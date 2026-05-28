@@ -385,7 +385,10 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (emp.current_status === "blocked") {
               newAlerts.push(mkAlert(emp, "red_block", "critical", `BLOQUEIO PREVENTIVO: ${emp.name} atingiu 100 min. Pausa térmica obrigatória.`));
               beep(1200, 0.4);
-              const ev = mkEvent(emp, area.id, "exit", "demo_simulation", prev.devices);
+              const ev = mkEvent(emp, area.id, "exit", "demo_simulation", prev.devices, {
+                status_before: "blocked", status_after: "thermal_break",
+                accumulated_at_event: emp.accumulated_minutes,
+              });
               newEvents.push(ev);
               emp.inside_since = null;
               emp.current_status = "thermal_break";
