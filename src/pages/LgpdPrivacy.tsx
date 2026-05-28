@@ -180,23 +180,72 @@ export default function LgpdPrivacy() {
     const total = employees.length;
     let activeCount = 0;
     let outdated = 0;
+    let pendingNotif = 0;
     employees.forEach(e => {
       const c = consentByEmp.get(e.id);
       if (c && c.status === "active") {
         activeCount++;
         if (settings && c.consent_version < settings.consent_version) outdated++;
       }
+      const n = pendingNotifByEmp.get(e.id);
+      if (n && (n.status === "pending" || n.status === "sent")) pendingNotif++;
     });
-    return { total, activeCount, outdated, missing: total - activeCount };
-  }, [employees, consentByEmp, settings]);
+    return { total, activeCount, outdated, missing: total - activeCount, pendingNotif };
+  }, [employees, consentByEmp, settings, pendingNotifByEmp]);
 
   const updateDraft = (patch: Partial<TenantSettings>) =>
     setDraft(d => (d ? { ...d, ...patch } : d));
+
+  const enqueueRenewalNotifications = async (
+    targetVersion: number,
+    previousVersion: number | null,
+    reason: string,
+    onlyEmployeeIds?: string[],
+  ) => {
+    if (!settings) return 0;
+    const targets = (onlyEmployeeIds ?? employees.map(e => e.id))
+      .map(empId => {
+        const c = consentByEmp.get(empId);
+        // só notificamos quem tem aceite ativo desatualizado (renovação)
+        // ou quem já tinha algum aceite (concedido/revogado) e precisa ressubir versão.
+        if (!c) return null;
+        if (c.status === "active" && c.consent_version >= targetVersion) return null;
+        // evita duplicar pendência da mesma versão
+        const existing = notifications.find(n =>
+          n.employee_id === empId && n.consent_version === targetVersion
+          && (n.status === "pending" || n.status === "sent"));
+        if (existing) return null;
+        return {
+          tenant_id: activeTenantId,
+          employee_id: empId,
+          consent_version: targetVersion,
+          previous_version: previousVersion,
+          reason,
+          channel: "in_app",
+          status: "pending",
+          message: `Nova versão do termo de consentimento (v${targetVersion}). Solicite ao colaborador um novo aceite antes da próxima captura biométrica.`,
+          created_by_name: profile?.full_name || profile?.email || "operação",
+        };
+      })
+      .filter(Boolean) as any[];
+    if (!targets.length) return 0;
+    const { data, error } = await supabase
+      .from("consent_renewal_notifications")
+      .insert(targets as any)
+      .select();
+    if (error) {
+      console.error("Falha ao criar notificações de renovação", error);
+      return 0;
+    }
+    setNotifications(prev => [...((data as any[]) || []), ...prev]);
+    return (data as any[])?.length || 0;
+  };
 
   const saveSettings = async () => {
     if (!draft || !canManage) return;
     setSaving(true);
     try {
+      const previousVersion = settings?.consent_version ?? null;
       const versionBumped = !!settings && draft.consent_text.trim() !== settings.consent_text.trim()
         ? Math.max(settings.consent_version + 1, draft.consent_version)
         : draft.consent_version;
@@ -205,7 +254,17 @@ export default function LgpdPrivacy() {
       if (error) throw error;
       setSettings(payload);
       setDraft(payload);
-      toast.success("Configurações de privacidade salvas.");
+
+      if (settings && versionBumped > settings.consent_version) {
+        const created = await enqueueRenewalNotifications(versionBumped, previousVersion, "version_bump");
+        toast.success(
+          created > 0
+            ? `Configurações salvas. ${created} colaborador(es) marcados para renovar consentimento (v${versionBumped}).`
+            : `Configurações salvas. Nova versão v${versionBumped} publicada.`,
+        );
+      } else {
+        toast.success("Configurações de privacidade salvas.");
+      }
     } catch (e: any) {
       toast.error("Falha ao salvar: " + (e?.message || "tente novamente"));
     } finally {
