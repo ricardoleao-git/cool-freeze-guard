@@ -254,6 +254,7 @@ export default function LgpdPrivacy() {
           <TabsTrigger value="retention"><FileLock2 className="h-4 w-4 mr-2" /> Retenção</TabsTrigger>
           <TabsTrigger value="consent"><ShieldCheck className="h-4 w-4 mr-2" /> Consentimento</TabsTrigger>
           <TabsTrigger value="registry"><UserCheck className="h-4 w-4 mr-2" /> Registros</TabsTrigger>
+          <TabsTrigger value="purge"><Trash2 className="h-4 w-4 mr-2" /> Purga & Auditoria</TabsTrigger>
         </TabsList>
 
         <TabsContent value="retention" className="space-y-4">
