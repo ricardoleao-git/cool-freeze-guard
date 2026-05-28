@@ -265,6 +265,17 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: r.id, employee_id: r.employee_id, cold_area_id: r.cold_area_id, tenant_id: r.tenant_id,
           authorized_by: r.authorized_by, authorized_at: toMs(r.authorized_at) || Date.now(),
         })),
+        tenantSettings: (settingsRows.data || []).map((r: any) => ({
+          tenant_id: r.tenant_id,
+          require_consent_before_capture: r.require_consent_before_capture !== false,
+          consent_version: Number(r.consent_version) || 1,
+        })),
+        employeeConsents: (consentRows.data || []).map((r: any) => ({
+          id: r.id, tenant_id: r.tenant_id, employee_id: r.employee_id,
+          consent_version: Number(r.consent_version) || 1,
+          status: (r.status === "revoked" ? "revoked" : "active"),
+          accepted_at: toMs(r.accepted_at) || Date.now(),
+        })),
         loading: false,
       }));
     })();
