@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/PageHeader";
 import { useTenantScoped, useDemo } from "@/lib/demo-store";
-import { Users, LogIn, LogOut, AlertTriangle, ShieldAlert, Plus, Pencil, Trash2 } from "lucide-react";
+import { Users, LogIn, LogOut, AlertTriangle, ShieldAlert, Plus, Pencil, Trash2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,6 +9,7 @@ import { useState } from "react";
 import { STATUS_LABEL, STATUS_COLOR, type Employee } from "@/lib/demo-data";
 import { toast } from "sonner";
 import { EmployeeFormDialog } from "@/components/EmployeeFormDialog";
+import { EmployeeAreaAuthDialog } from "@/components/EmployeeAreaAuthDialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
