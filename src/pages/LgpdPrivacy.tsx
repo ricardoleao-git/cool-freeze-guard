@@ -171,11 +171,40 @@ export default function LgpdPrivacy() {
     }
   };
 
+  const writeAudit = async (entry: {
+    employee_id: string;
+    consent_id: string | null;
+    event_type: "consent_given" | "consent_revoked" | "consent_renewed";
+    consent_version: number | null;
+    reason?: string | null;
+    snapshot?: Record<string, unknown>;
+  }) => {
+    try {
+      await supabase.from("consent_audit_log").insert({
+        tenant_id: activeTenantId,
+        employee_id: entry.employee_id,
+        consent_id: entry.consent_id,
+        event_type: entry.event_type,
+        consent_version: entry.consent_version,
+        acted_by_user_id: profile?.user_id ?? null,
+        acted_by_email: profile?.email ?? null,
+        acted_by_name: profile?.full_name || profile?.email || "operação",
+        reason: entry.reason ?? null,
+        user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
+        snapshot: entry.snapshot ?? {},
+      } as any);
+    } catch (e) {
+      console.error("Falha ao gravar trilha de consentimento", e);
+    }
+  };
+
   const recordConsent = async () => {
     if (!settings || !captureEmp || !signatureText.trim()) {
       toast.error("Selecione o colaborador e assine para registrar o aceite.");
       return;
     }
+    const previous = consentByEmp.get(captureEmp);
+    const isRenewal = !!previous;
     const payload = {
       tenant_id: activeTenantId,
       employee_id: captureEmp,
@@ -191,6 +220,18 @@ export default function LgpdPrivacy() {
     const { data, error } = await supabase.from("employee_consents").insert(payload as any).select().single();
     if (error) { toast.error("Falha ao registrar: " + error.message); return; }
     setConsents(prev => [data as any, ...prev]);
+    await writeAudit({
+      employee_id: captureEmp,
+      consent_id: (data as any).id,
+      event_type: isRenewal ? "consent_renewed" : "consent_given",
+      consent_version: settings.consent_version,
+      snapshot: {
+        scope: payload.scope,
+        signature_text_length: payload.signature_text.length,
+        previous_version: previous?.consent_version ?? null,
+        previous_status: previous?.status ?? null,
+      },
+    });
     setOpenCapture(false);
     setCaptureEmp(""); setSignatureText(""); setCaptureScope(["biometric_facial", "access_logs"]);
     toast.success("Consentimento registrado.");
@@ -205,6 +246,14 @@ export default function LgpdPrivacy() {
     setConsents(prev => prev.map(x => x.id === c.id
       ? { ...x, status: "revoked", revoked_at: new Date().toISOString(), revocation_reason: reason }
       : x));
+    await writeAudit({
+      employee_id: c.employee_id,
+      consent_id: c.id,
+      event_type: "consent_revoked",
+      consent_version: c.consent_version,
+      reason,
+      snapshot: { scope: c.scope, previous_status: "active" },
+    });
     toast.success("Consentimento revogado.");
   };
 
