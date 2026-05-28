@@ -74,6 +74,7 @@ export default function MyDay() {
   const [responseFor, setResponseFor] = useState<Correction | null>(null);
   const [responseAction, setResponseAction] = useState<"accept" | "contest">("accept");
   const [responseText, setResponseText] = useState("");
+  const [reportOpen, setReportOpen] = useState(false);
 
   useEffect(() => {
     if (!selectedEmpId && employees.length) setSelectedEmpId(employees[0].id);
@@ -171,10 +172,13 @@ export default function MyDay() {
             </Select>
           </div>
           {employee && (
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-2 text-xs flex-wrap">
               <Badge variant="outline" className="capitalize">{employee.position || "Colaborador"}</Badge>
               <Badge variant="outline">{employee.current_status === "thermal_break" ? "Em pausa" : employee.current_status === "outside" ? "Fora" : "Dentro / atenção"}</Badge>
               <Badge variant="outline">{Math.round(employee.accumulated_minutes)} min acumulados</Badge>
+              <Button size="sm" variant="outline" onClick={() => setReportOpen(true)}>
+                <FileText className="h-3.5 w-3.5 mr-1" /> Relatório mensal
+              </Button>
             </div>
           )}
         </CardContent>
