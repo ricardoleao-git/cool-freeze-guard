@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Smartphone,
   Share2,
@@ -11,6 +11,13 @@ import {
   ChevronRight,
   Home,
 } from "lucide-react";
+
+// Polyfill type for BeforeInstallPromptEvent (not standard in all TS targets)
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+  prompt(): Promise<void>;
+}
 
 // Detecta se o app está rodando como PWA instalado
 function isStandalone(): boolean {
@@ -57,7 +64,7 @@ export default function InstallPWA() {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
-    window.addEventListener("beforeinstallprompt", handler);
+    window.addEventListener("beforeinstallprompt", handler as EventListener);
 
     // Listener para mudança no display mode
     const mql = window.matchMedia("(display-mode: standalone)");
@@ -70,7 +77,7 @@ export default function InstallPWA() {
     mql.addEventListener("change", onChange);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("beforeinstallprompt", handler as EventListener);
       mql.removeEventListener("change", onChange);
     };
   }, []);
@@ -101,7 +108,7 @@ export default function InstallPWA() {
   return (
     <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-      
+
       <CardContent className="pt-5 pb-5 relative">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
