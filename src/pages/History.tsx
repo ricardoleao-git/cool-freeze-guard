@@ -481,11 +481,75 @@ export default function History() {
       </div>
 
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Filter className="h-4 w-4 text-primary" /> Filtros avançados
-          </CardTitle>
-          <CardDescription>Combine critérios para investigar incidentes específicos.</CardDescription>
+        <CardHeader className="pb-3 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Filter className="h-4 w-4 text-primary" /> Filtros avançados
+              </CardTitle>
+              <CardDescription>Combine critérios para investigar incidentes específicos.</CardDescription>
+            </div>
+            {user && presetsLoaded && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Select value={presetId} onValueChange={handleSelectPreset}>
+                  <SelectTrigger className="h-9 w-[220px]">
+                    <SelectValue placeholder="Aplicar preset…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem preset</SelectItem>
+                    {visiblePresets.length === 0 && (
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">Nenhum preset salvo</div>
+                    )}
+                    {visiblePresets.map(p => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.is_default ? "★ " : ""}{p.name}
+                        {p.tenant_id === null ? " · global" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {presetId !== "none" && (
+                  <>
+                    <Button size="sm" variant="ghost" onClick={handleUpdatePreset} title="Atualizar preset com filtros atuais">
+                      <Save className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={handleToggleDefault}
+                      title={presets.find(p => p.id === presetId)?.is_default ? "Remover como padrão" : "Definir como padrão"}>
+                      <Star className={`h-4 w-4 ${presets.find(p => p.id === presetId)?.is_default ? "fill-status-yellow text-status-yellow" : ""}`} />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={handleDeletePreset} title="Excluir preset">
+                      <Trash2 className="h-4 w-4 text-status-red" />
+                    </Button>
+                  </>
+                )}
+                <Dialog open={saveOpen} onOpenChange={setSaveOpen}>
+                  <Button size="sm" variant="outline" onClick={() => setSaveOpen(true)}>
+                    <BookmarkPlus className="h-4 w-4 mr-1.5" /> Salvar como…
+                  </Button>
+                  <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                      <DialogTitle>Salvar preset de filtros</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-3">
+                      <div>
+                        <Label>Nome</Label>
+                        <Input autoFocus value={newPresetName} onChange={e => setNewPresetName(e.target.value)}
+                          placeholder="Ex.: Alta severidade — Unidade SP" />
+                      </div>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={scopeToTenant} onChange={e => setScopeToTenant(e.target.checked)} />
+                        Restringir a este tenant {tenantId ? `(${tenantId})` : ""}
+                      </label>
+                      <div className="flex justify-end gap-2 pt-2">
+                        <Button variant="ghost" onClick={() => setSaveOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleSavePreset}>Salvar</Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-3 lg:grid-cols-4">
           <div className="md:col-span-2 lg:col-span-2">
