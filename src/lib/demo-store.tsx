@@ -176,6 +176,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
         supabase.from("occurrences").select("*").order("created_at", { ascending: false }),
         supabase.from("occurrence_notes").select("*").order("created_at", { ascending: true }),
         supabase.from("occurrence_attachments").select("*").order("created_at", { ascending: true }),
+        supabase.from("employee_cold_areas").select("*"),
       ]);
       if (cancelled) return;
       const notesByOcc = new Map<string, OccurrenceNote[]>();
