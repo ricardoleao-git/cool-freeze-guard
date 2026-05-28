@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  AccessEvent, Alert, ColdArea, Department, Device, Employee, EmployeeStatus,
+  AccessEvent, Alert, ColdArea, Department, Device, Employee, EmployeeColdAreaAuthorization, EmployeeStatus,
   Occurrence, OccurrenceAttachment, OccurrenceCategory, OccurrenceNote, OccurrencePriority,
   Tenant, ThermalBreak, Unit,
 } from "./demo-data";
