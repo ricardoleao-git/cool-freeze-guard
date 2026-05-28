@@ -146,8 +146,12 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const dirtyEmployeesRef = useRef<Set<string>>(new Set());
   const employeesRef = useRef<Employee[]>([]);
   const ecaRef = useRef<EmployeeColdAreaAuthorization[]>([]);
+  const breaksRef = useRef<ThermalBreak[]>([]);
+  const coldAreasRef = useRef<ColdArea[]>([]);
   useEffect(() => { employeesRef.current = state.employees; }, [state.employees]);
   useEffect(() => { ecaRef.current = state.employeeColdAreaAuth; }, [state.employeeColdAreaAuth]);
+  useEffect(() => { breaksRef.current = state.breaks; }, [state.breaks]);
+  useEffect(() => { coldAreasRef.current = state.coldAreas; }, [state.coldAreas]);
 
   // ---------- cycle reset tracking ----------
   // Tempo (em minutos simulados) que cada colaborador está fora do ambiente frio
