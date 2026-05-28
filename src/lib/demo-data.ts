@@ -44,7 +44,7 @@ export interface AccessEvent {
 }
 export interface Alert {
   id: string; tenant_id: string; employee_id: string;
-  alert_type: "yellow" | "orange" | "red_block" | "break_completed" | "break_interrupted" | "device_offline" | "missing_exit" | "cycle_reset_meal" | "cycle_reset_shift";
+  alert_type: "yellow" | "orange" | "red_block" | "break_completed" | "break_interrupted" | "device_offline" | "missing_exit" | "cycle_reset_meal" | "cycle_reset_shift" | "consent_missing" | "consent_outdated" | "consent_revoked";
   severity: "info" | "warning" | "critical";
   message: string; triggered_at: number; status: "open" | "acknowledged" | "resolved";
 }
