@@ -493,6 +493,14 @@ export default function LgpdPrivacy() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <EmployeeDataExportDialog
+        open={openExport}
+        onOpenChange={setOpenExport}
+        settings={settings}
+        defaultEmployeeId={exportEmp}
+        requestedBy={profile?.full_name || profile?.email || "operação"}
+      />
     </div>
   );
 }
