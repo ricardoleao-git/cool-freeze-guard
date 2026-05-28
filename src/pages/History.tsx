@@ -126,6 +126,145 @@ export default function History() {
   const [sort, setSort] = useState<SortState>(getStoredSort());
   const [previewAtt, setPreviewAtt] = useState<OccurrenceAttachment | null>(null);
 
+  // Presets
+  const [presets, setPresets] = useState<FilterPreset[]>([]);
+  const [presetId, setPresetId] = useState<string>("none");
+  const [presetsLoaded, setPresetsLoaded] = useState(false);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [newPresetName, setNewPresetName] = useState("");
+  const [scopeToTenant, setScopeToTenant] = useState(true);
+  const tenantId = profile?.tenant_id ?? null;
+
+  const applySnapshot = useCallback((s: FilterSnapshot) => {
+    setSearch(s.search ?? "");
+    setEmployeeId(s.employeeId ?? "all");
+    setUnitId(s.unitId ?? "all");
+    setPriority(s.priority ?? "all");
+    setCategory(s.category ?? "all");
+    setStatus(s.status ?? "all");
+    setDateFrom(s.dateFrom ?? "");
+    setDateTo(s.dateTo ?? "");
+    setHasAttach(s.hasAttach ?? "all");
+    if (s.sort) { setSort(s.sort); storeSort(s.sort); }
+  }, []);
+
+  const currentSnapshot = useCallback((): FilterSnapshot => ({
+    search, employeeId, unitId, priority, category, status,
+    dateFrom, dateTo, hasAttach, sort,
+  }), [search, employeeId, unitId, priority, category, status, dateFrom, dateTo, hasAttach, sort]);
+
+  // Load presets on mount / user change
+  useEffect(() => {
+    if (!user) { setPresets([]); setPresetsLoaded(true); return; }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("history_filter_presets")
+        .select("id,name,tenant_id,filters,is_default")
+        .eq("user_id", user.id)
+        .order("is_default", { ascending: false })
+        .order("name", { ascending: true });
+      if (cancelled) return;
+      if (error) { toast.error("Falha ao carregar presets: " + error.message); setPresetsLoaded(true); return; }
+      const items = (data || []).map(d => ({
+        id: d.id, name: d.name, tenant_id: d.tenant_id,
+        filters: (d.filters || {}) as FilterSnapshot, is_default: !!d.is_default,
+      }));
+      setPresets(items);
+      // Auto-apply default scoped to current tenant (or global) if no preset chosen yet
+      const def = items.find(p => p.is_default && (p.tenant_id === tenantId || p.tenant_id === null));
+      if (def) { setPresetId(def.id); applySnapshot(def.filters); }
+      setPresetsLoaded(true);
+    })();
+    return () => { cancelled = true; };
+  }, [user, tenantId, applySnapshot]);
+
+  const visiblePresets = useMemo(
+    () => presets.filter(p => p.tenant_id === null || p.tenant_id === tenantId),
+    [presets, tenantId]
+  );
+
+  const handleSelectPreset = (id: string) => {
+    setPresetId(id);
+    if (id === "none") return;
+    const p = presets.find(x => x.id === id);
+    if (p) { applySnapshot(p.filters); setPage(1); }
+  };
+
+  const handleSavePreset = async () => {
+    if (!user) return;
+    const name = newPresetName.trim();
+    if (!name) return toast.error("Informe um nome para o preset");
+    const payload = {
+      user_id: user.id,
+      tenant_id: scopeToTenant ? tenantId : null,
+      name,
+      filters: currentSnapshot() as any,
+      is_default: false,
+    };
+    const { data, error } = await supabase
+      .from("history_filter_presets")
+      .insert(payload)
+      .select("id,name,tenant_id,filters,is_default")
+      .single();
+    if (error) return toast.error("Falha ao salvar: " + error.message);
+    const preset: FilterPreset = {
+      id: data!.id, name: data!.name, tenant_id: data!.tenant_id,
+      filters: data!.filters as FilterSnapshot, is_default: !!data!.is_default,
+    };
+    setPresets(prev => [...prev, preset].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")));
+    setPresetId(preset.id);
+    setSaveOpen(false); setNewPresetName("");
+    toast.success(`Preset "${name}" salvo`);
+  };
+
+  const handleDeletePreset = async () => {
+    if (!user || presetId === "none") return;
+    const p = presets.find(x => x.id === presetId);
+    if (!p) return;
+    if (!window.confirm(`Excluir preset "${p.name}"?`)) return;
+    const { error } = await supabase.from("history_filter_presets").delete().eq("id", p.id);
+    if (error) return toast.error("Falha ao excluir: " + error.message);
+    setPresets(prev => prev.filter(x => x.id !== p.id));
+    setPresetId("none");
+    toast.success("Preset excluído");
+  };
+
+  const handleToggleDefault = async () => {
+    if (!user || presetId === "none") return;
+    const p = presets.find(x => x.id === presetId);
+    if (!p) return;
+    const makeDefault = !p.is_default;
+    // Clear other defaults in same tenant scope first
+    if (makeDefault) {
+      const sameScope = presets.filter(x => x.id !== p.id && x.tenant_id === p.tenant_id && x.is_default);
+      for (const s of sameScope) {
+        await supabase.from("history_filter_presets").update({ is_default: false }).eq("id", s.id);
+      }
+    }
+    const { error } = await supabase.from("history_filter_presets")
+      .update({ is_default: makeDefault }).eq("id", p.id);
+    if (error) return toast.error("Falha: " + error.message);
+    setPresets(prev => prev.map(x => {
+      if (x.id === p.id) return { ...x, is_default: makeDefault };
+      if (makeDefault && x.tenant_id === p.tenant_id) return { ...x, is_default: false };
+      return x;
+    }));
+    toast.success(makeDefault ? "Definido como padrão" : "Padrão removido");
+  };
+
+  const handleUpdatePreset = async () => {
+    if (!user || presetId === "none") return;
+    const p = presets.find(x => x.id === presetId);
+    if (!p) return;
+    const { error } = await supabase.from("history_filter_presets")
+      .update({ filters: currentSnapshot() as any }).eq("id", p.id);
+    if (error) return toast.error("Falha: " + error.message);
+    setPresets(prev => prev.map(x => x.id === p.id ? { ...x, filters: currentSnapshot() } : x));
+    toast.success(`Preset "${p.name}" atualizado`);
+  };
+
+
   const employeeMap = useMemo(() => new Map(employees.map(e => [e.id, e])), [employees]);
   const unitMap = useMemo(() => new Map(units.map(u => [u.id, u])), [units]);
 
