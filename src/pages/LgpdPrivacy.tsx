@@ -16,7 +16,8 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ShieldCheck, FileLock2, Trash2, RotateCcw, Save, UserCheck, AlertTriangle } from "lucide-react";
+import { ShieldCheck, FileLock2, Trash2, RotateCcw, Save, UserCheck, AlertTriangle, FileDown } from "lucide-react";
+import { EmployeeDataExportDialog } from "@/components/EmployeeDataExportDialog";
 import { useDemo, useTenantScoped } from "@/lib/demo-store";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
