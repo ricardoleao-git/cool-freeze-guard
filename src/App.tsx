@@ -28,6 +28,7 @@ import NotFound from "./pages/NotFound";
 import LgpdPrivacy from "./pages/LgpdPrivacy";
 import TimeAdjustments from "./pages/TimeAdjustments";
 import MyDay from "./pages/MyDay";
+import DailySummary from "./pages/DailySummary";
 
 const queryClient = new QueryClient();
 
