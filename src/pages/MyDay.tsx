@@ -363,6 +363,8 @@ export default function MyDay() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <MonthlyReportDialog employee={employee} open={reportOpen} onOpenChange={setReportOpen} />
     </div>
   );
 }
