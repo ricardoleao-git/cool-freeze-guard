@@ -540,22 +540,31 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.error(`Acesso negado: ${emp.name} não está autorizado em ${area.name}.`);
       return;
     }
+    const before = emp.current_status;
     const updated = employeesRef.current.find(e => e.id === employeeId)!;
     await flushEmployee(updated);
-    await persistEvent(mkEvent(updated, area.id, "entry", "demo_simulation"));
+    await persistEvent(mkEvent(updated, area.id, "entry", "demo_simulation", undefined, {
+      status_before: before, status_after: updated.current_status,
+      accumulated_at_event: updated.accumulated_minutes,
+    }));
   }, []);
 
 
   const simulateExit = useCallback(async (employeeId: string) => {
     const emp = employeesRef.current.find(e => e.id === employeeId); if (!emp || !emp.current_area_id) return;
     const areaId = emp.current_area_id;
+    const before = emp.current_status;
+    const accAtEvent = emp.accumulated_minutes;
     setState(prev => ({
       ...prev,
       employees: prev.employees.map(x => x.id === emp.id ? { ...x, inside_since: null, current_status: "outside" as const } : x),
     }));
     const updated = employeesRef.current.find(e => e.id === employeeId)!;
     await flushEmployee(updated);
-    await persistEvent(mkEvent(updated, areaId, "exit", "demo_simulation"));
+    await persistEvent(mkEvent(updated, areaId, "exit", "demo_simulation", undefined, {
+      status_before: before, status_after: "outside",
+      accumulated_at_event: accAtEvent,
+    }));
   }, []);
 
   const advanceMinutes = useCallback((minutes: number) => applyTick(minutes), [applyTick]);
