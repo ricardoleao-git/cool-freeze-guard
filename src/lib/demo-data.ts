@@ -34,6 +34,13 @@ export interface AccessEvent {
   source: "facial_reader" | "manual" | "demo_simulation" | "api";
   occurred_at: number; validation_status: "valid" | "pending" | "rejected";
   confidence_score: number;
+  status_before?: string | null;
+  status_after?: string | null;
+  accumulated_at_event?: number | null;
+  ip_origin?: string | null;
+  user_agent?: string | null;
+  record_hash?: string | null;
+  previous_hash?: string | null;
 }
 export interface Alert {
   id: string; tenant_id: string; employee_id: string;
