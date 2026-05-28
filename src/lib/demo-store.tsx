@@ -562,6 +562,32 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const emp = employeesRef.current.find(e => e.id === employeeId); if (!emp) return;
     if (emp.current_status === "blocked") return;
 
+    // Bloqueio LGPD: exige consentimento ativo e atualizado antes de qualquer captura biométrica.
+    const consentStatus = computeConsentStatus(emp.id);
+    if (consentStatus !== "ok") {
+      const reasonMap: Record<ConsentStatus, string> = {
+        ok: "",
+        missing: "consentimento LGPD pendente",
+        outdated: "consentimento LGPD desatualizado (nova versão da política)",
+        revoked: "consentimento LGPD revogado pelo titular",
+      };
+      const alertType: Alert["alert_type"] =
+        consentStatus === "revoked" ? "consent_revoked"
+        : consentStatus === "outdated" ? "consent_outdated"
+        : "consent_missing";
+      const a: Alert = {
+        id: crypto.randomUUID(), tenant_id: emp.tenant_id, employee_id: emp.id,
+        alert_type: alertType, severity: "warning",
+        message: `Captura bloqueada: ${emp.name} — ${reasonMap[consentStatus]}.`,
+        triggered_at: Date.now(), status: "open",
+      };
+      persistAlert(a).catch(() => {});
+      setState(prev => ({ ...prev, alerts: [a, ...prev.alerts].slice(0, 300) }));
+      toast.error(`Acesso negado por LGPD: ${reasonMap[consentStatus]}.`);
+      beep(440, 0.3);
+      return;
+    }
+
     const originalStatus = emp.current_status;
 
     // Pausa interrompida: reentrada antes de completar os 20 min oficiais.
