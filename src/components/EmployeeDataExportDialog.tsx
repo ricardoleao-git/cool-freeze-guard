@@ -88,6 +88,10 @@ export function EmployeeDataExportDialog({
 
   const employee = useMemo(() => employees.find(e => e.id === empId) || null, [employees, empId]);
 
+  useEffect(() => {
+    if (open) setEmpId(defaultEmployeeId || "");
+  }, [open, defaultEmployeeId]);
+
   const toggle = (s: Section) => {
     setSelected(prev => {
       const next = new Set(prev);
