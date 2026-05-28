@@ -16,12 +16,13 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function Employees() {
-  const { employees, units, departments } = useTenantScoped();
+  const { employees, units, departments, employeeColdAreaAuth } = useTenantScoped();
   const { simulateEntry, simulateExit, forceStatus, deleteEmployee } = useDemo();
   const [q, setQ] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [deleting, setDeleting] = useState<Employee | null>(null);
+  const [authFor, setAuthFor] = useState<Employee | null>(null);
 
   const filtered = employees.filter(e =>
     e.name.toLowerCase().includes(q.toLowerCase()) || e.registration_number.includes(q),
