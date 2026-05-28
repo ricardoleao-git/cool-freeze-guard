@@ -38,6 +38,7 @@ const groups = [
       { to: "/relatorios", title: "Relatórios", icon: FileBarChart2 },
       { to: "/integracoes", title: "Integrações / API", icon: PlugZap },
       { to: "/usuarios", title: "Usuários & Permissões", icon: UserCog },
+      { to: "/lgpd", title: "Privacidade & LGPD", icon: FileLock2 },
       { to: "/empresas", title: "Empresas (Multi-tenant)", icon: Building2 },
     ],
   },
