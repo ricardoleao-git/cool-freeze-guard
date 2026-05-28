@@ -56,6 +56,23 @@ type EmployeeConsent = {
   revocation_reason: string | null;
 };
 
+type RenewalNotification = {
+  id: string;
+  tenant_id: string;
+  employee_id: string;
+  consent_version: number;
+  previous_version: number | null;
+  reason: string;
+  channel: string;
+  status: "pending" | "sent" | "acknowledged" | "cancelled";
+  message: string;
+  created_by_name: string | null;
+  sent_at: string | null;
+  acknowledged_at: string | null;
+  acknowledged_consent_id: string | null;
+  created_at: string;
+};
+
 const DEFAULT_CONSENT = `Autorizo a empresa, na qualidade de Controladora, a tratar meus dados pessoais e biométricos (reconhecimento facial e logs de acesso) com a finalidade exclusiva de controle de exposição ao frio, cumprimento da NR-36/NR-15 e segurança do trabalho, pelo prazo de retenção definido nesta política. Estou ciente do meu direito de revogar este consentimento e solicitar exclusão dos dados a qualquer momento.`;
 
 const LAWFUL_BASIS: Array<{ value: string; label: string }> = [
