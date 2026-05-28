@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bell, Check, X, ClipboardCheck, AlertTriangle, FileLock2, Clock, Snowflake, Activity } from "lucide-react";
+import { Bell, Check, X, ClipboardCheck, AlertTriangle, FileLock2, Clock, Snowflake, Activity, FileText } from "lucide-react";
+import { MonthlyReportDialog } from "@/components/MonthlyReportDialog";
 import { useTenantScoped, useDemo } from "@/lib/demo-store";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -73,6 +74,7 @@ export default function MyDay() {
   const [responseFor, setResponseFor] = useState<Correction | null>(null);
   const [responseAction, setResponseAction] = useState<"accept" | "contest">("accept");
   const [responseText, setResponseText] = useState("");
+  const [reportOpen, setReportOpen] = useState(false);
 
   useEffect(() => {
     if (!selectedEmpId && employees.length) setSelectedEmpId(employees[0].id);
@@ -170,10 +172,13 @@ export default function MyDay() {
             </Select>
           </div>
           {employee && (
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-2 text-xs flex-wrap">
               <Badge variant="outline" className="capitalize">{employee.position || "Colaborador"}</Badge>
               <Badge variant="outline">{employee.current_status === "thermal_break" ? "Em pausa" : employee.current_status === "outside" ? "Fora" : "Dentro / atenção"}</Badge>
               <Badge variant="outline">{Math.round(employee.accumulated_minutes)} min acumulados</Badge>
+              <Button size="sm" variant="outline" onClick={() => setReportOpen(true)}>
+                <FileText className="h-3.5 w-3.5 mr-1" /> Relatório mensal
+              </Button>
             </div>
           )}
         </CardContent>
@@ -358,6 +363,8 @@ export default function MyDay() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <MonthlyReportDialog employee={employee} open={reportOpen} onOpenChange={setReportOpen} />
     </div>
   );
 }
