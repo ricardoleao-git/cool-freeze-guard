@@ -783,12 +783,22 @@ export type Database = {
           content_hash: string
           created_at: string
           employee_id: string
+          icp_certificate_issuer: string | null
+          icp_certificate_valid_until: string | null
+          icp_notes: string | null
+          icp_signed_at: string | null
+          icp_signed_file_hash: string | null
+          icp_signed_file_path: string | null
+          icp_signed_file_size: number | null
+          icp_signer_cpf: string | null
+          icp_signer_name: string | null
           id: string
           ip_origin: unknown
           pdf_filename: string
           reference_month: number
           reference_year: number
           signature_method: string
+          signature_type: string
           signed_at: string
           signed_by_name: string
           signed_by_user_id: string | null
@@ -803,12 +813,22 @@ export type Database = {
           content_hash: string
           created_at?: string
           employee_id: string
+          icp_certificate_issuer?: string | null
+          icp_certificate_valid_until?: string | null
+          icp_notes?: string | null
+          icp_signed_at?: string | null
+          icp_signed_file_hash?: string | null
+          icp_signed_file_path?: string | null
+          icp_signed_file_size?: number | null
+          icp_signer_cpf?: string | null
+          icp_signer_name?: string | null
           id?: string
           ip_origin?: unknown
           pdf_filename?: string
           reference_month: number
           reference_year: number
           signature_method?: string
+          signature_type?: string
           signed_at?: string
           signed_by_name?: string
           signed_by_user_id?: string | null
@@ -823,12 +843,22 @@ export type Database = {
           content_hash?: string
           created_at?: string
           employee_id?: string
+          icp_certificate_issuer?: string | null
+          icp_certificate_valid_until?: string | null
+          icp_notes?: string | null
+          icp_signed_at?: string | null
+          icp_signed_file_hash?: string | null
+          icp_signed_file_path?: string | null
+          icp_signed_file_size?: number | null
+          icp_signer_cpf?: string | null
+          icp_signer_name?: string | null
           id?: string
           ip_origin?: unknown
           pdf_filename?: string
           reference_month?: number
           reference_year?: number
           signature_method?: string
+          signature_type?: string
           signed_at?: string
           signed_by_name?: string
           signed_by_user_id?: string | null
