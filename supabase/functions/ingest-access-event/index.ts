@@ -64,6 +64,55 @@ Deno.serve(async (req) => {
   const employee = emps?.[0];
   if (!employee) return json({ error: "employee_not_found", employee_external_id: payload.employee_external_id }, 404);
 
+  // LGPD: bloqueia captura biométrica quando consentimento estiver pendente, desatualizado ou revogado.
+  if (payload.event_type === "entry") {
+    const { data: settingsRow } = await supabase
+      .from("tenant_settings")
+      .select("require_consent_before_capture, consent_version")
+      .eq("tenant_id", payload.tenant_id!)
+      .maybeSingle();
+    const requireConsent = settingsRow?.require_consent_before_capture !== false;
+    const currentVersion = Number(settingsRow?.consent_version ?? 1);
+    if (requireConsent) {
+      const { data: consentRows } = await supabase
+        .from("employee_consents")
+        .select("status, consent_version, accepted_at")
+        .eq("tenant_id", payload.tenant_id!)
+        .eq("employee_id", employee.id)
+        .order("accepted_at", { ascending: false })
+        .limit(1);
+      const latest = consentRows?.[0];
+      let consent_status: "missing" | "outdated" | "revoked" | "ok" = "ok";
+      if (!latest) consent_status = "missing";
+      else if (latest.status === "revoked") consent_status = "revoked";
+      else if (Number(latest.consent_version) < currentVersion) consent_status = "outdated";
+      if (consent_status !== "ok") {
+        // Registra evento rejeitado para trilha forense, mas não altera estado do colaborador.
+        await supabase.from("access_events").insert({
+          tenant_id: payload.tenant_id,
+          unit_id: device.unit_id,
+          cold_area_id: device.cold_area_id,
+          device_id: device.id,
+          employee_id: employee.id,
+          event_type: payload.event_type,
+          source: "device_api",
+          occurred_at: payload.timestamp ? new Date(payload.timestamp).toISOString() : new Date().toISOString(),
+          validation_status: "rejected",
+          confidence_score: typeof payload.confidence_score === "number" ? payload.confidence_score : 0.95,
+          status_before: employee.current_status,
+          status_after: employee.current_status,
+          accumulated_at_event: employee.accumulated_minutes,
+        });
+        return json({
+          error: "consent_required",
+          consent_status,
+          message: `Captura bloqueada por LGPD: ${consent_status}.`,
+        }, 451); // 451 Unavailable For Legal Reasons
+      }
+    }
+  }
+
+
   const conf = typeof payload.confidence_score === "number" ? payload.confidence_score : 0.95;
   const occurredAt = payload.timestamp ? new Date(payload.timestamp).toISOString() : new Date().toISOString();
 

@@ -7,6 +7,21 @@ import {
   Tenant, ThermalBreak, Unit,
 } from "./demo-data";
 
+export type ConsentStatus = "ok" | "missing" | "outdated" | "revoked";
+export type TenantPrivacySettings = {
+  tenant_id: string;
+  require_consent_before_capture: boolean;
+  consent_version: number;
+};
+export type EmployeeConsentRecord = {
+  id: string;
+  tenant_id: string;
+  employee_id: string;
+  consent_version: number;
+  status: "active" | "revoked";
+  accepted_at: number;
+};
+
 type State = {
   tenants: Tenant[];
   units: Unit[];
@@ -19,6 +34,8 @@ type State = {
   breaks: ThermalBreak[];
   occurrences: Occurrence[];
   employeeColdAreaAuth: EmployeeColdAreaAuthorization[];
+  tenantSettings: TenantPrivacySettings[];
+  employeeConsents: EmployeeConsentRecord[];
   activeTenantId: string;
   timeScale: number;
   soundEnabled: boolean;
@@ -48,6 +65,7 @@ type Ctx = State & {
   uploadEmployeeAvatar: (employeeId: string, file: File) => Promise<string>;
   isEmployeeAuthorizedForArea: (employeeId: string, areaId: string) => boolean;
   setEmployeeAreaAuthorizations: (employeeId: string, areaIds: string[]) => Promise<void>;
+  getConsentStatus: (employeeId: string) => ConsentStatus;
 };
 
 const DemoContext = createContext<Ctx | null>(null);
@@ -139,6 +157,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [state, setState] = useState<State>({
     tenants: [], units: [], departments: [], coldAreas: [], employees: [], devices: [],
     events: [], alerts: [], breaks: [], occurrences: [], employeeColdAreaAuth: [],
+    tenantSettings: [], employeeConsents: [],
     activeTenantId: "t1", timeScale: 1, soundEnabled: false, loading: true,
   });
 
@@ -148,10 +167,30 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const ecaRef = useRef<EmployeeColdAreaAuthorization[]>([]);
   const breaksRef = useRef<ThermalBreak[]>([]);
   const coldAreasRef = useRef<ColdArea[]>([]);
+  const settingsRef = useRef<TenantPrivacySettings[]>([]);
+  const consentsRef = useRef<EmployeeConsentRecord[]>([]);
   useEffect(() => { employeesRef.current = state.employees; }, [state.employees]);
   useEffect(() => { ecaRef.current = state.employeeColdAreaAuth; }, [state.employeeColdAreaAuth]);
   useEffect(() => { breaksRef.current = state.breaks; }, [state.breaks]);
   useEffect(() => { coldAreasRef.current = state.coldAreas; }, [state.coldAreas]);
+  useEffect(() => { settingsRef.current = state.tenantSettings; }, [state.tenantSettings]);
+  useEffect(() => { consentsRef.current = state.employeeConsents; }, [state.employeeConsents]);
+
+  // Avalia o status de consentimento LGPD de um colaborador frente à versão vigente do tenant.
+  const computeConsentStatus = useCallback((empId: string): ConsentStatus => {
+    const emp = employeesRef.current.find(e => e.id === empId);
+    if (!emp) return "missing";
+    const settings = settingsRef.current.find(s => s.tenant_id === emp.tenant_id);
+    if (settings && !settings.require_consent_before_capture) return "ok";
+    const empConsents = consentsRef.current
+      .filter(c => c.employee_id === empId)
+      .sort((a, b) => b.accepted_at - a.accepted_at);
+    const latest = empConsents[0];
+    if (!latest) return "missing";
+    if (latest.status === "revoked") return "revoked";
+    if (settings && latest.consent_version < settings.consent_version) return "outdated";
+    return "ok";
+  }, []);
 
   // ---------- cycle reset tracking ----------
   // Tempo (em minutos simulados) que cada colaborador está fora do ambiente frio
@@ -182,7 +221,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [tenants, units, departments, coldAreas, employees, devices, events, alerts, breaks, occurrences, notes, attachments, ecaRows] = await Promise.all([
+      const [tenants, units, departments, coldAreas, employees, devices, events, alerts, breaks, occurrences, notes, attachments, ecaRows, settingsRows, consentRows] = await Promise.all([
         supabase.from("tenants").select("*").order("name"),
         supabase.from("units").select("*").order("name"),
         supabase.from("departments").select("*").order("name"),
@@ -196,6 +235,8 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
         supabase.from("occurrence_notes").select("*").order("created_at", { ascending: true }),
         supabase.from("occurrence_attachments").select("*").order("created_at", { ascending: true }),
         supabase.from("employee_cold_areas").select("*"),
+        supabase.from("tenant_settings").select("tenant_id, require_consent_before_capture, consent_version"),
+        supabase.from("employee_consents").select("id, tenant_id, employee_id, consent_version, status, accepted_at"),
       ]);
       if (cancelled) return;
       const notesByOcc = new Map<string, OccurrenceNote[]>();
@@ -223,6 +264,17 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
         employeeColdAreaAuth: (ecaRows.data || []).map((r: any) => ({
           id: r.id, employee_id: r.employee_id, cold_area_id: r.cold_area_id, tenant_id: r.tenant_id,
           authorized_by: r.authorized_by, authorized_at: toMs(r.authorized_at) || Date.now(),
+        })),
+        tenantSettings: (settingsRows.data || []).map((r: any) => ({
+          tenant_id: r.tenant_id,
+          require_consent_before_capture: r.require_consent_before_capture !== false,
+          consent_version: Number(r.consent_version) || 1,
+        })),
+        employeeConsents: (consentRows.data || []).map((r: any) => ({
+          id: r.id, tenant_id: r.tenant_id, employee_id: r.employee_id,
+          consent_version: Number(r.consent_version) || 1,
+          status: (r.status === "revoked" ? "revoked" : "active"),
+          accepted_at: toMs(r.accepted_at) || Date.now(),
         })),
         loading: false,
       }));
@@ -311,6 +363,39 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
               : { ...o, attachments: [...o.attachments, a] };
           }),
         }));
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "tenant_settings" }, (p) => {
+        if (p.eventType === "DELETE") {
+          setState(s => ({ ...s, tenantSettings: s.tenantSettings.filter(t => t.tenant_id !== (p.old as any).tenant_id) }));
+          return;
+        }
+        const r: any = p.new;
+        const next: TenantPrivacySettings = {
+          tenant_id: r.tenant_id,
+          require_consent_before_capture: r.require_consent_before_capture !== false,
+          consent_version: Number(r.consent_version) || 1,
+        };
+        setState(s => {
+          const exists = s.tenantSettings.some(t => t.tenant_id === next.tenant_id);
+          return { ...s, tenantSettings: exists ? s.tenantSettings.map(t => t.tenant_id === next.tenant_id ? next : t) : [...s.tenantSettings, next] };
+        });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "employee_consents" }, (p) => {
+        if (p.eventType === "DELETE") {
+          setState(s => ({ ...s, employeeConsents: s.employeeConsents.filter(c => c.id !== (p.old as any).id) }));
+          return;
+        }
+        const r: any = p.new;
+        const next: EmployeeConsentRecord = {
+          id: r.id, tenant_id: r.tenant_id, employee_id: r.employee_id,
+          consent_version: Number(r.consent_version) || 1,
+          status: r.status === "revoked" ? "revoked" : "active",
+          accepted_at: toMs(r.accepted_at) || Date.now(),
+        };
+        setState(s => {
+          const exists = s.employeeConsents.some(c => c.id === next.id);
+          return { ...s, employeeConsents: exists ? s.employeeConsents.map(c => c.id === next.id ? next : c) : [...s.employeeConsents, next] };
+        });
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -510,6 +595,32 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const emp = employeesRef.current.find(e => e.id === employeeId); if (!emp) return;
     if (emp.current_status === "blocked") return;
 
+    // Bloqueio LGPD: exige consentimento ativo e atualizado antes de qualquer captura biométrica.
+    const consentStatus = computeConsentStatus(emp.id);
+    if (consentStatus !== "ok") {
+      const reasonMap: Record<ConsentStatus, string> = {
+        ok: "",
+        missing: "consentimento LGPD pendente",
+        outdated: "consentimento LGPD desatualizado (nova versão da política)",
+        revoked: "consentimento LGPD revogado pelo titular",
+      };
+      const alertType: Alert["alert_type"] =
+        consentStatus === "revoked" ? "consent_revoked"
+        : consentStatus === "outdated" ? "consent_outdated"
+        : "consent_missing";
+      const a: Alert = {
+        id: crypto.randomUUID(), tenant_id: emp.tenant_id, employee_id: emp.id,
+        alert_type: alertType, severity: "warning",
+        message: `Captura bloqueada: ${emp.name} — ${reasonMap[consentStatus]}.`,
+        triggered_at: Date.now(), status: "open",
+      };
+      persistAlert(a).catch(() => {});
+      setState(prev => ({ ...prev, alerts: [a, ...prev.alerts].slice(0, 300) }));
+      toast.error(`Acesso negado por LGPD: ${reasonMap[consentStatus]}.`);
+      beep(440, 0.3);
+      return;
+    }
+
     const originalStatus = emp.current_status;
 
     // Pausa interrompida: reentrada antes de completar os 20 min oficiais.
@@ -603,7 +714,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.warning(`Pausa interrompida — acumulado de ${emp.name} preservado.`);
       beep(880, 0.3);
     }
-  }, [beep]);
+  }, [beep, computeConsentStatus]);
 
 
   const simulateExit = useCallback(async (employeeId: string) => {
@@ -865,11 +976,12 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     removeOccurrenceAttachment, getAttachmentDownloadUrl,
     createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar,
     isEmployeeAuthorizedForArea, setEmployeeAreaAuthorizations,
+    getConsentStatus: computeConsentStatus,
   }), [state, simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert,
        addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment,
        removeOccurrenceAttachment, getAttachmentDownloadUrl,
        createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar,
-       isEmployeeAuthorizedForArea, setEmployeeAreaAuthorizations]);
+       isEmployeeAuthorizedForArea, setEmployeeAreaAuthorizations, computeConsentStatus]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 };
