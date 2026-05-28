@@ -398,6 +398,39 @@ export type Database = {
           },
         ]
       }
+      history_filter_presets: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          is_default: boolean
+          name: string
+          tenant_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          is_default?: boolean
+          name: string
+          tenant_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          is_default?: boolean
+          name?: string
+          tenant_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           accepted_at: string | null

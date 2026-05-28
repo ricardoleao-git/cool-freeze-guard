@@ -21,9 +21,13 @@ import {
 import {
   ClipboardList, Download, FileText, Filter, ImageIcon, Paperclip, Search, X, Eye,
   ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
+  BookmarkPlus, Star, Trash2, Save,
 } from "lucide-react";
 import type { Occurrence, OccurrencePriority, OccurrenceCategory, OccurrenceAttachment } from "@/lib/demo-data";
 import { AttachmentPreviewDialog } from "@/components/AttachmentPreviewDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { toast } from "sonner";
 
 const CATEGORY_LABELS: Record<OccurrenceCategory, string> = {
   missing_exit: "Saída não registrada",
@@ -79,8 +83,30 @@ function storePageSize(n: number) {
   try { localStorage.setItem(LS_PAGE_SIZE_KEY, String(n)); } catch { /* noop */ }
 }
 
+interface FilterSnapshot {
+  search: string;
+  employeeId: string;
+  unitId: string;
+  priority: string;
+  category: string;
+  status: string;
+  dateFrom: string;
+  dateTo: string;
+  hasAttach: "all" | "yes" | "no";
+  sort: SortState;
+}
+
+interface FilterPreset {
+  id: string;
+  name: string;
+  tenant_id: string | null;
+  filters: FilterSnapshot;
+  is_default: boolean;
+}
+
 export default function History() {
   const { occurrences, employees, units, getAttachmentDownloadUrl } = useDemo();
+  const { user, profile } = useAuth();
 
   // Filters
   const [search, setSearch] = useState("");
@@ -99,6 +125,145 @@ export default function History() {
   const [pageSize, setPageSize] = useState<number>(getStoredPageSize());
   const [sort, setSort] = useState<SortState>(getStoredSort());
   const [previewAtt, setPreviewAtt] = useState<OccurrenceAttachment | null>(null);
+
+  // Presets
+  const [presets, setPresets] = useState<FilterPreset[]>([]);
+  const [presetId, setPresetId] = useState<string>("none");
+  const [presetsLoaded, setPresetsLoaded] = useState(false);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [newPresetName, setNewPresetName] = useState("");
+  const [scopeToTenant, setScopeToTenant] = useState(true);
+  const tenantId = profile?.tenant_id ?? null;
+
+  const applySnapshot = useCallback((s: FilterSnapshot) => {
+    setSearch(s.search ?? "");
+    setEmployeeId(s.employeeId ?? "all");
+    setUnitId(s.unitId ?? "all");
+    setPriority(s.priority ?? "all");
+    setCategory(s.category ?? "all");
+    setStatus(s.status ?? "all");
+    setDateFrom(s.dateFrom ?? "");
+    setDateTo(s.dateTo ?? "");
+    setHasAttach(s.hasAttach ?? "all");
+    if (s.sort) { setSort(s.sort); storeSort(s.sort); }
+  }, []);
+
+  const currentSnapshot = useCallback((): FilterSnapshot => ({
+    search, employeeId, unitId, priority, category, status,
+    dateFrom, dateTo, hasAttach, sort,
+  }), [search, employeeId, unitId, priority, category, status, dateFrom, dateTo, hasAttach, sort]);
+
+  // Load presets on mount / user change
+  useEffect(() => {
+    if (!user) { setPresets([]); setPresetsLoaded(true); return; }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("history_filter_presets")
+        .select("id,name,tenant_id,filters,is_default")
+        .eq("user_id", user.id)
+        .order("is_default", { ascending: false })
+        .order("name", { ascending: true });
+      if (cancelled) return;
+      if (error) { toast.error("Falha ao carregar presets: " + error.message); setPresetsLoaded(true); return; }
+      const items = (data || []).map(d => ({
+        id: d.id, name: d.name, tenant_id: d.tenant_id,
+        filters: ((d.filters || {}) as unknown) as FilterSnapshot, is_default: !!d.is_default,
+      }));
+      setPresets(items);
+      // Auto-apply default scoped to current tenant (or global) if no preset chosen yet
+      const def = items.find(p => p.is_default && (p.tenant_id === tenantId || p.tenant_id === null));
+      if (def) { setPresetId(def.id); applySnapshot(def.filters); }
+      setPresetsLoaded(true);
+    })();
+    return () => { cancelled = true; };
+  }, [user, tenantId, applySnapshot]);
+
+  const visiblePresets = useMemo(
+    () => presets.filter(p => p.tenant_id === null || p.tenant_id === tenantId),
+    [presets, tenantId]
+  );
+
+  const handleSelectPreset = (id: string) => {
+    setPresetId(id);
+    if (id === "none") return;
+    const p = presets.find(x => x.id === id);
+    if (p) { applySnapshot(p.filters); setPage(1); }
+  };
+
+  const handleSavePreset = async () => {
+    if (!user) return;
+    const name = newPresetName.trim();
+    if (!name) return toast.error("Informe um nome para o preset");
+    const payload = {
+      user_id: user.id,
+      tenant_id: scopeToTenant ? tenantId : null,
+      name,
+      filters: currentSnapshot() as any,
+      is_default: false,
+    };
+    const { data, error } = await supabase
+      .from("history_filter_presets")
+      .insert(payload)
+      .select("id,name,tenant_id,filters,is_default")
+      .single();
+    if (error) return toast.error("Falha ao salvar: " + error.message);
+    const preset: FilterPreset = {
+      id: data!.id, name: data!.name, tenant_id: data!.tenant_id,
+      filters: (data!.filters as unknown) as FilterSnapshot, is_default: !!data!.is_default,
+    };
+    setPresets(prev => [...prev, preset].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")));
+    setPresetId(preset.id);
+    setSaveOpen(false); setNewPresetName("");
+    toast.success(`Preset "${name}" salvo`);
+  };
+
+  const handleDeletePreset = async () => {
+    if (!user || presetId === "none") return;
+    const p = presets.find(x => x.id === presetId);
+    if (!p) return;
+    if (!window.confirm(`Excluir preset "${p.name}"?`)) return;
+    const { error } = await supabase.from("history_filter_presets").delete().eq("id", p.id);
+    if (error) return toast.error("Falha ao excluir: " + error.message);
+    setPresets(prev => prev.filter(x => x.id !== p.id));
+    setPresetId("none");
+    toast.success("Preset excluído");
+  };
+
+  const handleToggleDefault = async () => {
+    if (!user || presetId === "none") return;
+    const p = presets.find(x => x.id === presetId);
+    if (!p) return;
+    const makeDefault = !p.is_default;
+    // Clear other defaults in same tenant scope first
+    if (makeDefault) {
+      const sameScope = presets.filter(x => x.id !== p.id && x.tenant_id === p.tenant_id && x.is_default);
+      for (const s of sameScope) {
+        await supabase.from("history_filter_presets").update({ is_default: false }).eq("id", s.id);
+      }
+    }
+    const { error } = await supabase.from("history_filter_presets")
+      .update({ is_default: makeDefault }).eq("id", p.id);
+    if (error) return toast.error("Falha: " + error.message);
+    setPresets(prev => prev.map(x => {
+      if (x.id === p.id) return { ...x, is_default: makeDefault };
+      if (makeDefault && x.tenant_id === p.tenant_id) return { ...x, is_default: false };
+      return x;
+    }));
+    toast.success(makeDefault ? "Definido como padrão" : "Padrão removido");
+  };
+
+  const handleUpdatePreset = async () => {
+    if (!user || presetId === "none") return;
+    const p = presets.find(x => x.id === presetId);
+    if (!p) return;
+    const { error } = await supabase.from("history_filter_presets")
+      .update({ filters: currentSnapshot() as any }).eq("id", p.id);
+    if (error) return toast.error("Falha: " + error.message);
+    setPresets(prev => prev.map(x => x.id === p.id ? { ...x, filters: currentSnapshot() } : x));
+    toast.success(`Preset "${p.name}" atualizado`);
+  };
+
 
   const employeeMap = useMemo(() => new Map(employees.map(e => [e.id, e])), [employees]);
   const unitMap = useMemo(() => new Map(units.map(u => [u.id, u])), [units]);
@@ -316,11 +481,75 @@ export default function History() {
       </div>
 
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Filter className="h-4 w-4 text-primary" /> Filtros avançados
-          </CardTitle>
-          <CardDescription>Combine critérios para investigar incidentes específicos.</CardDescription>
+        <CardHeader className="pb-3 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Filter className="h-4 w-4 text-primary" /> Filtros avançados
+              </CardTitle>
+              <CardDescription>Combine critérios para investigar incidentes específicos.</CardDescription>
+            </div>
+            {user && presetsLoaded && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Select value={presetId} onValueChange={handleSelectPreset}>
+                  <SelectTrigger className="h-9 w-[220px]">
+                    <SelectValue placeholder="Aplicar preset…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem preset</SelectItem>
+                    {visiblePresets.length === 0 && (
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">Nenhum preset salvo</div>
+                    )}
+                    {visiblePresets.map(p => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.is_default ? "★ " : ""}{p.name}
+                        {p.tenant_id === null ? " · global" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {presetId !== "none" && (
+                  <>
+                    <Button size="sm" variant="ghost" onClick={handleUpdatePreset} title="Atualizar preset com filtros atuais">
+                      <Save className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={handleToggleDefault}
+                      title={presets.find(p => p.id === presetId)?.is_default ? "Remover como padrão" : "Definir como padrão"}>
+                      <Star className={`h-4 w-4 ${presets.find(p => p.id === presetId)?.is_default ? "fill-status-yellow text-status-yellow" : ""}`} />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={handleDeletePreset} title="Excluir preset">
+                      <Trash2 className="h-4 w-4 text-status-red" />
+                    </Button>
+                  </>
+                )}
+                <Dialog open={saveOpen} onOpenChange={setSaveOpen}>
+                  <Button size="sm" variant="outline" onClick={() => setSaveOpen(true)}>
+                    <BookmarkPlus className="h-4 w-4 mr-1.5" /> Salvar como…
+                  </Button>
+                  <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                      <DialogTitle>Salvar preset de filtros</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-3">
+                      <div>
+                        <Label>Nome</Label>
+                        <Input autoFocus value={newPresetName} onChange={e => setNewPresetName(e.target.value)}
+                          placeholder="Ex.: Alta severidade — Unidade SP" />
+                      </div>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={scopeToTenant} onChange={e => setScopeToTenant(e.target.checked)} />
+                        Restringir a este tenant {tenantId ? `(${tenantId})` : ""}
+                      </label>
+                      <div className="flex justify-end gap-2 pt-2">
+                        <Button variant="ghost" onClick={() => setSaveOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleSavePreset}>Salvar</Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-3 lg:grid-cols-4">
           <div className="md:col-span-2 lg:col-span-2">
