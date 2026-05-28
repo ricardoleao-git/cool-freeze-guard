@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bell, Check, X, ClipboardCheck, AlertTriangle, FileLock2, Clock, Snowflake, Activity, FileText } from "lucide-react";
 import { MonthlyReportDialog } from "@/components/MonthlyReportDialog";
+import InstallPWA from "@/components/InstallPWA";
 import { useTenantScoped, useDemo } from "@/lib/demo-store";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
