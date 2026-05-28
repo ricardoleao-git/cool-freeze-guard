@@ -486,11 +486,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const emp = employeesRef.current.find(e => e.id === employeeId); if (!emp) return;
     if (emp.current_status === "blocked" || emp.current_status === "thermal_break") return;
     outsideMinutesRef.current.delete(employeeId);
-    // Resolve area first to validate authorization before any state change
     const candidateAreaId = areaId || emp.current_area_id || undefined;
-    const candidateArea = candidateAreaId
-      ? (await Promise.resolve()).valueOf() && undefined // placeholder, real lookup below
-      : undefined;
     let area: ColdArea | undefined;
     // synchronous lookup via current state snapshot through setState callback
     setState(prev => {
