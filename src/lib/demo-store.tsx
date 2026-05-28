@@ -510,6 +510,8 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const emp = employeesRef.current.find(e => e.id === employeeId); if (!emp) return;
     if (emp.current_status === "blocked") return;
 
+    const originalStatus = emp.current_status;
+
     // Pausa interrompida: reentrada antes de completar os 20 min oficiais.
     // O acumulado NÃO é zerado — apenas pausas concluídas integralmente resetam o ciclo.
     let interruptedBreak: { id: string; elapsedMin: number; required: number } | null = null;
@@ -519,9 +521,21 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const elapsedMin = emp.break_started_at ? (Date.now() - emp.break_started_at) / 60_000 : 0;
       if (ongoing) interruptedBreak = { id: ongoing.id, elapsedMin, required };
       // sai do estado de pausa, mas preserva accumulated_minutes
-      emp.current_status = "outside";
-      emp.break_started_at = null;
+      setState(prev => ({
+        ...prev,
+        employees: prev.employees.map(x => x.id === emp.id
+          ? { ...x, current_status: "outside" as const, break_started_at: null }
+          : x),
+        breaks: ongoing
+          ? prev.breaks.map(b => b.id === ongoing.id
+            ? { ...b, ended_at: Date.now(), completed: false, interrupted: true,
+                interrupted_at: Date.now(),
+                interruption_reason: `Reentrada após ${elapsedMin.toFixed(1)} min (mínimo ${required} min).` }
+            : b)
+          : prev.breaks,
+      }));
     }
+
 
     outsideMinutesRef.current.delete(employeeId);
     const candidateAreaId = areaId || emp.current_area_id || undefined;
