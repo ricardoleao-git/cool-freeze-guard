@@ -826,6 +826,7 @@ export const useTenantScoped = () => {
     alerts: s.alerts.filter(a => a.tenant_id === t),
     breaks: s.breaks.filter(b => b.tenant_id === t),
     occurrences: s.occurrences.filter(o => o.tenant_id === t),
+    employeeColdAreaAuth: s.employeeColdAreaAuth.filter(a => a.tenant_id === t),
   };
 };
 
