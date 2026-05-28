@@ -404,20 +404,27 @@ export default function LgpdPrivacy() {
                           {c?.scope?.length ? c.scope.join(", ") : "—"}
                         </TableCell>
                         <TableCell className="text-right">
-                          {canManage && (
-                            <div className="flex justify-end gap-1">
-                              <Button size="sm" variant="outline"
-                                onClick={() => { setCaptureEmp(emp.id); setOpenCapture(true); }}>
-                                {c ? "Renovar" : "Registrar"}
-                              </Button>
-                              {c?.status === "active" && (
-                                <Button size="sm" variant="ghost" className="text-status-red"
-                                  onClick={() => revokeConsent(c)}>
-                                  <Trash2 className="h-4 w-4" />
+                          <div className="flex justify-end gap-1">
+                            <Button size="sm" variant="ghost"
+                              title="Gerar arquivo do titular"
+                              onClick={() => { setExportEmp(emp.id); setOpenExport(true); }}>
+                              <FileDown className="h-4 w-4" />
+                            </Button>
+                            {canManage && (
+                              <>
+                                <Button size="sm" variant="outline"
+                                  onClick={() => { setCaptureEmp(emp.id); setOpenCapture(true); }}>
+                                  {c ? "Renovar" : "Registrar"}
                                 </Button>
-                              )}
-                            </div>
-                          )}
+                                {c?.status === "active" && (
+                                  <Button size="sm" variant="ghost" className="text-status-red"
+                                    onClick={() => revokeConsent(c)}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
