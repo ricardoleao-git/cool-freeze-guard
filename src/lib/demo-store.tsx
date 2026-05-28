@@ -76,6 +76,13 @@ const mapEvent = (r: any): AccessEvent => ({
   occurred_at: toMs(r.occurred_at) || Date.now(),
   validation_status: r.validation_status,
   confidence_score: Number(r.confidence_score) || 0.95,
+  status_before: r.status_before ?? null,
+  status_after: r.status_after ?? null,
+  accumulated_at_event: r.accumulated_at_event != null ? Number(r.accumulated_at_event) : null,
+  ip_origin: r.ip_origin ?? null,
+  user_agent: r.user_agent ?? null,
+  record_hash: r.record_hash ?? null,
+  previous_hash: r.previous_hash ?? null,
 });
 const mapAlert = (r: any): Alert => ({
   id: r.id, tenant_id: r.tenant_id, employee_id: r.employee_id,
