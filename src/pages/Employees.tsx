@@ -107,7 +107,12 @@ export default function Employees() {
                       {STATUS_LABEL[e.current_status]}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">{e.accumulated_minutes.toFixed(0)} min</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    <div>{e.accumulated_minutes.toFixed(0)} min</div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {employeeColdAreaAuth.filter(a => a.employee_id === e.id).length} áreas autorizadas
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1 flex-wrap">
                       <Button size="sm" variant="outline" onClick={() => { simulateEntry(e.id); toast.success(`Entrada: ${e.name}`); }}><LogIn className="h-3.5 w-3.5 mr-1" /> Entrada</Button>
@@ -116,6 +121,7 @@ export default function Employees() {
                       <Button size="sm" variant="ghost" className="text-status-orange" onClick={() => forceStatus(e.id, "orange")} title="Forçar laranja"><AlertTriangle className="h-3.5 w-3.5" /></Button>
                       <Button size="sm" variant="ghost" className="text-status-red" onClick={() => forceStatus(e.id, "blocked")} title="Bloquear"><ShieldAlert className="h-3.5 w-3.5" /></Button>
                       <div className="w-px h-5 bg-border mx-1" />
+                      <Button size="sm" variant="ghost" onClick={() => setAuthFor(e)} title="Autorizar áreas frias"><ShieldCheck className="h-3.5 w-3.5" /></Button>
                       <Button size="sm" variant="ghost" onClick={() => openEdit(e)} title="Editar"><Pencil className="h-3.5 w-3.5" /></Button>
                       <Button size="sm" variant="ghost" className="text-status-red" onClick={() => setDeleting(e)} title="Excluir"><Trash2 className="h-3.5 w-3.5" /></Button>
                     </div>
