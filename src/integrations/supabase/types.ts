@@ -763,6 +763,63 @@ export type Database = {
           },
         ]
       }
+      retention_purge_log: {
+        Row: {
+          created_at: string
+          cutoff_biometric: string | null
+          cutoff_logs: string | null
+          cutoff_occurrences: string | null
+          deleted_access_events: number
+          deleted_alerts: number
+          deleted_consents: number
+          deleted_occurrences: number
+          deleted_thermal_breaks: number
+          id: string
+          notes: Json
+          policy: Json
+          run_at: string
+          status: string
+          tenant_id: string
+          triggered_by: string
+        }
+        Insert: {
+          created_at?: string
+          cutoff_biometric?: string | null
+          cutoff_logs?: string | null
+          cutoff_occurrences?: string | null
+          deleted_access_events?: number
+          deleted_alerts?: number
+          deleted_consents?: number
+          deleted_occurrences?: number
+          deleted_thermal_breaks?: number
+          id?: string
+          notes?: Json
+          policy?: Json
+          run_at?: string
+          status?: string
+          tenant_id: string
+          triggered_by?: string
+        }
+        Update: {
+          created_at?: string
+          cutoff_biometric?: string | null
+          cutoff_logs?: string | null
+          cutoff_occurrences?: string | null
+          deleted_access_events?: number
+          deleted_alerts?: number
+          deleted_consents?: number
+          deleted_occurrences?: number
+          deleted_thermal_breaks?: number
+          id?: string
+          notes?: Json
+          policy?: Json
+          run_at?: string
+          status?: string
+          tenant_id?: string
+          triggered_by?: string
+        }
+        Relationships: []
+      }
       tenant_settings: {
         Row: {
           biometric_retention_days: number
