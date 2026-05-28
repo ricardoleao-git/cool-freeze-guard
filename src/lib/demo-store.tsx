@@ -474,6 +474,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const simulateEntry = useCallback(async (employeeId: string, areaId?: string) => {
     const emp = employeesRef.current.find(e => e.id === employeeId); if (!emp) return;
     if (emp.current_status === "blocked" || emp.current_status === "thermal_break") return;
+    outsideMinutesRef.current.delete(employeeId);
     let area: ColdArea | undefined;
     setState(prev => {
       area = prev.coldAreas.find(a => a.id === (areaId || emp.current_area_id || "")) || pickAreaForEmployee(emp, prev.coldAreas);
