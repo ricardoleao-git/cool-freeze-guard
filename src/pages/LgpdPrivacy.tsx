@@ -538,3 +538,139 @@ function RetField({ label, value, onChange, disabled }: {
     </div>
   );
 }
+
+type PurgeLog = {
+  id: string;
+  run_at: string;
+  triggered_by: string;
+  cutoff_logs: string | null;
+  cutoff_biometric: string | null;
+  cutoff_occurrences: string | null;
+  deleted_access_events: number;
+  deleted_alerts: number;
+  deleted_thermal_breaks: number;
+  deleted_occurrences: number;
+  deleted_consents: number;
+  status: string;
+  policy: any;
+  notes: any;
+};
+
+function PurgeAuditPanel({ tenantId, canManage }: { tenantId: string; canManage: boolean }) {
+  const [logs, setLogs] = useState<PurgeLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("retention_purge_log")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("run_at", { ascending: false })
+      .limit(50);
+    setLogs((data as any) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [tenantId]);
+
+  const runNow = async (dryRun = false) => {
+    setRunning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("purge-retention", {
+        body: { tenant_id: tenantId, triggered_by: "manual", dry_run: dryRun },
+      });
+      if (error) throw error;
+      if (dryRun) {
+        toast.success("Simulação concluída. Verifique janelas de corte no console.");
+        console.info("purge dry-run", data);
+      } else {
+        const total = (data?.results || []).reduce((acc: number, r: any) =>
+          acc + (r.deleted_access_events || 0) + (r.deleted_alerts || 0)
+              + (r.deleted_thermal_breaks || 0) + (r.deleted_occurrences || 0)
+              + (r.deleted_consents || 0), 0);
+        toast.success(`Purga concluída. ${total} registros removidos.`);
+        await load();
+      }
+    } catch (e: any) {
+      toast.error("Falha ao executar purga: " + (e?.message || "tente novamente"));
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between gap-4">
+          <div>
+            <CardTitle>Job de purga programado</CardTitle>
+            <CardDescription>
+              Executa todo dia às 03:10 UTC e remove dados expirados respeitando a política de retenção
+              de cada tenant. Cada execução grava uma evidência auditável abaixo.
+            </CardDescription>
+          </div>
+          {canManage && (
+            <div className="flex gap-2 shrink-0">
+              <Button variant="outline" size="sm" onClick={() => runNow(true)} disabled={running}>
+                Simular
+              </Button>
+              <Button size="sm" onClick={() => runNow(false)} disabled={running}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                {running ? "Executando..." : "Executar agora"}
+              </Button>
+            </div>
+          )}
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-sm text-muted-foreground py-6 text-center">Carregando trilha...</div>
+          ) : logs.length === 0 ? (
+            <div className="text-sm text-muted-foreground py-6 text-center">
+              Nenhuma execução registrada para este tenant.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Execução</TableHead>
+                  <TableHead>Origem</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Logs</TableHead>
+                  <TableHead className="text-right">Alertas</TableHead>
+                  <TableHead className="text-right">Pausas</TableHead>
+                  <TableHead className="text-right">Ocorrências</TableHead>
+                  <TableHead className="text-right">Consentimentos</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {logs.map(l => (
+                  <TableRow key={l.id}>
+                    <TableCell className="text-xs">
+                      <div>{format(new Date(l.run_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</div>
+                      <div className="text-muted-foreground">
+                        corte logs: {l.cutoff_logs ? format(new Date(l.cutoff_logs), "dd/MM/yy", { locale: ptBR }) : "—"}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-xs">{l.triggered_by}</TableCell>
+                    <TableCell>
+                      {l.status === "ok" && <Badge className="bg-status-ok/20 text-status-ok border border-status-ok/40">OK</Badge>}
+                      {l.status === "partial" && <Badge className="bg-status-yellow/20 text-status-yellow border border-status-yellow/40">Parcial</Badge>}
+                      {l.status === "error" && <Badge variant="outline" className="border-status-red/40 text-status-red">Erro</Badge>}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{l.deleted_access_events}</TableCell>
+                    <TableCell className="text-right tabular-nums">{l.deleted_alerts}</TableCell>
+                    <TableCell className="text-right tabular-nums">{l.deleted_thermal_breaks}</TableCell>
+                    <TableCell className="text-right tabular-nums">{l.deleted_occurrences}</TableCell>
+                    <TableCell className="text-right tabular-nums">{l.deleted_consents}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
