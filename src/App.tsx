@@ -57,6 +57,7 @@ const App = () => (
                 <Route path="/empresas" element={<Tenants />} />
                 <Route path="/usuarios" element={<Users />} />
                 <Route path="/como-funciona" element={<HowItWorks />} />
+                <Route path="/lgpd" element={<LgpdPrivacy />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
