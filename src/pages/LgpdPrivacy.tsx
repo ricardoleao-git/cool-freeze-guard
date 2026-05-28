@@ -1138,3 +1138,176 @@ function ConsentAuditTrail({
     </Card>
   );
 }
+
+function RenewalNotificationsPanel({
+  employees,
+  notifications,
+  consentByEmp,
+  currentVersion,
+  canManage,
+  notifying,
+  onMarkSent,
+  onCancel,
+  onOpenCapture,
+  onBulkEnqueue,
+  onReload,
+}: {
+  employees: Array<{ id: string; name: string; registration_number: string }>;
+  notifications: RenewalNotification[];
+  consentByEmp: Map<string, EmployeeConsent>;
+  currentVersion: number;
+  canManage: boolean;
+  notifying: boolean;
+  onMarkSent: (ids: string[]) => Promise<void>;
+  onCancel: (id: string) => Promise<void>;
+  onOpenCapture: (employeeId: string) => void;
+  onBulkEnqueue: () => Promise<void>;
+  onReload: () => Promise<void>;
+}) {
+  const [filter, setFilter] = useState<"open" | "all">("open");
+
+  const empMap = useMemo(() => {
+    const m = new Map<string, { name: string; registration_number: string }>();
+    employees.forEach(e => m.set(e.id, e));
+    return m;
+  }, [employees]);
+
+  const rows = useMemo(() => {
+    const sorted = [...notifications].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+    if (filter === "open") return sorted.filter(n => n.status === "pending" || n.status === "sent");
+    return sorted;
+  }, [notifications, filter]);
+
+  const pendingIds = useMemo(() => rows.filter(n => n.status === "pending").map(n => n.id), [rows]);
+
+  const statusBadge = (s: RenewalNotification["status"]) => {
+    if (s === "pending") return <Badge className="bg-status-orange/20 text-status-orange border border-status-orange/40">Pendente</Badge>;
+    if (s === "sent") return <Badge className="bg-primary/20 text-primary border border-primary/40">Notificado</Badge>;
+    if (s === "acknowledged") return <Badge className="bg-status-ok/20 text-status-ok border border-status-ok/40">Reaceite registrado</Badge>;
+    return <Badge variant="outline" className="text-muted-foreground">Cancelada</Badge>;
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between gap-4 flex-wrap">
+        <div>
+          <CardTitle className="flex items-center gap-2">
+            <BellRing className="h-5 w-5" /> Renovações de consentimento
+          </CardTitle>
+          <CardDescription>
+            Quando o texto do termo é alterado e a versão é incrementada, os colaboradores com aceite
+            desatualizado entram nesta fila até que registrem novo aceite — bloqueando capturas biométricas
+            nesse intervalo.
+          </CardDescription>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <Select value={filter} onValueChange={v => setFilter(v as any)}>
+            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="open">Em aberto</SelectItem>
+              <SelectItem value="all">Todas</SelectItem>
+            </SelectContent>
+          </Select>
+          {canManage && (
+            <>
+              <Button variant="outline" size="sm" onClick={onBulkEnqueue}>
+                <BellRing className="h-4 w-4 mr-2" /> Gerar pendentes (v{currentVersion})
+              </Button>
+              <Button size="sm" disabled={!pendingIds.length || notifying}
+                onClick={() => onMarkSent(pendingIds)}>
+                <Send className="h-4 w-4 mr-2" /> Marcar todos como enviados ({pendingIds.length})
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onReload}>Atualizar</Button>
+            </>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        {rows.length === 0 ? (
+          <div className="text-sm text-muted-foreground py-10 text-center">
+            Nenhuma notificação {filter === "open" ? "em aberto" : "registrada"}. Quando uma nova versão do termo for publicada,
+            o sistema cria automaticamente as solicitações de reaceite.
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Colaborador</TableHead>
+                <TableHead>Versão</TableHead>
+                <TableHead>Motivo</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Criada em</TableHead>
+                <TableHead>Notificada em</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map(n => {
+                const emp = empMap.get(n.employee_id);
+                const reasonLabel = n.reason === "version_bump"
+                  ? "Versão atualizada"
+                  : n.reason === "manual_request"
+                    ? "Solicitação manual"
+                    : n.reason === "manual_bulk"
+                      ? "Disparo em lote"
+                      : n.reason;
+                return (
+                  <TableRow key={n.id}>
+                    <TableCell>
+                      <div className="font-medium text-sm">{emp?.name || n.employee_id}</div>
+                      <div className="text-xs text-muted-foreground">{emp?.registration_number || "—"}</div>
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      v{n.consent_version}
+                      {n.previous_version != null && (
+                        <span className="text-muted-foreground"> ← v{n.previous_version}</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs">{reasonLabel}</TableCell>
+                    <TableCell>{statusBadge(n.status)}</TableCell>
+                    <TableCell className="text-xs whitespace-nowrap">
+                      {format(new Date(n.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                      <div className="text-muted-foreground">por {n.created_by_name || "—"}</div>
+                    </TableCell>
+                    <TableCell className="text-xs whitespace-nowrap">
+                      {n.sent_at ? format(new Date(n.sent_at), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "—"}
+                      {n.acknowledged_at && (
+                        <div className="text-status-ok flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          aceito em {format(new Date(n.acknowledged_at), "dd/MM HH:mm", { locale: ptBR })}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        {canManage && n.status === "pending" && (
+                          <Button size="sm" variant="outline" onClick={() => onMarkSent([n.id])}>
+                            <Send className="h-3.5 w-3.5 mr-1" /> Marcar enviada
+                          </Button>
+                        )}
+                        {canManage && (n.status === "pending" || n.status === "sent") && (
+                          <>
+                            <Button size="sm" onClick={() => onOpenCapture(n.employee_id)}>
+                              Registrar aceite
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-muted-foreground"
+                              onClick={() => onCancel(n.id)}>
+                              Cancelar
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+        <p className="text-xs text-muted-foreground mt-3">
+          {consentByEmp.size} colaborador(es) com algum aceite registrado · versão vigente do termo: v{currentVersion}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
