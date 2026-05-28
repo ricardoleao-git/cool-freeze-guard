@@ -746,6 +746,9 @@ export type Database = {
           employee_id: string
           ended_at: string | null
           id: string
+          interrupted: boolean
+          interrupted_at: string | null
+          interruption_reason: string | null
           source: string
           started_at: string
           tenant_id: string
@@ -756,6 +759,9 @@ export type Database = {
           employee_id: string
           ended_at?: string | null
           id?: string
+          interrupted?: boolean
+          interrupted_at?: string | null
+          interruption_reason?: string | null
           source?: string
           started_at?: string
           tenant_id: string
@@ -766,6 +772,9 @@ export type Database = {
           employee_id?: string
           ended_at?: string | null
           id?: string
+          interrupted?: boolean
+          interrupted_at?: string | null
+          interruption_reason?: string | null
           source?: string
           started_at?: string
           tenant_id?: string

@@ -94,6 +94,9 @@ const mapBreak = (r: any): ThermalBreak => ({
   id: r.id, tenant_id: r.tenant_id, employee_id: r.employee_id,
   started_at: toMs(r.started_at) || Date.now(),
   ended_at: toMs(r.ended_at), completed: r.completed, source: r.source,
+  interrupted: !!r.interrupted,
+  interrupted_at: toMs(r.interrupted_at),
+  interruption_reason: r.interruption_reason ?? null,
 });
 const mapOccurrence = (r: any, notes: OccurrenceNote[], attachments: OccurrenceAttachment[]): Occurrence => ({
   id: r.id, tenant_id: r.tenant_id, employee_id: r.employee_id,
@@ -143,8 +146,12 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const dirtyEmployeesRef = useRef<Set<string>>(new Set());
   const employeesRef = useRef<Employee[]>([]);
   const ecaRef = useRef<EmployeeColdAreaAuthorization[]>([]);
+  const breaksRef = useRef<ThermalBreak[]>([]);
+  const coldAreasRef = useRef<ColdArea[]>([]);
   useEffect(() => { employeesRef.current = state.employees; }, [state.employees]);
   useEffect(() => { ecaRef.current = state.employeeColdAreaAuth; }, [state.employeeColdAreaAuth]);
+  useEffect(() => { breaksRef.current = state.breaks; }, [state.breaks]);
+  useEffect(() => { coldAreasRef.current = state.coldAreas; }, [state.coldAreas]);
 
   // ---------- cycle reset tracking ----------
   // Tempo (em minutos simulados) que cada colaborador está fora do ambiente frio
@@ -338,10 +345,13 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
   const updateBreakById = async (id: string, patch: Partial<ThermalBreak>) => {
-    await supabase.from("thermal_breaks").update({
-      ended_at: patch.ended_at ? toIso(patch.ended_at) : undefined,
-      completed: patch.completed,
-    }).eq("id", id);
+    const upd: Record<string, unknown> = {};
+    if (patch.ended_at !== undefined) upd.ended_at = patch.ended_at ? toIso(patch.ended_at) : null;
+    if (patch.completed !== undefined) upd.completed = patch.completed;
+    if (patch.interrupted !== undefined) upd.interrupted = patch.interrupted;
+    if (patch.interrupted_at !== undefined) upd.interrupted_at = patch.interrupted_at ? toIso(patch.interrupted_at) : null;
+    if (patch.interruption_reason !== undefined) upd.interruption_reason = patch.interruption_reason;
+    await supabase.from("thermal_breaks").update(upd as any).eq("id", id);
   };
   const flushEmployee = async (emp: Employee) => {
     await supabase.from("employees").update({
@@ -498,7 +508,35 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ---------- mutations ----------
   const simulateEntry = useCallback(async (employeeId: string, areaId?: string) => {
     const emp = employeesRef.current.find(e => e.id === employeeId); if (!emp) return;
-    if (emp.current_status === "blocked" || emp.current_status === "thermal_break") return;
+    if (emp.current_status === "blocked") return;
+
+    const originalStatus = emp.current_status;
+
+    // Pausa interrompida: reentrada antes de completar os 20 min oficiais.
+    // O acumulado NÃO é zerado — apenas pausas concluídas integralmente resetam o ciclo.
+    let interruptedBreak: { id: string; elapsedMin: number; required: number } | null = null;
+    if (emp.current_status === "thermal_break") {
+      const ongoing = breaksRef.current.find(b => b.employee_id === emp.id && !b.completed && !b.interrupted);
+      const required = pickAreaForEmployee(emp, coldAreasRef.current)?.break_minutes ?? 20;
+      const elapsedMin = emp.break_started_at ? (Date.now() - emp.break_started_at) / 60_000 : 0;
+      if (ongoing) interruptedBreak = { id: ongoing.id, elapsedMin, required };
+      // sai do estado de pausa, mas preserva accumulated_minutes
+      setState(prev => ({
+        ...prev,
+        employees: prev.employees.map(x => x.id === emp.id
+          ? { ...x, current_status: "outside" as const, break_started_at: null }
+          : x),
+        breaks: ongoing
+          ? prev.breaks.map(b => b.id === ongoing.id
+            ? { ...b, ended_at: Date.now(), completed: false, interrupted: true,
+                interrupted_at: Date.now(),
+                interruption_reason: `Reentrada após ${elapsedMin.toFixed(1)} min (mínimo ${required} min).` }
+            : b)
+          : prev.breaks,
+      }));
+    }
+
+
     outsideMinutesRef.current.delete(employeeId);
     const candidateAreaId = areaId || emp.current_area_id || undefined;
     let area: ColdArea | undefined;
@@ -540,14 +578,32 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.error(`Acesso negado: ${emp.name} não está autorizado em ${area.name}.`);
       return;
     }
-    const before = emp.current_status;
     const updated = employeesRef.current.find(e => e.id === employeeId)!;
     await flushEmployee(updated);
     await persistEvent(mkEvent(updated, area.id, "entry", "demo_simulation", undefined, {
-      status_before: before, status_after: updated.current_status,
+      status_before: originalStatus, status_after: updated.current_status,
       accumulated_at_event: updated.accumulated_minutes,
     }));
-  }, []);
+
+    // Persistência + alerta da pausa interrompida
+    if (interruptedBreak) {
+      const reason = `Reentrada após ${interruptedBreak.elapsedMin.toFixed(1)} min (mínimo ${interruptedBreak.required} min). Acumulado preservado.`;
+      updateBreakById(interruptedBreak.id, {
+        ended_at: Date.now(), completed: false,
+        interrupted: true, interrupted_at: Date.now(), interruption_reason: reason,
+      }).catch(() => {});
+      const alert: Alert = {
+        id: crypto.randomUUID(), tenant_id: emp.tenant_id, employee_id: emp.id,
+        alert_type: "break_interrupted", severity: "warning",
+        message: `Pausa interrompida: ${emp.name} retornou em ${interruptedBreak.elapsedMin.toFixed(1)} min. Exposição acumulada (${updated.accumulated_minutes.toFixed(0)} min) mantida.`,
+        triggered_at: Date.now(), status: "open",
+      };
+      persistAlert(alert).catch(() => {});
+      setState(prev => ({ ...prev, alerts: [alert, ...prev.alerts].slice(0, 300) }));
+      toast.warning(`Pausa interrompida — acumulado de ${emp.name} preservado.`);
+      beep(880, 0.3);
+    }
+  }, [beep]);
 
 
   const simulateExit = useCallback(async (employeeId: string) => {

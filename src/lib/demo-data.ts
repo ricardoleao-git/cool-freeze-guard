@@ -44,11 +44,16 @@ export interface AccessEvent {
 }
 export interface Alert {
   id: string; tenant_id: string; employee_id: string;
-  alert_type: "yellow" | "orange" | "red_block" | "break_completed" | "device_offline" | "missing_exit" | "cycle_reset_meal" | "cycle_reset_shift";
+  alert_type: "yellow" | "orange" | "red_block" | "break_completed" | "break_interrupted" | "device_offline" | "missing_exit" | "cycle_reset_meal" | "cycle_reset_shift";
   severity: "info" | "warning" | "critical";
   message: string; triggered_at: number; status: "open" | "acknowledged" | "resolved";
 }
-export interface ThermalBreak { id: string; tenant_id: string; employee_id: string; started_at: number; ended_at: number | null; completed: boolean; source: "automatic" | "manual"; }
+export interface ThermalBreak {
+  id: string; tenant_id: string; employee_id: string;
+  started_at: number; ended_at: number | null;
+  completed: boolean; source: "automatic" | "manual";
+  interrupted?: boolean; interrupted_at?: number | null; interruption_reason?: string | null;
+}
 export type OccurrenceCategory = "missing_exit" | "missing_entry" | "device_failure" | "manual_correction" | "false_reading" | "other";
 export type OccurrencePriority = "low" | "medium" | "high";
 export interface OccurrenceAttachment { id: string; name: string; size: number; mime: string; storage_path: string; data_url?: string; }
