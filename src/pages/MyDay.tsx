@@ -157,6 +157,8 @@ export default function MyDay() {
         icon={<Bell className="h-5 w-5" />}
       />
 
+      <InstallPWA />
+
       <Card>
         <CardContent className="pt-5 flex flex-col md:flex-row md:items-center gap-3">
           <div className="flex-1">
