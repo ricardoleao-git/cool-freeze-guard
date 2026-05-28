@@ -553,6 +553,12 @@ export default function History() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AttachmentPreviewDialog
+        attachment={previewAtt}
+        open={!!previewAtt}
+        onOpenChange={(o) => { if (!o) setPreviewAtt(null); }}
+      />
     </div>
   );
 }
