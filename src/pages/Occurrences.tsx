@@ -3,8 +3,10 @@ import { useTenantScoped, useDemo } from "@/lib/demo-store";
 import { Occurrence, OccurrenceCategory, OccurrencePriority } from "@/lib/demo-data";
 import {
   FileWarning, Plus, Paperclip, MessageSquarePlus, CheckCircle2, Filter, Search,
-  AlertTriangle, ShieldAlert, ShieldCheck, Cpu, PencilLine, EyeOff, FileText, Download, Trash2, Image as ImageIcon, Loader2,
+  AlertTriangle, ShieldAlert, ShieldCheck, Cpu, PencilLine, EyeOff, FileText, Download, Trash2, Image as ImageIcon, Loader2, Eye,
 } from "lucide-react";
+import { AttachmentPreviewDialog } from "@/components/AttachmentPreviewDialog";
+import type { OccurrenceAttachment } from "@/lib/demo-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
