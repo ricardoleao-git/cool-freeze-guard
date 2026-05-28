@@ -681,7 +681,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.warning(`Pausa interrompida — acumulado de ${emp.name} preservado.`);
       beep(880, 0.3);
     }
-  }, [beep]);
+  }, [beep, computeConsentStatus]);
 
 
   const simulateExit = useCallback(async (employeeId: string) => {
