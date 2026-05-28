@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bell, Check, X, ClipboardCheck, AlertTriangle, FileLock2, Clock, Snowflake, Activity } from "lucide-react";
+import { Bell, Check, X, ClipboardCheck, AlertTriangle, FileLock2, Clock, Snowflake, Activity, FileText } from "lucide-react";
+import { MonthlyReportDialog } from "@/components/MonthlyReportDialog";
 import { useTenantScoped, useDemo } from "@/lib/demo-store";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
