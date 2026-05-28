@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, MonitorPlay, Users, Snowflake, Cpu, Activity, Timer,
-  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning, UserCog, ClipboardList, FileLock2, ClipboardCheck,
+  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning, UserCog, ClipboardList, FileLock2, ClipboardCheck, Bell,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -23,6 +23,7 @@ const groups = [
       { to: "/pausas", title: "Pausas Térmicas", icon: Timer },
       { to: "/eventos", title: "Eventos de Acesso", icon: Activity },
       { to: "/ajustes", title: "Ajustes & Inconsistências", icon: ClipboardCheck },
+      { to: "/meu-dia", title: "Meu Dia (Colaborador)", icon: Bell },
     ],
   },
   {
