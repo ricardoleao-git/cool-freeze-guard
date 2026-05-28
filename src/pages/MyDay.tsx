@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bell, Check, X, ClipboardCheck, AlertTriangle, FileLock2, Clock, Snowflake, Activity, FileText } from "lucide-react";
 import { MonthlyReportDialog } from "@/components/MonthlyReportDialog";
+import InstallPWA from "@/components/InstallPWA";
 import { useTenantScoped, useDemo } from "@/lib/demo-store";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -155,6 +156,8 @@ export default function MyDay() {
         description="Visão pessoal do colaborador: pendências, notificações e respostas a correções de horário."
         icon={<Bell className="h-5 w-5" />}
       />
+
+      <InstallPWA />
 
       <Card>
         <CardContent className="pt-5 flex flex-col md:flex-row md:items-center gap-3">
