@@ -287,6 +287,63 @@ export type Database = {
         }
         Relationships: []
       }
+      consent_renewal_notifications: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_consent_id: string | null
+          channel: string
+          consent_version: number
+          created_at: string
+          created_by_name: string | null
+          created_by_user_id: string | null
+          employee_id: string
+          id: string
+          message: string
+          previous_version: number | null
+          reason: string
+          sent_at: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_consent_id?: string | null
+          channel?: string
+          consent_version: number
+          created_at?: string
+          created_by_name?: string | null
+          created_by_user_id?: string | null
+          employee_id: string
+          id?: string
+          message?: string
+          previous_version?: number | null
+          reason?: string
+          sent_at?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_consent_id?: string | null
+          channel?: string
+          consent_version?: number
+          created_at?: string
+          created_by_name?: string | null
+          created_by_user_id?: string | null
+          employee_id?: string
+          id?: string
+          message?: string
+          previous_version?: number | null
+          reason?: string
+          sent_at?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       departments: {
         Row: {
           created_at: string

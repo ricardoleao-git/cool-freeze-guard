@@ -16,7 +16,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ShieldCheck, FileLock2, Trash2, RotateCcw, Save, UserCheck, AlertTriangle, FileDown } from "lucide-react";
+import { ShieldCheck, FileLock2, Trash2, RotateCcw, Save, UserCheck, AlertTriangle, FileDown, BellRing, Send, CheckCircle2 } from "lucide-react";
 import { EmployeeDataExportDialog } from "@/components/EmployeeDataExportDialog";
 import { useDemo, useTenantScoped } from "@/lib/demo-store";
 import { useAuth } from "@/lib/auth";
@@ -56,6 +56,23 @@ type EmployeeConsent = {
   revocation_reason: string | null;
 };
 
+type RenewalNotification = {
+  id: string;
+  tenant_id: string;
+  employee_id: string;
+  consent_version: number;
+  previous_version: number | null;
+  reason: string;
+  channel: string;
+  status: "pending" | "sent" | "acknowledged" | "cancelled";
+  message: string;
+  created_by_name: string | null;
+  sent_at: string | null;
+  acknowledged_at: string | null;
+  acknowledged_consent_id: string | null;
+  created_at: string;
+};
+
 const DEFAULT_CONSENT = `Autorizo a empresa, na qualidade de Controladora, a tratar meus dados pessoais e biométricos (reconhecimento facial e logs de acesso) com a finalidade exclusiva de controle de exposição ao frio, cumprimento da NR-36/NR-15 e segurança do trabalho, pelo prazo de retenção definido nesta política. Estou ciente do meu direito de revogar este consentimento e solicitar exclusão dos dados a qualquer momento.`;
 
 const LAWFUL_BASIS: Array<{ value: string; label: string }> = [
@@ -81,8 +98,10 @@ export default function LgpdPrivacy() {
   const [settings, setSettings] = useState<TenantSettings | null>(null);
   const [draft, setDraft] = useState<TenantSettings | null>(null);
   const [consents, setConsents] = useState<EmployeeConsent[]>([]);
+  const [notifications, setNotifications] = useState<RenewalNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [notifying, setNotifying] = useState(false);
 
   // Diálogo de captura
   const [openCapture, setOpenCapture] = useState(false);
@@ -94,14 +113,26 @@ export default function LgpdPrivacy() {
   const [openExport, setOpenExport] = useState(false);
   const [exportEmp, setExportEmp] = useState<string>("");
 
+  const reloadNotifications = async () => {
+    const { data } = await supabase
+      .from("consent_renewal_notifications")
+      .select("*")
+      .eq("tenant_id", activeTenantId)
+      .order("created_at", { ascending: false })
+      .limit(500);
+    setNotifications((data as any) || []);
+  };
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
       setLoading(true);
-      const [{ data: tsRows }, { data: ecRows }] = await Promise.all([
+      const [{ data: tsRows }, { data: ecRows }, { data: nRows }] = await Promise.all([
         supabase.from("tenant_settings").select("*").eq("tenant_id", activeTenantId).maybeSingle(),
         supabase.from("employee_consents").select("*").eq("tenant_id", activeTenantId)
           .order("accepted_at", { ascending: false }).limit(500),
+        supabase.from("consent_renewal_notifications").select("*").eq("tenant_id", activeTenantId)
+          .order("created_at", { ascending: false }).limit(500),
       ]);
       if (cancelled) return;
       const ts: TenantSettings = (tsRows as any) || {
@@ -120,6 +151,7 @@ export default function LgpdPrivacy() {
       setSettings(ts);
       setDraft(ts);
       setConsents((ecRows as any) || []);
+      setNotifications((nRows as any) || []);
       setLoading(false);
     }
     load();
@@ -134,27 +166,86 @@ export default function LgpdPrivacy() {
     return map;
   }, [consents]);
 
+  const pendingNotifByEmp = useMemo(() => {
+    const map = new Map<string, RenewalNotification>();
+    for (const n of notifications) {
+      if (n.status === "acknowledged" || n.status === "cancelled") continue;
+      const existing = map.get(n.employee_id);
+      if (!existing || n.consent_version > existing.consent_version) map.set(n.employee_id, n);
+    }
+    return map;
+  }, [notifications]);
+
   const stats = useMemo(() => {
     const total = employees.length;
     let activeCount = 0;
     let outdated = 0;
+    let pendingNotif = 0;
     employees.forEach(e => {
       const c = consentByEmp.get(e.id);
       if (c && c.status === "active") {
         activeCount++;
         if (settings && c.consent_version < settings.consent_version) outdated++;
       }
+      const n = pendingNotifByEmp.get(e.id);
+      if (n && (n.status === "pending" || n.status === "sent")) pendingNotif++;
     });
-    return { total, activeCount, outdated, missing: total - activeCount };
-  }, [employees, consentByEmp, settings]);
+    return { total, activeCount, outdated, missing: total - activeCount, pendingNotif };
+  }, [employees, consentByEmp, settings, pendingNotifByEmp]);
 
   const updateDraft = (patch: Partial<TenantSettings>) =>
     setDraft(d => (d ? { ...d, ...patch } : d));
+
+  const enqueueRenewalNotifications = async (
+    targetVersion: number,
+    previousVersion: number | null,
+    reason: string,
+    onlyEmployeeIds?: string[],
+  ) => {
+    if (!settings) return 0;
+    const targets = (onlyEmployeeIds ?? employees.map(e => e.id))
+      .map(empId => {
+        const c = consentByEmp.get(empId);
+        // só notificamos quem tem aceite ativo desatualizado (renovação)
+        // ou quem já tinha algum aceite (concedido/revogado) e precisa ressubir versão.
+        if (!c) return null;
+        if (c.status === "active" && c.consent_version >= targetVersion) return null;
+        // evita duplicar pendência da mesma versão
+        const existing = notifications.find(n =>
+          n.employee_id === empId && n.consent_version === targetVersion
+          && (n.status === "pending" || n.status === "sent"));
+        if (existing) return null;
+        return {
+          tenant_id: activeTenantId,
+          employee_id: empId,
+          consent_version: targetVersion,
+          previous_version: previousVersion,
+          reason,
+          channel: "in_app",
+          status: "pending",
+          message: `Nova versão do termo de consentimento (v${targetVersion}). Solicite ao colaborador um novo aceite antes da próxima captura biométrica.`,
+          created_by_name: profile?.full_name || profile?.email || "operação",
+        };
+      })
+      .filter(Boolean) as any[];
+    if (!targets.length) return 0;
+    const { data, error } = await supabase
+      .from("consent_renewal_notifications")
+      .insert(targets as any)
+      .select();
+    if (error) {
+      console.error("Falha ao criar notificações de renovação", error);
+      return 0;
+    }
+    setNotifications(prev => [...((data as any[]) || []), ...prev]);
+    return (data as any[])?.length || 0;
+  };
 
   const saveSettings = async () => {
     if (!draft || !canManage) return;
     setSaving(true);
     try {
+      const previousVersion = settings?.consent_version ?? null;
       const versionBumped = !!settings && draft.consent_text.trim() !== settings.consent_text.trim()
         ? Math.max(settings.consent_version + 1, draft.consent_version)
         : draft.consent_version;
@@ -163,7 +254,17 @@ export default function LgpdPrivacy() {
       if (error) throw error;
       setSettings(payload);
       setDraft(payload);
-      toast.success("Configurações de privacidade salvas.");
+
+      if (settings && versionBumped > settings.consent_version) {
+        const created = await enqueueRenewalNotifications(versionBumped, previousVersion, "version_bump");
+        toast.success(
+          created > 0
+            ? `Configurações salvas. ${created} colaborador(es) marcados para renovar consentimento (v${versionBumped}).`
+            : `Configurações salvas. Nova versão v${versionBumped} publicada.`,
+        );
+      } else {
+        toast.success("Configurações de privacidade salvas.");
+      }
     } catch (e: any) {
       toast.error("Falha ao salvar: " + (e?.message || "tente novamente"));
     } finally {
@@ -232,9 +333,77 @@ export default function LgpdPrivacy() {
         previous_status: previous?.status ?? null,
       },
     });
+
+    // Marca notificações pendentes desse colaborador (versão atual ou anteriores) como reconhecidas.
+    try {
+      const { data: ackRows } = await supabase
+        .from("consent_renewal_notifications")
+        .update({
+          status: "acknowledged",
+          acknowledged_at: new Date().toISOString(),
+          acknowledged_consent_id: (data as any).id,
+        } as any)
+        .eq("tenant_id", activeTenantId)
+        .eq("employee_id", captureEmp)
+        .in("status", ["pending", "sent"])
+        .lte("consent_version", settings.consent_version)
+        .select();
+      if (ackRows && (ackRows as any[]).length) {
+        const ackedIds = new Set((ackRows as any[]).map(r => r.id));
+        setNotifications(prev => prev.map(n => ackedIds.has(n.id)
+          ? { ...n, status: "acknowledged", acknowledged_at: new Date().toISOString(), acknowledged_consent_id: (data as any).id }
+          : n));
+      }
+    } catch (e) {
+      console.error("Falha ao reconciliar notificações de renovação", e);
+    }
+
     setOpenCapture(false);
     setCaptureEmp(""); setSignatureText(""); setCaptureScope(["biometric_facial", "access_logs"]);
-    toast.success("Consentimento registrado.");
+    toast.success(isRenewal ? "Consentimento renovado e notificação atendida." : "Consentimento registrado.");
+  };
+
+  const markNotificationSent = async (ids: string[]) => {
+    if (!ids.length) return;
+    setNotifying(true);
+    try {
+      const { error } = await supabase
+        .from("consent_renewal_notifications")
+        .update({ status: "sent", sent_at: new Date().toISOString() } as any)
+        .in("id", ids)
+        .eq("status", "pending");
+      if (error) throw error;
+      setNotifications(prev => prev.map(n =>
+        ids.includes(n.id) && n.status === "pending"
+          ? { ...n, status: "sent", sent_at: new Date().toISOString() }
+          : n));
+      toast.success(`${ids.length} notificação(ões) marcadas como enviadas.`);
+    } catch (e: any) {
+      toast.error("Falha ao registrar envio: " + (e?.message || "tente novamente"));
+    } finally {
+      setNotifying(false);
+    }
+  };
+
+  const cancelNotification = async (id: string) => {
+    const { error } = await supabase
+      .from("consent_renewal_notifications")
+      .update({ status: "cancelled" } as any)
+      .eq("id", id);
+    if (error) { toast.error("Falha ao cancelar: " + error.message); return; }
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, status: "cancelled" } : n));
+    toast.success("Solicitação cancelada.");
+  };
+
+  const requestRenewalNow = async (employeeId: string) => {
+    if (!settings) return;
+    const created = await enqueueRenewalNotifications(
+      settings.consent_version,
+      null,
+      "manual_request",
+      [employeeId],
+    );
+    toast.success(created > 0 ? "Renovação solicitada." : "Já existe uma solicitação pendente para este colaborador.");
   };
 
   const revokeConsent = async (c: EmployeeConsent) => {
@@ -291,18 +460,41 @@ export default function LgpdPrivacy() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <StatTile label="Colaboradores" value={stats.total} />
         <StatTile label="Consentimento ativo" value={stats.activeCount} tone="ok" />
         <StatTile label="Pendentes" value={stats.missing} tone={stats.missing ? "warn" : "muted"} />
         <StatTile label="Versão desatualizada" value={stats.outdated} tone={stats.outdated ? "warn" : "muted"} />
+        <StatTile label="Renovações em aberto" value={stats.pendingNotif} tone={stats.pendingNotif ? "warn" : "muted"} />
       </div>
+
+      {stats.pendingNotif > 0 && (
+        <div className="rounded-lg border border-status-orange/40 bg-status-orange/10 p-3 flex items-start gap-3">
+          <BellRing className="h-5 w-5 text-status-orange shrink-0 mt-0.5" />
+          <div className="flex-1 text-sm">
+            <div className="font-medium text-status-orange">
+              {stats.pendingNotif} colaborador(es) aguardando reaceite do termo v{settings?.consent_version}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Enquanto a renovação não for registrada, o sistema bloqueia novas capturas biométricas para esses titulares.
+            </div>
+          </div>
+        </div>
+      )}
 
       <Tabs defaultValue="retention" className="w-full">
         <TabsList>
           <TabsTrigger value="retention"><FileLock2 className="h-4 w-4 mr-2" /> Retenção</TabsTrigger>
           <TabsTrigger value="consent"><ShieldCheck className="h-4 w-4 mr-2" /> Consentimento</TabsTrigger>
           <TabsTrigger value="registry"><UserCheck className="h-4 w-4 mr-2" /> Registros</TabsTrigger>
+          <TabsTrigger value="notifications">
+            <BellRing className="h-4 w-4 mr-2" /> Notificações
+            {stats.pendingNotif > 0 && (
+              <Badge className="ml-2 bg-status-orange/20 text-status-orange border border-status-orange/40">
+                {stats.pendingNotif}
+              </Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="purge"><Trash2 className="h-4 w-4 mr-2" /> Purga & Auditoria</TabsTrigger>
           <TabsTrigger value="trail"><FileLock2 className="h-4 w-4 mr-2" /> Trilha de consentimentos</TabsTrigger>
         </TabsList>
@@ -430,6 +622,8 @@ export default function LgpdPrivacy() {
                   {employees.map(emp => {
                     const c = consentByEmp.get(emp.id);
                     const outdated = c && settings && c.status === "active" && c.consent_version < settings.consent_version;
+                    const notif = pendingNotifByEmp.get(emp.id);
+                    const needsRenewal = !c || c.status !== "active" || !!outdated;
                     return (
                       <TableRow key={emp.id}>
                         <TableCell>
@@ -437,10 +631,22 @@ export default function LgpdPrivacy() {
                           <div className="text-xs text-muted-foreground">{emp.registration_number}</div>
                         </TableCell>
                         <TableCell>
-                          {!c && <Badge variant="outline" className="border-status-orange/40 text-status-orange">Sem aceite</Badge>}
-                          {c?.status === "active" && !outdated && <Badge className="bg-status-ok/20 text-status-ok border border-status-ok/40">Ativo</Badge>}
-                          {c?.status === "active" && outdated && <Badge className="bg-status-yellow/20 text-status-yellow border border-status-yellow/40">Desatualizado</Badge>}
-                          {c?.status === "revoked" && <Badge variant="outline" className="border-status-red/40 text-status-red">Revogado</Badge>}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {!c && <Badge variant="outline" className="border-status-orange/40 text-status-orange">Sem aceite</Badge>}
+                            {c?.status === "active" && !outdated && <Badge className="bg-status-ok/20 text-status-ok border border-status-ok/40">Ativo</Badge>}
+                            {c?.status === "active" && outdated && <Badge className="bg-status-yellow/20 text-status-yellow border border-status-yellow/40">Desatualizado</Badge>}
+                            {c?.status === "revoked" && <Badge variant="outline" className="border-status-red/40 text-status-red">Revogado</Badge>}
+                            {notif && notif.status === "pending" && (
+                              <Badge variant="outline" className="border-status-orange/40 text-status-orange gap-1">
+                                <BellRing className="h-3 w-3" /> notificar
+                              </Badge>
+                            )}
+                            {notif && notif.status === "sent" && (
+                              <Badge variant="outline" className="border-primary/40 text-primary gap-1">
+                                <Send className="h-3 w-3" /> notificado
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>{c ? `v${c.consent_version}` : "—"}</TableCell>
                         <TableCell className="text-xs">
@@ -461,6 +667,13 @@ export default function LgpdPrivacy() {
                               onClick={() => { setExportEmp(emp.id); setOpenExport(true); }}>
                               <FileDown className="h-4 w-4" />
                             </Button>
+                            {canManage && needsRenewal && !notif && (
+                              <Button size="sm" variant="ghost"
+                                title="Solicitar renovação do consentimento"
+                                onClick={() => requestRenewalNow(emp.id)}>
+                                <BellRing className="h-4 w-4 text-status-orange" />
+                              </Button>
+                            )}
                             {canManage && (
                               <>
                                 <Button size="sm" variant="outline"
@@ -489,6 +702,28 @@ export default function LgpdPrivacy() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value="notifications" className="space-y-4">
+          <RenewalNotificationsPanel
+            employees={employees}
+            notifications={notifications}
+            consentByEmp={consentByEmp}
+            currentVersion={settings?.consent_version ?? 1}
+            canManage={canManage}
+            notifying={notifying}
+            onMarkSent={markNotificationSent}
+            onCancel={cancelNotification}
+            onOpenCapture={(empId) => { setCaptureEmp(empId); setOpenCapture(true); }}
+            onBulkEnqueue={async () => {
+              if (!settings) return;
+              const created = await enqueueRenewalNotifications(
+                settings.consent_version, null, "manual_bulk",
+              );
+              if (created > 0) toast.success(`${created} nova(s) solicitação(ões) de renovação criadas.`);
+              else toast.info("Nenhum colaborador elegível para nova notificação.");
+            }}
+            onReload={reloadNotifications}
+          />
         </TabsContent>
         <TabsContent value="purge" className="space-y-4">
           <PurgeAuditPanel tenantId={activeTenantId} canManage={canManage} />
@@ -899,6 +1134,179 @@ function ConsentAuditTrail({
             </TableBody>
           </Table>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function RenewalNotificationsPanel({
+  employees,
+  notifications,
+  consentByEmp,
+  currentVersion,
+  canManage,
+  notifying,
+  onMarkSent,
+  onCancel,
+  onOpenCapture,
+  onBulkEnqueue,
+  onReload,
+}: {
+  employees: Array<{ id: string; name: string; registration_number: string }>;
+  notifications: RenewalNotification[];
+  consentByEmp: Map<string, EmployeeConsent>;
+  currentVersion: number;
+  canManage: boolean;
+  notifying: boolean;
+  onMarkSent: (ids: string[]) => Promise<void>;
+  onCancel: (id: string) => Promise<void>;
+  onOpenCapture: (employeeId: string) => void;
+  onBulkEnqueue: () => Promise<void>;
+  onReload: () => Promise<void>;
+}) {
+  const [filter, setFilter] = useState<"open" | "all">("open");
+
+  const empMap = useMemo(() => {
+    const m = new Map<string, { name: string; registration_number: string }>();
+    employees.forEach(e => m.set(e.id, e));
+    return m;
+  }, [employees]);
+
+  const rows = useMemo(() => {
+    const sorted = [...notifications].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+    if (filter === "open") return sorted.filter(n => n.status === "pending" || n.status === "sent");
+    return sorted;
+  }, [notifications, filter]);
+
+  const pendingIds = useMemo(() => rows.filter(n => n.status === "pending").map(n => n.id), [rows]);
+
+  const statusBadge = (s: RenewalNotification["status"]) => {
+    if (s === "pending") return <Badge className="bg-status-orange/20 text-status-orange border border-status-orange/40">Pendente</Badge>;
+    if (s === "sent") return <Badge className="bg-primary/20 text-primary border border-primary/40">Notificado</Badge>;
+    if (s === "acknowledged") return <Badge className="bg-status-ok/20 text-status-ok border border-status-ok/40">Reaceite registrado</Badge>;
+    return <Badge variant="outline" className="text-muted-foreground">Cancelada</Badge>;
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between gap-4 flex-wrap">
+        <div>
+          <CardTitle className="flex items-center gap-2">
+            <BellRing className="h-5 w-5" /> Renovações de consentimento
+          </CardTitle>
+          <CardDescription>
+            Quando o texto do termo é alterado e a versão é incrementada, os colaboradores com aceite
+            desatualizado entram nesta fila até que registrem novo aceite — bloqueando capturas biométricas
+            nesse intervalo.
+          </CardDescription>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <Select value={filter} onValueChange={v => setFilter(v as any)}>
+            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="open">Em aberto</SelectItem>
+              <SelectItem value="all">Todas</SelectItem>
+            </SelectContent>
+          </Select>
+          {canManage && (
+            <>
+              <Button variant="outline" size="sm" onClick={onBulkEnqueue}>
+                <BellRing className="h-4 w-4 mr-2" /> Gerar pendentes (v{currentVersion})
+              </Button>
+              <Button size="sm" disabled={!pendingIds.length || notifying}
+                onClick={() => onMarkSent(pendingIds)}>
+                <Send className="h-4 w-4 mr-2" /> Marcar todos como enviados ({pendingIds.length})
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onReload}>Atualizar</Button>
+            </>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        {rows.length === 0 ? (
+          <div className="text-sm text-muted-foreground py-10 text-center">
+            Nenhuma notificação {filter === "open" ? "em aberto" : "registrada"}. Quando uma nova versão do termo for publicada,
+            o sistema cria automaticamente as solicitações de reaceite.
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Colaborador</TableHead>
+                <TableHead>Versão</TableHead>
+                <TableHead>Motivo</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Criada em</TableHead>
+                <TableHead>Notificada em</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map(n => {
+                const emp = empMap.get(n.employee_id);
+                const reasonLabel = n.reason === "version_bump"
+                  ? "Versão atualizada"
+                  : n.reason === "manual_request"
+                    ? "Solicitação manual"
+                    : n.reason === "manual_bulk"
+                      ? "Disparo em lote"
+                      : n.reason;
+                return (
+                  <TableRow key={n.id}>
+                    <TableCell>
+                      <div className="font-medium text-sm">{emp?.name || n.employee_id}</div>
+                      <div className="text-xs text-muted-foreground">{emp?.registration_number || "—"}</div>
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      v{n.consent_version}
+                      {n.previous_version != null && (
+                        <span className="text-muted-foreground"> ← v{n.previous_version}</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs">{reasonLabel}</TableCell>
+                    <TableCell>{statusBadge(n.status)}</TableCell>
+                    <TableCell className="text-xs whitespace-nowrap">
+                      {format(new Date(n.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                      <div className="text-muted-foreground">por {n.created_by_name || "—"}</div>
+                    </TableCell>
+                    <TableCell className="text-xs whitespace-nowrap">
+                      {n.sent_at ? format(new Date(n.sent_at), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "—"}
+                      {n.acknowledged_at && (
+                        <div className="text-status-ok flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          aceito em {format(new Date(n.acknowledged_at), "dd/MM HH:mm", { locale: ptBR })}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        {canManage && n.status === "pending" && (
+                          <Button size="sm" variant="outline" onClick={() => onMarkSent([n.id])}>
+                            <Send className="h-3.5 w-3.5 mr-1" /> Marcar enviada
+                          </Button>
+                        )}
+                        {canManage && (n.status === "pending" || n.status === "sent") && (
+                          <>
+                            <Button size="sm" onClick={() => onOpenCapture(n.employee_id)}>
+                              Registrar aceite
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-muted-foreground"
+                              onClick={() => onCancel(n.id)}>
+                              Cancelar
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+        <p className="text-xs text-muted-foreground mt-3">
+          {consentByEmp.size} colaborador(es) com algum aceite registrado · versão vigente do termo: v{currentVersion}
+        </p>
       </CardContent>
     </Card>
   );
