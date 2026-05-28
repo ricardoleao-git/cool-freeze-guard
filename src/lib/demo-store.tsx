@@ -948,7 +948,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
        addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment,
        removeOccurrenceAttachment, getAttachmentDownloadUrl,
        createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar,
-       isEmployeeAuthorizedForArea, setEmployeeAreaAuthorizations]);
+       isEmployeeAuthorizedForArea, setEmployeeAreaAuthorizations, computeConsentStatus]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 };
