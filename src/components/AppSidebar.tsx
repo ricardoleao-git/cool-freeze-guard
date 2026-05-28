@@ -22,6 +22,7 @@ const groups = [
       { to: "/historico", title: "Histórico RH/SST", icon: ClipboardList },
       { to: "/pausas", title: "Pausas Térmicas", icon: Timer },
       { to: "/eventos", title: "Eventos de Acesso", icon: Activity },
+      { to: "/ajustes", title: "Ajustes & Inconsistências", icon: ClipboardCheck },
     ],
   },
   {
