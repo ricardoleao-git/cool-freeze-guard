@@ -210,7 +210,7 @@ export default function History() {
     if (error) return toast.error("Falha ao salvar: " + error.message);
     const preset: FilterPreset = {
       id: data!.id, name: data!.name, tenant_id: data!.tenant_id,
-      filters: data!.filters as FilterSnapshot, is_default: !!data!.is_default,
+      filters: (data!.filters as unknown) as FilterSnapshot, is_default: !!data!.is_default,
     };
     setPresets(prev => [...prev, preset].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")));
     setPresetId(preset.id);
