@@ -83,8 +83,30 @@ function storePageSize(n: number) {
   try { localStorage.setItem(LS_PAGE_SIZE_KEY, String(n)); } catch { /* noop */ }
 }
 
+interface FilterSnapshot {
+  search: string;
+  employeeId: string;
+  unitId: string;
+  priority: string;
+  category: string;
+  status: string;
+  dateFrom: string;
+  dateTo: string;
+  hasAttach: "all" | "yes" | "no";
+  sort: SortState;
+}
+
+interface FilterPreset {
+  id: string;
+  name: string;
+  tenant_id: string | null;
+  filters: FilterSnapshot;
+  is_default: boolean;
+}
+
 export default function History() {
   const { occurrences, employees, units, getAttachmentDownloadUrl } = useDemo();
+  const { user, profile } = useAuth();
 
   // Filters
   const [search, setSearch] = useState("");
