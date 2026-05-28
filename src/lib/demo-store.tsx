@@ -167,10 +167,30 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const ecaRef = useRef<EmployeeColdAreaAuthorization[]>([]);
   const breaksRef = useRef<ThermalBreak[]>([]);
   const coldAreasRef = useRef<ColdArea[]>([]);
+  const settingsRef = useRef<TenantPrivacySettings[]>([]);
+  const consentsRef = useRef<EmployeeConsentRecord[]>([]);
   useEffect(() => { employeesRef.current = state.employees; }, [state.employees]);
   useEffect(() => { ecaRef.current = state.employeeColdAreaAuth; }, [state.employeeColdAreaAuth]);
   useEffect(() => { breaksRef.current = state.breaks; }, [state.breaks]);
   useEffect(() => { coldAreasRef.current = state.coldAreas; }, [state.coldAreas]);
+  useEffect(() => { settingsRef.current = state.tenantSettings; }, [state.tenantSettings]);
+  useEffect(() => { consentsRef.current = state.employeeConsents; }, [state.employeeConsents]);
+
+  // Avalia o status de consentimento LGPD de um colaborador frente à versão vigente do tenant.
+  const computeConsentStatus = useCallback((empId: string): ConsentStatus => {
+    const emp = employeesRef.current.find(e => e.id === empId);
+    if (!emp) return "missing";
+    const settings = settingsRef.current.find(s => s.tenant_id === emp.tenant_id);
+    if (settings && !settings.require_consent_before_capture) return "ok";
+    const empConsents = consentsRef.current
+      .filter(c => c.employee_id === empId)
+      .sort((a, b) => b.accepted_at - a.accepted_at);
+    const latest = empConsents[0];
+    if (!latest) return "missing";
+    if (latest.status === "revoked") return "revoked";
+    if (settings && latest.consent_version < settings.consent_version) return "outdated";
+    return "ok";
+  }, []);
 
   // ---------- cycle reset tracking ----------
   // Tempo (em minutos simulados) que cada colaborador está fora do ambiente frio
