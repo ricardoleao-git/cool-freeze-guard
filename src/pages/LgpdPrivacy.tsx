@@ -98,8 +98,10 @@ export default function LgpdPrivacy() {
   const [settings, setSettings] = useState<TenantSettings | null>(null);
   const [draft, setDraft] = useState<TenantSettings | null>(null);
   const [consents, setConsents] = useState<EmployeeConsent[]>([]);
+  const [notifications, setNotifications] = useState<RenewalNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [notifying, setNotifying] = useState(false);
 
   // Diálogo de captura
   const [openCapture, setOpenCapture] = useState(false);
@@ -111,14 +113,26 @@ export default function LgpdPrivacy() {
   const [openExport, setOpenExport] = useState(false);
   const [exportEmp, setExportEmp] = useState<string>("");
 
+  const reloadNotifications = async () => {
+    const { data } = await supabase
+      .from("consent_renewal_notifications")
+      .select("*")
+      .eq("tenant_id", activeTenantId)
+      .order("created_at", { ascending: false })
+      .limit(500);
+    setNotifications((data as any) || []);
+  };
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
       setLoading(true);
-      const [{ data: tsRows }, { data: ecRows }] = await Promise.all([
+      const [{ data: tsRows }, { data: ecRows }, { data: nRows }] = await Promise.all([
         supabase.from("tenant_settings").select("*").eq("tenant_id", activeTenantId).maybeSingle(),
         supabase.from("employee_consents").select("*").eq("tenant_id", activeTenantId)
           .order("accepted_at", { ascending: false }).limit(500),
+        supabase.from("consent_renewal_notifications").select("*").eq("tenant_id", activeTenantId)
+          .order("created_at", { ascending: false }).limit(500),
       ]);
       if (cancelled) return;
       const ts: TenantSettings = (tsRows as any) || {
@@ -137,6 +151,7 @@ export default function LgpdPrivacy() {
       setSettings(ts);
       setDraft(ts);
       setConsents((ecRows as any) || []);
+      setNotifications((nRows as any) || []);
       setLoading(false);
     }
     load();
@@ -150,6 +165,16 @@ export default function LgpdPrivacy() {
     }
     return map;
   }, [consents]);
+
+  const pendingNotifByEmp = useMemo(() => {
+    const map = new Map<string, RenewalNotification>();
+    for (const n of notifications) {
+      if (n.status === "acknowledged" || n.status === "cancelled") continue;
+      const existing = map.get(n.employee_id);
+      if (!existing || n.consent_version > existing.consent_version) map.set(n.employee_id, n);
+    }
+    return map;
+  }, [notifications]);
 
   const stats = useMemo(() => {
     const total = employees.length;
