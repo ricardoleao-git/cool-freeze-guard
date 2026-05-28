@@ -395,18 +395,36 @@ export default function Occurrences() {
                         return (
                           <div key={a.id} className="flex items-center gap-2 rounded-lg border border-border p-2 bg-card/40">
                             {isImage && a.data_url ? (
-                              <a href={a.data_url} target="_blank" rel="noopener noreferrer" className="h-9 w-9 rounded overflow-hidden ring-1 ring-border shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewAtt(a)}
+                                className="h-9 w-9 rounded overflow-hidden ring-1 ring-border shrink-0 focus:outline-none focus:ring-2 focus:ring-primary"
+                                title="Pré-visualizar"
+                              >
                                 <img src={a.data_url} alt={a.name} className="h-full w-full object-cover" />
-                              </a>
+                              </button>
                             ) : (
-                              <div className="h-9 w-9 rounded grid place-items-center bg-muted shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewAtt(a)}
+                                className="h-9 w-9 rounded grid place-items-center bg-muted shrink-0 hover:bg-muted/70"
+                                title="Pré-visualizar"
+                              >
                                 {isImage ? <ImageIcon className="h-4 w-4 text-muted-foreground" /> : <FileText className="h-4 w-4 text-muted-foreground" />}
-                              </div>
+                              </button>
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="text-sm truncate">{a.name}</div>
                               <div className="text-[10.5px] text-muted-foreground">{a.mime || "arquivo"} · {fmtSize(a.size)}</div>
                             </div>
+                            <button
+                              type="button"
+                              onClick={() => setPreviewAtt(a)}
+                              className="text-muted-foreground hover:text-foreground p-1"
+                              title="Pré-visualizar"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
                             <button
                               type="button"
                               onClick={() => handleDownload(a.storage_path, a.name)}
