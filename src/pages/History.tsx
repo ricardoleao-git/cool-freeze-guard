@@ -21,9 +21,13 @@ import {
 import {
   ClipboardList, Download, FileText, Filter, ImageIcon, Paperclip, Search, X, Eye,
   ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
+  BookmarkPlus, Star, Trash2, Save,
 } from "lucide-react";
 import type { Occurrence, OccurrencePriority, OccurrenceCategory, OccurrenceAttachment } from "@/lib/demo-data";
 import { AttachmentPreviewDialog } from "@/components/AttachmentPreviewDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { toast } from "sonner";
 
 const CATEGORY_LABELS: Record<OccurrenceCategory, string> = {
   missing_exit: "Saída não registrada",
