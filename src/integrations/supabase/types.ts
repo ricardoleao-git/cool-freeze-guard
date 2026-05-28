@@ -363,6 +363,60 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_consents: {
+        Row: {
+          accepted_at: string
+          accepted_by: string
+          consent_text_snapshot: string
+          consent_version: number
+          created_at: string
+          employee_id: string
+          id: string
+          ip_origin: unknown
+          revocation_reason: string | null
+          revoked_at: string | null
+          scope: string[]
+          signature_text: string
+          status: string
+          tenant_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          accepted_at?: string
+          accepted_by?: string
+          consent_text_snapshot?: string
+          consent_version?: number
+          created_at?: string
+          employee_id: string
+          id?: string
+          ip_origin?: unknown
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          scope?: string[]
+          signature_text?: string
+          status?: string
+          tenant_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          accepted_at?: string
+          accepted_by?: string
+          consent_text_snapshot?: string
+          consent_version?: number
+          created_at?: string
+          employee_id?: string
+          id?: string
+          ip_origin?: unknown
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          scope?: string[]
+          signature_text?: string
+          status?: string
+          tenant_id?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       employees: {
         Row: {
           accumulated_minutes: number
@@ -708,6 +762,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tenant_settings: {
+        Row: {
+          biometric_retention_days: number
+          consent_text: string
+          consent_version: number
+          created_at: string
+          dpo_email: string
+          dpo_name: string
+          lawful_basis: string
+          logs_retention_days: number
+          occurrences_retention_days: number
+          privacy_policy_url: string
+          require_consent_before_capture: boolean
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          biometric_retention_days?: number
+          consent_text?: string
+          consent_version?: number
+          created_at?: string
+          dpo_email?: string
+          dpo_name?: string
+          lawful_basis?: string
+          logs_retention_days?: number
+          occurrences_retention_days?: number
+          privacy_policy_url?: string
+          require_consent_before_capture?: boolean
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          biometric_retention_days?: number
+          consent_text?: string
+          consent_version?: number
+          created_at?: string
+          dpo_email?: string
+          dpo_name?: string
+          lawful_basis?: string
+          logs_retention_days?: number
+          occurrences_retention_days?: number
+          privacy_policy_url?: string
+          require_consent_before_capture?: boolean
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       tenants: {
         Row: {
