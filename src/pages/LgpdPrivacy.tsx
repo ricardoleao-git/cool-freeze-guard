@@ -727,3 +727,179 @@ function PurgeAuditPanel({ tenantId, canManage }: { tenantId: string; canManage:
     </div>
   );
 }
+
+type AuditEntry = {
+  id: string;
+  employee_id: string;
+  consent_id: string | null;
+  event_type: string;
+  consent_version: number | null;
+  acted_by_email: string | null;
+  acted_by_name: string | null;
+  reason: string | null;
+  ip_origin: string | null;
+  user_agent: string | null;
+  snapshot: any;
+  occurred_at: string;
+};
+
+function ConsentAuditTrail({
+  tenantId, employees,
+}: { tenantId: string; employees: Array<{ id: string; name: string; registration_number: string }> }) {
+  const [rows, setRows] = useState<AuditEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filterEmp, setFilterEmp] = useState<string>("all");
+  const [filterEvent, setFilterEvent] = useState<string>("all");
+
+  const empMap = useMemo(() => {
+    const m = new Map<string, { name: string; registration_number: string }>();
+    employees.forEach(e => m.set(e.id, e));
+    return m;
+  }, [employees]);
+
+  const load = async () => {
+    setLoading(true);
+    let q = supabase
+      .from("consent_audit_log")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("occurred_at", { ascending: false })
+      .limit(300);
+    if (filterEmp !== "all") q = q.eq("employee_id", filterEmp);
+    if (filterEvent !== "all") q = q.eq("event_type", filterEvent);
+    const { data } = await q;
+    setRows((data as any) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [tenantId, filterEmp, filterEvent]);
+
+  const exportCsv = () => {
+    const header = ["data","colaborador","matricula","evento","versao","executor","email","ip","motivo","user_agent"];
+    const lines = rows.map(r => {
+      const emp = empMap.get(r.employee_id);
+      const cells = [
+        format(new Date(r.occurred_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR }),
+        emp?.name || r.employee_id,
+        emp?.registration_number || "",
+        r.event_type,
+        r.consent_version ?? "",
+        r.acted_by_name || "",
+        r.acted_by_email || "",
+        r.ip_origin || "",
+        (r.reason || "").replace(/\s+/g, " "),
+        (r.user_agent || "").replace(/\s+/g, " "),
+      ];
+      return cells.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",");
+    });
+    const csv = [header.join(","), ...lines].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `trilha-consentimentos-${format(new Date(), "yyyyMMdd-HHmm")}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const eventLabel = (t: string) => ({
+    consent_given: "Concedido",
+    consent_renewed: "Renovado",
+    consent_revoked: "Revogado",
+  } as Record<string, string>)[t] || t;
+
+  const eventTone = (t: string) =>
+    t === "consent_revoked"
+      ? "bg-status-red/20 text-status-red border border-status-red/40"
+      : t === "consent_renewed"
+        ? "bg-status-yellow/20 text-status-yellow border border-status-yellow/40"
+        : "bg-status-ok/20 text-status-ok border border-status-ok/40";
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between gap-4 flex-wrap">
+        <div>
+          <CardTitle>Trilha de consentimentos</CardTitle>
+          <CardDescription>
+            Cada concessão, renovação ou revogação fica registrada com data/hora, IP, dispositivo e o usuário responsável.
+            Esta trilha é a fonte de verdade para o RH/SST e para a ANPD.
+          </CardDescription>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <Select value={filterEmp} onValueChange={setFilterEmp}>
+            <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os colaboradores</SelectItem>
+              {employees.map(e => (
+                <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterEvent} onValueChange={setFilterEvent}>
+            <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os eventos</SelectItem>
+              <SelectItem value="consent_given">Concedido</SelectItem>
+              <SelectItem value="consent_renewed">Renovado</SelectItem>
+              <SelectItem value="consent_revoked">Revogado</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" onClick={exportCsv} disabled={!rows.length}>
+            <FileDown className="h-4 w-4 mr-2" /> Exportar CSV
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="text-sm text-muted-foreground py-6 text-center">Carregando trilha...</div>
+        ) : rows.length === 0 ? (
+          <div className="text-sm text-muted-foreground py-6 text-center">
+            Nenhum evento registrado ainda.
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Data/Hora</TableHead>
+                <TableHead>Colaborador</TableHead>
+                <TableHead>Evento</TableHead>
+                <TableHead>Versão</TableHead>
+                <TableHead>Executor</TableHead>
+                <TableHead>IP</TableHead>
+                <TableHead>Motivo</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map(r => {
+                const emp = empMap.get(r.employee_id);
+                return (
+                  <TableRow key={r.id}>
+                    <TableCell className="text-xs whitespace-nowrap">
+                      {format(new Date(r.occurred_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-medium text-sm">{emp?.name || r.employee_id}</div>
+                      <div className="text-xs text-muted-foreground">{emp?.registration_number || "—"}</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={eventTone(r.event_type)}>{eventLabel(r.event_type)}</Badge>
+                    </TableCell>
+                    <TableCell className="text-xs">v{r.consent_version ?? "—"}</TableCell>
+                    <TableCell className="text-xs">
+                      <div>{r.acted_by_name || "—"}</div>
+                      <div className="text-muted-foreground">{r.acted_by_email || ""}</div>
+                    </TableCell>
+                    <TableCell className="text-xs font-mono">{r.ip_origin || "—"}</TableCell>
+                    <TableCell className="text-xs max-w-[260px] truncate" title={r.reason || ""}>
+                      {r.reason || "—"}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
