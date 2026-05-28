@@ -33,6 +33,7 @@ export const ROUTE_ACCESS: Record<string, AppRole[]> = {
   "/empresas": [], // só super_admin
   "/usuarios": ["administrador"],
   "/como-funciona": ["administrador", "gestor", "rh_sst", "visualizador"],
+  "/lgpd": ["administrador", "gestor", "rh_sst", "visualizador"],
 };
 
 export function canAccess(path: string, roles: AppRole[]): boolean {
