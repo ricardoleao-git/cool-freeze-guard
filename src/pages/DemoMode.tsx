@@ -36,10 +36,16 @@ export default function DemoMode() {
           <CardContent className="space-y-5">
             <div>
               <Label>Colaborador alvo</Label>
-              <Select value={emp} onValueChange={setEmp}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
-              </Select>
+              {loading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground py-2"><Loader2 className="h-4 w-4 animate-spin" /> Carregando ambiente de experimentação…</div>
+              ) : employees.length === 0 ? (
+                <div className="text-sm text-muted-foreground py-2">Nenhum colaborador disponível no tenant de demonstração.</div>
+              ) : (
+                <Select value={emp} onValueChange={setEmp}>
+                  <SelectTrigger><SelectValue placeholder="Selecione um colaborador" /></SelectTrigger>
+                  <SelectContent>{employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
+                </Select>
+              )}
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
