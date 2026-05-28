@@ -172,7 +172,7 @@ export default function MyDay() {
           {employee && (
             <div className="flex items-center gap-2 text-xs">
               <Badge variant="outline" className="capitalize">{employee.position || "Colaborador"}</Badge>
-              <Badge variant="outline">{employee.current_status === "inside" ? "Dentro da câmara" : employee.current_status === "break" ? "Em pausa" : "Fora"}</Badge>
+              <Badge variant="outline">{employee.current_status === "thermal_break" ? "Em pausa" : employee.current_status === "outside" ? "Fora" : "Dentro / atenção"}</Badge>
               <Badge variant="outline">{Math.round(employee.accumulated_minutes)} min acumulados</Badge>
             </div>
           )}
