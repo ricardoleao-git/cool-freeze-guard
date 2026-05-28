@@ -33,7 +33,7 @@ export interface AccessEvent {
 }
 export interface Alert {
   id: string; tenant_id: string; employee_id: string;
-  alert_type: "yellow" | "orange" | "red_block" | "break_completed" | "device_offline" | "missing_exit";
+  alert_type: "yellow" | "orange" | "red_block" | "break_completed" | "device_offline" | "missing_exit" | "cycle_reset_meal" | "cycle_reset_shift";
   severity: "info" | "warning" | "critical";
   message: string; triggered_at: number; status: "open" | "acknowledged" | "resolved";
 }

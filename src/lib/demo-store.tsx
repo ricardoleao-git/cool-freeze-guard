@@ -133,6 +133,16 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const employeesRef = useRef<Employee[]>([]);
   useEffect(() => { employeesRef.current = state.employees; }, [state.employees]);
 
+  // ---------- cycle reset tracking ----------
+  // Tempo (em minutos simulados) que cada colaborador está fora do ambiente frio
+  // com exposição acumulada > 0. Ao atingir MEAL_RESET_MINUTES o ciclo é reiniciado
+  // (regra do intervalo de refeição — PDF Seção 3 / regra dos 20 min).
+  const outsideMinutesRef = useRef<Map<string, number>>(new Map());
+  // Última hora-do-dia em que avaliamos virada de turno (wall clock).
+  const lastShiftHourRef = useRef<number>(new Date().getHours());
+  const MEAL_RESET_MINUTES = 20;
+  const SHIFT_BOUNDARIES = [6, 14, 22]; // 1º, 2º, 3º turno
+
   // ---------- audio ----------
   const audioCtxRef = useRef<AudioContext | null>(null);
   const soundRef = useRef(state.soundEnabled);
@@ -338,6 +348,8 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!area) return;
 
         if (emp.current_status === "inside" || emp.current_status === "yellow" || emp.current_status === "orange") {
+          // dentro do ambiente frio: zera contador de "tempo fora"
+          outsideMinutesRef.current.delete(emp.id);
           emp.accumulated_minutes = Math.min(area.exposure_limit_minutes, emp.accumulated_minutes + deltaMinutes);
           const prevStatus = emp.current_status;
           if (emp.accumulated_minutes >= area.exposure_limit_minutes) emp.current_status = "blocked";
@@ -362,6 +374,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
             dirtyEmployeesRef.current.add(emp.id);
           }
         } else if (emp.current_status === "thermal_break") {
+          outsideMinutesRef.current.delete(emp.id);
           if (emp.break_started_at) emp.break_started_at -= deltaMinutes * 60_000;
           const elapsedMin = emp.break_started_at ? (Date.now() - emp.break_started_at) / 60_000 : 0;
           if (elapsedMin >= area.break_minutes) {
@@ -374,8 +387,49 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const ongoing = prev.breaks.find(b => b.employee_id === emp.id && !b.completed);
             if (ongoing) completedBreakIds.push(ongoing.id);
           }
+        } else if (emp.current_status === "outside") {
+          // Regra de refeição: 20 min consecutivos fora reinicia a exposição acumulada.
+          if (emp.accumulated_minutes > 0) {
+            const acc = (outsideMinutesRef.current.get(emp.id) || 0) + deltaMinutes;
+            if (acc >= MEAL_RESET_MINUTES) {
+              emp.accumulated_minutes = 0;
+              outsideMinutesRef.current.delete(emp.id);
+              dirtyEmployeesRef.current.add(emp.id);
+              newAlerts.push(mkAlert(emp, "cycle_reset_meal", "info",
+                `Ciclo reiniciado: ${emp.name} cumpriu ${MEAL_RESET_MINUTES} min fora do ambiente frio (intervalo de refeição).`));
+            } else {
+              outsideMinutesRef.current.set(emp.id, acc);
+            }
+          } else {
+            outsideMinutesRef.current.delete(emp.id);
+          }
+        } else {
+          outsideMinutesRef.current.delete(emp.id);
         }
       });
+
+      // Virada de turno (wall clock): ao cruzar 06:00 / 14:00 / 22:00 reinicia
+      // a exposição acumulada de todos os colaboradores fora do ambiente frio.
+      const nowHour = new Date().getHours();
+      const prevHour = lastShiftHourRef.current;
+      if (nowHour !== prevHour) {
+        const crossed = SHIFT_BOUNDARIES.some(h =>
+          prevHour < h ? nowHour >= h : (nowHour < prevHour && (h > prevHour || h <= nowHour))
+        );
+        lastShiftHourRef.current = nowHour;
+        if (crossed) {
+          employees.forEach(emp => {
+            if (emp.current_status === "outside" && emp.accumulated_minutes > 0) {
+              emp.accumulated_minutes = 0;
+              outsideMinutesRef.current.delete(emp.id);
+              dirtyEmployeesRef.current.add(emp.id);
+              newAlerts.push(mkAlert(emp, "cycle_reset_shift", "info",
+                `Ciclo reiniciado: virada de turno (${String(nowHour).padStart(2, "0")}:00) — ${emp.name}.`));
+            }
+          });
+        }
+      }
+
 
       // persist async
       newAlerts.forEach(a => { persistAlert(a).catch(() => {}); });
@@ -420,6 +474,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const simulateEntry = useCallback(async (employeeId: string, areaId?: string) => {
     const emp = employeesRef.current.find(e => e.id === employeeId); if (!emp) return;
     if (emp.current_status === "blocked" || emp.current_status === "thermal_break") return;
+    outsideMinutesRef.current.delete(employeeId);
     let area: ColdArea | undefined;
     setState(prev => {
       area = prev.coldAreas.find(a => a.id === (areaId || emp.current_area_id || "")) || pickAreaForEmployee(emp, prev.coldAreas);
@@ -474,6 +529,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetDemo = useCallback(async () => {
     // wipe ephemeral data and reset employees
+    outsideMinutesRef.current.clear();
     await Promise.all([
       supabase.from("access_events").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
       supabase.from("alerts").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
