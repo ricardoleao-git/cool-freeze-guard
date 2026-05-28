@@ -504,7 +504,21 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ---------- mutations ----------
   const simulateEntry = useCallback(async (employeeId: string, areaId?: string) => {
     const emp = employeesRef.current.find(e => e.id === employeeId); if (!emp) return;
-    if (emp.current_status === "blocked" || emp.current_status === "thermal_break") return;
+    if (emp.current_status === "blocked") return;
+
+    // Pausa interrompida: reentrada antes de completar os 20 min oficiais.
+    // O acumulado NÃO é zerado — apenas pausas concluídas integralmente resetam o ciclo.
+    let interruptedBreak: { id: string; elapsedMin: number; required: number } | null = null;
+    if (emp.current_status === "thermal_break") {
+      const ongoing = breaksRef.current.find(b => b.employee_id === emp.id && !b.completed && !b.interrupted);
+      const required = pickAreaForEmployee(emp, coldAreasRef.current)?.break_minutes ?? 20;
+      const elapsedMin = emp.break_started_at ? (Date.now() - emp.break_started_at) / 60_000 : 0;
+      if (ongoing) interruptedBreak = { id: ongoing.id, elapsedMin, required };
+      // sai do estado de pausa, mas preserva accumulated_minutes
+      emp.current_status = "outside";
+      emp.break_started_at = null;
+    }
+
     outsideMinutesRef.current.delete(employeeId);
     const candidateAreaId = areaId || emp.current_area_id || undefined;
     let area: ColdArea | undefined;
