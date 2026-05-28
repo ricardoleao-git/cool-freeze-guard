@@ -59,6 +59,7 @@ const App = () => (
                 <Route path="/usuarios" element={<Users />} />
                 <Route path="/como-funciona" element={<HowItWorks />} />
                 <Route path="/lgpd" element={<LgpdPrivacy />} />
+                <Route path="/ajustes" element={<TimeAdjustments />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
