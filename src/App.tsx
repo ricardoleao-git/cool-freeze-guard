@@ -25,6 +25,7 @@ import History from "./pages/History";
 import Login from "./pages/Login";
 import NoPermission from "./pages/NoPermission";
 import NotFound from "./pages/NotFound";
+import LgpdPrivacy from "./pages/LgpdPrivacy";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => (
                 <Route path="/empresas" element={<Tenants />} />
                 <Route path="/usuarios" element={<Users />} />
                 <Route path="/como-funciona" element={<HowItWorks />} />
+                <Route path="/lgpd" element={<LgpdPrivacy />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
