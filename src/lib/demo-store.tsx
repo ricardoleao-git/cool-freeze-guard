@@ -221,7 +221,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [tenants, units, departments, coldAreas, employees, devices, events, alerts, breaks, occurrences, notes, attachments, ecaRows] = await Promise.all([
+      const [tenants, units, departments, coldAreas, employees, devices, events, alerts, breaks, occurrences, notes, attachments, ecaRows, settingsRows, consentRows] = await Promise.all([
         supabase.from("tenants").select("*").order("name"),
         supabase.from("units").select("*").order("name"),
         supabase.from("departments").select("*").order("name"),
@@ -235,6 +235,8 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
         supabase.from("occurrence_notes").select("*").order("created_at", { ascending: true }),
         supabase.from("occurrence_attachments").select("*").order("created_at", { ascending: true }),
         supabase.from("employee_cold_areas").select("*"),
+        supabase.from("tenant_settings").select("tenant_id, require_consent_before_capture, consent_version"),
+        supabase.from("employee_consents").select("id, tenant_id, employee_id, consent_version, status, accepted_at"),
       ]);
       if (cancelled) return;
       const notesByOcc = new Map<string, OccurrenceNote[]>();
