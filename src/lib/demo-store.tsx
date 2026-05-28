@@ -809,12 +809,26 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
 function mkAlert(emp: Employee, type: Alert["alert_type"], severity: Alert["severity"], message: string): Alert {
   return { id: crypto.randomUUID(), tenant_id: emp.tenant_id, employee_id: emp.id, alert_type: type, severity, message, triggered_at: Date.now(), status: "open" };
 }
-function mkEvent(emp: Employee, areaId: string, eventType: "entry" | "exit", source: AccessEvent["source"], devices?: Device[]): AccessEvent {
+function mkEvent(
+  emp: Employee,
+  areaId: string,
+  eventType: "entry" | "exit",
+  source: AccessEvent["source"],
+  devices?: Device[],
+  ctx?: { status_before?: string | null; status_after?: string | null; accumulated_at_event?: number | null },
+): AccessEvent {
   const device = devices?.find(d => d.cold_area_id === areaId && d.device_type === eventType);
   return {
     id: crypto.randomUUID(), tenant_id: emp.tenant_id, unit_id: emp.unit_id, cold_area_id: areaId,
     device_id: device?.id || "manual", employee_id: emp.id, event_type: eventType,
     source, occurred_at: Date.now(), validation_status: "valid", confidence_score: 0.92 + Math.random() * 0.07,
+    status_before: ctx?.status_before ?? null,
+    status_after: ctx?.status_after ?? null,
+    accumulated_at_event: ctx?.accumulated_at_event ?? emp.accumulated_minutes,
+    user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
+    ip_origin: null,
+    record_hash: null,
+    previous_hash: null,
   };
 }
 
