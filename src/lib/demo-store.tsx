@@ -45,6 +45,8 @@ type Ctx = State & {
   updateEmployee: (id: string, patch: Partial<Employee>) => Promise<void>;
   deleteEmployee: (id: string) => Promise<void>;
   uploadEmployeeAvatar: (employeeId: string, file: File) => Promise<string>;
+  isEmployeeAuthorizedForArea: (employeeId: string, areaId: string) => boolean;
+  setEmployeeAreaAuthorizations: (employeeId: string, areaIds: string[]) => Promise<void>;
 };
 
 const DemoContext = createContext<Ctx | null>(null);
