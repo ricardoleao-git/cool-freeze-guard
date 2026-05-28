@@ -341,10 +341,13 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
   const updateBreakById = async (id: string, patch: Partial<ThermalBreak>) => {
-    await supabase.from("thermal_breaks").update({
-      ended_at: patch.ended_at ? toIso(patch.ended_at) : undefined,
-      completed: patch.completed,
-    }).eq("id", id);
+    const upd: Record<string, unknown> = {};
+    if (patch.ended_at !== undefined) upd.ended_at = patch.ended_at ? toIso(patch.ended_at) : null;
+    if (patch.completed !== undefined) upd.completed = patch.completed;
+    if (patch.interrupted !== undefined) upd.interrupted = patch.interrupted;
+    if (patch.interrupted_at !== undefined) upd.interrupted_at = patch.interrupted_at ? toIso(patch.interrupted_at) : null;
+    if (patch.interruption_reason !== undefined) upd.interruption_reason = patch.interruption_reason;
+    await supabase.from("thermal_breaks").update(upd as any).eq("id", id);
   };
   const flushEmployee = async (emp: Employee) => {
     await supabase.from("employees").update({
