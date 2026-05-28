@@ -204,20 +204,62 @@ export default function History() {
   };
 
   const exportCsv = () => {
-    const rows = [
-      ["Data", "Colaborador", "Matrícula", "Unidade", "Categoria", "Prioridade", "Status", "Título", "Anexos"],
-      ...filtered.map(o => {
-        const emp = employeeMap.get(o.employee_id);
-        const u = emp ? unitMap.get(emp.unit_id) : undefined;
-        return [
-          new Date(o.created_at).toLocaleString("pt-BR"),
-          emp?.name ?? "—", emp?.registration_number ?? "—", u?.name ?? "—",
-          CATEGORY_LABELS[o.category], PRIORITY_LABELS[o.priority], STATUS_LABELS[o.status],
-          o.title, String(o.attachments.length),
-        ];
-      }),
+    const sortLabel = `${sort.field} ${sort.dir}`;
+    const activeFilters: Array<[string, string]> = [
+      ["Busca", search || "—"],
+      ["Colaborador", employeeId === "all" ? "Todos" : (employeeMap.get(employeeId)?.name ?? employeeId)],
+      ["Unidade", unitId === "all" ? "Todas" : (unitMap.get(unitId)?.name ?? unitId)],
+      ["Severidade", priority === "all" ? "Todas" : (PRIORITY_LABELS[priority as OccurrencePriority] ?? priority)],
+      ["Categoria", category === "all" ? "Todas" : (CATEGORY_LABELS[category as OccurrenceCategory] ?? category)],
+      ["Status", status === "all" ? "Todos" : (STATUS_LABELS[status] ?? status)],
+      ["Evidência", hasAttach === "all" ? "Todas" : hasAttach === "yes" ? "Apenas com anexo" : "Apenas sem anexo"],
+      ["Data inicial", dateFrom || "—"],
+      ["Data final", dateTo || "—"],
+      ["Ordenação", sortLabel],
+      ["Total exportado", String(filtered.length)],
     ];
-    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+
+    const headerRows: string[][] = [
+      [`Histórico RH/SST — exportado em ${new Date().toLocaleString("pt-BR")}`],
+      ["Filtros ativos:"],
+      ...activeFilters.map(([k, v]) => [k, v]),
+      [""],
+    ];
+
+    const columns = [
+      "Data de abertura", "Colaborador", "Matrícula", "Unidade",
+      "Categoria", "Prioridade", "Status",
+      "Título", "Descrição",
+      "Resolvida em", "Resolvido por", "Resolução",
+      "Qtd. evidências", "Evidências (nomes)",
+      "Notas (qtd)", "ID ocorrência",
+    ];
+
+    const dataRows = filtered.map(o => {
+      const emp = employeeMap.get(o.employee_id);
+      const u = emp ? unitMap.get(emp.unit_id) : undefined;
+      return [
+        new Date(o.created_at).toLocaleString("pt-BR"),
+        emp?.name ?? "—",
+        emp?.registration_number ?? "—",
+        u?.name ?? "—",
+        CATEGORY_LABELS[o.category],
+        PRIORITY_LABELS[o.priority],
+        STATUS_LABELS[o.status],
+        o.title,
+        o.description ?? "",
+        o.resolved_at ? new Date(o.resolved_at).toLocaleString("pt-BR") : "—",
+        o.resolved_by ?? "—",
+        o.resolution ?? "—",
+        String(o.attachments.length),
+        o.attachments.map(a => a.name).join(" | "),
+        String(o.notes.length),
+        o.id,
+      ];
+    });
+
+    const rows = [...headerRows, columns, ...dataRows];
+    const csv = rows.map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
     const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
