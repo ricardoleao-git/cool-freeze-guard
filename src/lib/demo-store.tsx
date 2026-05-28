@@ -76,6 +76,13 @@ const mapEvent = (r: any): AccessEvent => ({
   occurred_at: toMs(r.occurred_at) || Date.now(),
   validation_status: r.validation_status,
   confidence_score: Number(r.confidence_score) || 0.95,
+  status_before: r.status_before ?? null,
+  status_after: r.status_after ?? null,
+  accumulated_at_event: r.accumulated_at_event != null ? Number(r.accumulated_at_event) : null,
+  ip_origin: r.ip_origin ?? null,
+  user_agent: r.user_agent ?? null,
+  record_hash: r.record_hash ?? null,
+  previous_hash: r.previous_hash ?? null,
 });
 const mapAlert = (r: any): Alert => ({
   id: r.id, tenant_id: r.tenant_id, employee_id: r.employee_id,
@@ -317,7 +324,11 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
       employee_id: e.employee_id, event_type: e.event_type, source: e.source,
       occurred_at: toIso(e.occurred_at), validation_status: e.validation_status,
       confidence_score: e.confidence_score,
-    });
+      status_before: e.status_before ?? null,
+      status_after: e.status_after ?? null,
+      accumulated_at_event: e.accumulated_at_event ?? null,
+      user_agent: e.user_agent ?? (typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null),
+    } as any);
   };
   const persistBreak = async (b: ThermalBreak) => {
     await supabase.from("thermal_breaks").insert({
@@ -374,7 +385,10 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (emp.current_status === "blocked") {
               newAlerts.push(mkAlert(emp, "red_block", "critical", `BLOQUEIO PREVENTIVO: ${emp.name} atingiu 100 min. Pausa térmica obrigatória.`));
               beep(1200, 0.4);
-              const ev = mkEvent(emp, area.id, "exit", "demo_simulation", prev.devices);
+              const ev = mkEvent(emp, area.id, "exit", "demo_simulation", prev.devices, {
+                status_before: "blocked", status_after: "thermal_break",
+                accumulated_at_event: emp.accumulated_minutes,
+              });
               newEvents.push(ev);
               emp.inside_since = null;
               emp.current_status = "thermal_break";
@@ -526,22 +540,31 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.error(`Acesso negado: ${emp.name} não está autorizado em ${area.name}.`);
       return;
     }
+    const before = emp.current_status;
     const updated = employeesRef.current.find(e => e.id === employeeId)!;
     await flushEmployee(updated);
-    await persistEvent(mkEvent(updated, area.id, "entry", "demo_simulation"));
+    await persistEvent(mkEvent(updated, area.id, "entry", "demo_simulation", undefined, {
+      status_before: before, status_after: updated.current_status,
+      accumulated_at_event: updated.accumulated_minutes,
+    }));
   }, []);
 
 
   const simulateExit = useCallback(async (employeeId: string) => {
     const emp = employeesRef.current.find(e => e.id === employeeId); if (!emp || !emp.current_area_id) return;
     const areaId = emp.current_area_id;
+    const before = emp.current_status;
+    const accAtEvent = emp.accumulated_minutes;
     setState(prev => ({
       ...prev,
       employees: prev.employees.map(x => x.id === emp.id ? { ...x, inside_since: null, current_status: "outside" as const } : x),
     }));
     const updated = employeesRef.current.find(e => e.id === employeeId)!;
     await flushEmployee(updated);
-    await persistEvent(mkEvent(updated, areaId, "exit", "demo_simulation"));
+    await persistEvent(mkEvent(updated, areaId, "exit", "demo_simulation", undefined, {
+      status_before: before, status_after: "outside",
+      accumulated_at_event: accAtEvent,
+    }));
   }, []);
 
   const advanceMinutes = useCallback((minutes: number) => applyTick(minutes), [applyTick]);
@@ -798,12 +821,26 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
 function mkAlert(emp: Employee, type: Alert["alert_type"], severity: Alert["severity"], message: string): Alert {
   return { id: crypto.randomUUID(), tenant_id: emp.tenant_id, employee_id: emp.id, alert_type: type, severity, message, triggered_at: Date.now(), status: "open" };
 }
-function mkEvent(emp: Employee, areaId: string, eventType: "entry" | "exit", source: AccessEvent["source"], devices?: Device[]): AccessEvent {
+function mkEvent(
+  emp: Employee,
+  areaId: string,
+  eventType: "entry" | "exit",
+  source: AccessEvent["source"],
+  devices?: Device[],
+  ctx?: { status_before?: string | null; status_after?: string | null; accumulated_at_event?: number | null },
+): AccessEvent {
   const device = devices?.find(d => d.cold_area_id === areaId && d.device_type === eventType);
   return {
     id: crypto.randomUUID(), tenant_id: emp.tenant_id, unit_id: emp.unit_id, cold_area_id: areaId,
     device_id: device?.id || "manual", employee_id: emp.id, event_type: eventType,
     source, occurred_at: Date.now(), validation_status: "valid", confidence_score: 0.92 + Math.random() * 0.07,
+    status_before: ctx?.status_before ?? null,
+    status_after: ctx?.status_after ?? null,
+    accumulated_at_event: ctx?.accumulated_at_event ?? emp.accumulated_minutes,
+    user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
+    ip_origin: null,
+    record_hash: null,
+    previous_hash: null,
   };
 }
 

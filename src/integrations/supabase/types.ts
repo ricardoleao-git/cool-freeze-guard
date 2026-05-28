@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       access_events: {
         Row: {
+          accumulated_at_event: number | null
           cold_area_id: string
           confidence_score: number
           created_at: string
@@ -23,13 +24,20 @@ export type Database = {
           employee_id: string
           event_type: string
           id: string
+          ip_origin: unknown
           occurred_at: string
+          previous_hash: string | null
+          record_hash: string | null
           source: string
+          status_after: string | null
+          status_before: string | null
           tenant_id: string
           unit_id: string
+          user_agent: string | null
           validation_status: string
         }
         Insert: {
+          accumulated_at_event?: number | null
           cold_area_id: string
           confidence_score?: number
           created_at?: string
@@ -37,13 +45,20 @@ export type Database = {
           employee_id: string
           event_type: string
           id?: string
+          ip_origin?: unknown
           occurred_at?: string
+          previous_hash?: string | null
+          record_hash?: string | null
           source?: string
+          status_after?: string | null
+          status_before?: string | null
           tenant_id: string
           unit_id: string
+          user_agent?: string | null
           validation_status?: string
         }
         Update: {
+          accumulated_at_event?: number | null
           cold_area_id?: string
           confidence_score?: number
           created_at?: string
@@ -51,10 +66,16 @@ export type Database = {
           employee_id?: string
           event_type?: string
           id?: string
+          ip_origin?: unknown
           occurred_at?: string
+          previous_hash?: string | null
+          record_hash?: string | null
           source?: string
+          status_after?: string | null
+          status_before?: string | null
           tenant_id?: string
           unit_id?: string
+          user_agent?: string | null
           validation_status?: string
         }
         Relationships: [
