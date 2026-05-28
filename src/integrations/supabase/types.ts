@@ -233,6 +233,60 @@ export type Database = {
           },
         ]
       }
+      consent_audit_log: {
+        Row: {
+          acted_by_email: string | null
+          acted_by_name: string | null
+          acted_by_user_id: string | null
+          consent_id: string | null
+          consent_version: number | null
+          created_at: string
+          employee_id: string
+          event_type: string
+          id: string
+          ip_origin: unknown
+          occurred_at: string
+          reason: string | null
+          snapshot: Json
+          tenant_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          acted_by_email?: string | null
+          acted_by_name?: string | null
+          acted_by_user_id?: string | null
+          consent_id?: string | null
+          consent_version?: number | null
+          created_at?: string
+          employee_id: string
+          event_type: string
+          id?: string
+          ip_origin?: unknown
+          occurred_at?: string
+          reason?: string | null
+          snapshot?: Json
+          tenant_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          acted_by_email?: string | null
+          acted_by_name?: string | null
+          acted_by_user_id?: string | null
+          consent_id?: string | null
+          consent_version?: number | null
+          created_at?: string
+          employee_id?: string
+          event_type?: string
+          id?: string
+          ip_origin?: unknown
+          occurred_at?: string
+          reason?: string | null
+          snapshot?: Json
+          tenant_id?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       departments: {
         Row: {
           created_at: string
