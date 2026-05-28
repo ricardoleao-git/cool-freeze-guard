@@ -134,6 +134,7 @@ export default function Employees() {
       </div>
 
       <EmployeeFormDialog open={formOpen} onOpenChange={setFormOpen} employee={editing} />
+      <EmployeeAreaAuthDialog open={!!authFor} onOpenChange={(o) => !o && setAuthFor(null)} employee={authFor} />
 
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
