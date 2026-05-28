@@ -732,7 +732,48 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const deleteEmployee: Ctx["deleteEmployee"] = useCallback(async (id) => {
     const { error } = await supabase.from("employees").delete().eq("id", id);
     if (error) throw error;
-    setState(prev => ({ ...prev, employees: prev.employees.filter(e => e.id !== id) }));
+    setState(prev => ({
+      ...prev,
+      employees: prev.employees.filter(e => e.id !== id),
+      employeeColdAreaAuth: prev.employeeColdAreaAuth.filter(a => a.employee_id !== id),
+    }));
+  }, []);
+
+  const isEmployeeAuthorizedForArea: Ctx["isEmployeeAuthorizedForArea"] = useCallback(
+    (employeeId, areaId) => ecaRef.current.some(x => x.employee_id === employeeId && x.cold_area_id === areaId),
+    [],
+  );
+
+  const setEmployeeAreaAuthorizations: Ctx["setEmployeeAreaAuthorizations"] = useCallback(async (employeeId, areaIds) => {
+    const emp = employeesRef.current.find(e => e.id === employeeId);
+    if (!emp) throw new Error("Colaborador não encontrado");
+    const current = ecaRef.current.filter(x => x.employee_id === employeeId);
+    const currentIds = new Set(current.map(x => x.cold_area_id));
+    const nextIds = new Set(areaIds);
+    const toAdd = areaIds.filter(id => !currentIds.has(id));
+    const toRemoveIds = current.filter(x => !nextIds.has(x.cold_area_id)).map(x => x.id);
+
+    if (toRemoveIds.length > 0) {
+      const { error } = await supabase.from("employee_cold_areas").delete().in("id", toRemoveIds);
+      if (error) throw error;
+    }
+    let inserted: any[] = [];
+    if (toAdd.length > 0) {
+      const rows = toAdd.map(areaId => ({
+        employee_id: employeeId, cold_area_id: areaId, tenant_id: emp.tenant_id, authorized_by: "gestor.demo",
+      }));
+      const { data, error } = await supabase.from("employee_cold_areas").insert(rows).select("*");
+      if (error) throw error;
+      inserted = data || [];
+    }
+    setState(prev => {
+      const remaining = prev.employeeColdAreaAuth.filter(a => a.employee_id !== employeeId || nextIds.has(a.cold_area_id));
+      const insertedMapped: EmployeeColdAreaAuthorization[] = inserted.map((r: any) => ({
+        id: r.id, employee_id: r.employee_id, cold_area_id: r.cold_area_id, tenant_id: r.tenant_id,
+        authorized_by: r.authorized_by, authorized_at: toMs(r.authorized_at) || Date.now(),
+      }));
+      return { ...prev, employeeColdAreaAuth: [...remaining, ...insertedMapped] };
+    });
   }, []);
 
   const value: Ctx = useMemo(() => ({
@@ -744,10 +785,12 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment,
     removeOccurrenceAttachment, getAttachmentDownloadUrl,
     createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar,
+    isEmployeeAuthorizedForArea, setEmployeeAreaAuthorizations,
   }), [state, simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, acknowledgeAlert,
        addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment,
        removeOccurrenceAttachment, getAttachmentDownloadUrl,
-       createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar]);
+       createEmployee, updateEmployee, deleteEmployee, uploadEmployeeAvatar,
+       isEmployeeAuthorizedForArea, setEmployeeAreaAuthorizations]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 };
