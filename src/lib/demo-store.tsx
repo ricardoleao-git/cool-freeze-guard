@@ -7,6 +7,21 @@ import {
   Tenant, ThermalBreak, Unit,
 } from "./demo-data";
 
+export type ConsentStatus = "ok" | "missing" | "outdated" | "revoked";
+export type TenantPrivacySettings = {
+  tenant_id: string;
+  require_consent_before_capture: boolean;
+  consent_version: number;
+};
+export type EmployeeConsentRecord = {
+  id: string;
+  tenant_id: string;
+  employee_id: string;
+  consent_version: number;
+  status: "active" | "revoked";
+  accepted_at: number;
+};
+
 type State = {
   tenants: Tenant[];
   units: Unit[];
@@ -19,6 +34,8 @@ type State = {
   breaks: ThermalBreak[];
   occurrences: Occurrence[];
   employeeColdAreaAuth: EmployeeColdAreaAuthorization[];
+  tenantSettings: TenantPrivacySettings[];
+  employeeConsents: EmployeeConsentRecord[];
   activeTenantId: string;
   timeScale: number;
   soundEnabled: boolean;
