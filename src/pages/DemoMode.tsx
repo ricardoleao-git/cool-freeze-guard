@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { DemoLiveStatusPanel } from "@/components/DemoLiveStatusPanel";
+
 
 export default function DemoMode() {
   const { simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, timeScale, setTimeScale, setActiveTenantId, loading } = useDemo();
@@ -75,20 +77,23 @@ export default function DemoMode() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
-          <CardHeader><CardTitle className="font-display">Roteiro sugerido</CardTitle></CardHeader>
-          <CardContent className="text-sm space-y-3 text-muted-foreground">
-            <ol className="list-decimal pl-5 space-y-2">
-              <li>Abra o <strong className="text-foreground">Painel Operacional</strong> em uma TV.</li>
-              <li>Use <strong className="text-foreground">Entrada</strong> para um colaborador iniciar exposição.</li>
-              <li>Aumente a velocidade do tempo para 4× e observe o card mudar para <span className="text-status-yellow">amarelo</span> aos 80 min.</li>
-              <li>Acompanhe a evolução para <span className="text-status-orange">laranja</span> aos 90 min.</li>
-              <li>Aos 100 min, o sistema dispara <span className="text-status-red font-semibold">bloqueio preventivo</span> e inicia automaticamente a pausa térmica.</li>
-              <li>Após 20 min fora, o colaborador é liberado e o ciclo reinicia.</li>
-            </ol>
-          </CardContent>
-        </Card>
+        <DemoLiveStatusPanel employeeId={emp} />
       </div>
+
+      <Card className="glass-card mt-4">
+        <CardHeader><CardTitle className="font-display">Roteiro sugerido</CardTitle></CardHeader>
+        <CardContent className="text-sm space-y-3 text-muted-foreground">
+          <ol className="list-decimal pl-5 space-y-2 md:columns-2 md:gap-8">
+            <li>Abra o <strong className="text-foreground">Painel Operacional</strong> em uma TV.</li>
+            <li>Use <strong className="text-foreground">Entrada</strong> para um colaborador iniciar exposição.</li>
+            <li>Aumente a velocidade do tempo para 4× e observe o card mudar para <span className="text-status-yellow">amarelo</span> aos 80 min.</li>
+            <li>Acompanhe a evolução para <span className="text-status-orange">laranja</span> aos 90 min.</li>
+            <li>Aos 100 min, o sistema dispara <span className="text-status-red font-semibold">bloqueio preventivo</span> e inicia automaticamente a pausa térmica.</li>
+            <li>Após 20 min fora, o colaborador é liberado e o ciclo reinicia.</li>
+          </ol>
+        </CardContent>
+      </Card>
     </div>
   );
 }
+
