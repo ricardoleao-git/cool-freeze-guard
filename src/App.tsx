@@ -20,6 +20,7 @@ import Integrations from "./pages/Integrations";
 import Tenants from "./pages/Tenants";
 import Users from "./pages/Users";
 import DemoMode from "./pages/DemoMode";
+import PublicPanel from "./pages/PublicPanel";
 import HowItWorks from "./pages/HowItWorks";
 import History from "./pages/History";
 import Login from "./pages/Login";
@@ -43,6 +44,8 @@ const App = () => (
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/demo" element={<DemoMode />} />
+              <Route path="/painel-demo" element={<PublicPanel />} />
+              <Route path="/painel-tv" element={<PublicPanel />} />
               <Route path="/sem-permissao" element={<ProtectedRoute><NoPermission /></ProtectedRoute>} />
               <Route element={<ProtectedRoute><RoleGuard><AppLayout /></RoleGuard></ProtectedRoute>}>
                 <Route path="/" element={<Dashboard />} />
