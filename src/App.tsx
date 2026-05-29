@@ -20,6 +20,7 @@ import Integrations from "./pages/Integrations";
 import Tenants from "./pages/Tenants";
 import Users from "./pages/Users";
 import DemoMode from "./pages/DemoMode";
+import PublicPanel from "./pages/PublicPanel";
 import HowItWorks from "./pages/HowItWorks";
 import History from "./pages/History";
 import Login from "./pages/Login";
