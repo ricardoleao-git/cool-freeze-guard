@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { DemoLiveStatusPanel } from "@/components/DemoLiveStatusPanel";
+
 
 export default function DemoMode() {
   const { simulateEntry, simulateExit, advanceMinutes, forceStatus, resetDemo, timeScale, setTimeScale, setActiveTenantId, loading } = useDemo();
