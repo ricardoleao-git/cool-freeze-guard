@@ -26,7 +26,12 @@ export default function DemoMode() {
         title="Modo Experimentação"
         description="Ambiente paralelo para testes e demonstrações ao vivo: simule entradas, avance o tempo, dispare alertas e observe o bloqueio preventivo com a pausa térmica — sem afetar dados de produção."
         icon={<Sparkles className="h-5 w-5" />}
-        actions={<Button asChild variant="outline"><Link to="/painel">Abrir Painel Operacional</Link></Button>}
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button asChild variant="outline"><Link to="/painel">Painel (autenticado)</Link></Button>
+            <Button asChild><a href="/painel-demo" target="_blank" rel="noopener">Abrir Painel TV (sem login)</a></Button>
+          </div>
+        }
       />
 
 
