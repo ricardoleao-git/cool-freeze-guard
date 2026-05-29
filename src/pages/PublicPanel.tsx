@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { useDemo } from "@/lib/demo-store";
 import OperationalPanel from "./OperationalPanel";
 
@@ -8,7 +8,21 @@ import OperationalPanel from "./OperationalPanel";
  * (policies anon permitem leitura). Ideal para deixar exibindo numa TV.
  */
 export default function PublicPanel() {
-  const { setActiveTenantId } = useDemo();
-  useEffect(() => { setActiveTenantId("demo-tenant"); }, [setActiveTenantId]);
+  const { activeTenantId, setActiveTenantId } = useDemo();
+
+  useLayoutEffect(() => {
+    if (activeTenantId !== "demo-tenant") {
+      setActiveTenantId("demo-tenant");
+    }
+  }, [activeTenantId, setActiveTenantId]);
+
+  if (activeTenantId !== "demo-tenant") {
+    return (
+      <div className="min-h-screen grid place-items-center text-muted-foreground text-sm">
+        Carregando painel operacional…
+      </div>
+    );
+  }
+
   return <OperationalPanel />;
 }
