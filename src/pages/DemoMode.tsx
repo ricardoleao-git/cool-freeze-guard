@@ -1,15 +1,17 @@
 import { PageHeader } from "@/components/PageHeader";
 import { useDemo, useTenantScoped } from "@/lib/demo-store";
-import { Sparkles, LogIn, LogOut, FastForward, AlertTriangle, ShieldAlert, RotateCcw, Play, Loader2 } from "lucide-react";
+import { Sparkles, LogIn, LogOut, FastForward, AlertTriangle, ShieldAlert, RotateCcw, Play, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { DemoLiveStatusPanel } from "@/components/DemoLiveStatusPanel";
+import { regenerateDemoSeed, getAutoRegenerate, setAutoRegenerate } from "@/lib/demo-seed";
 
 
 export default function DemoMode() {
