@@ -1,15 +1,17 @@
 import { PageHeader } from "@/components/PageHeader";
 import { useDemo, useTenantScoped } from "@/lib/demo-store";
-import { Sparkles, LogIn, LogOut, FastForward, AlertTriangle, ShieldAlert, RotateCcw, Play, Loader2 } from "lucide-react";
+import { Sparkles, LogIn, LogOut, FastForward, AlertTriangle, ShieldAlert, RotateCcw, Play, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { DemoLiveStatusPanel } from "@/components/DemoLiveStatusPanel";
+import { regenerateDemoSeed, getAutoRegenerate, setAutoRegenerate } from "@/lib/demo-seed";
 
 
 export default function DemoMode() {
@@ -19,7 +21,22 @@ export default function DemoMode() {
   useEffect(() => { setActiveTenantId("demo-tenant"); }, [setActiveTenantId]);
   const { employees } = useTenantScoped();
   const [emp, setEmp] = useState<string>("");
+  const [autoRegen, setAutoRegenState] = useState<boolean>(() => getAutoRegenerate());
+  const [regenerating, setRegenerating] = useState(false);
   useEffect(() => { if (!emp && employees[0]) setEmp(employees[0].id); }, [employees, emp]);
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    try {
+      await regenerateDemoSeed();
+      toast.success("Dados simulados regenerados. Recarregando…");
+      setTimeout(() => window.location.reload(), 500);
+    } catch (e) {
+      console.error(e);
+      toast.error("Falha ao regenerar dados de demonstração.");
+      setRegenerating(false);
+    }
+  };
 
   return (
     <div className="container py-6 md:py-8">
@@ -35,6 +52,31 @@ export default function DemoMode() {
           </div>
         }
       />
+
+      <Card className="glass-card mb-4">
+        <CardHeader>
+          <CardTitle className="font-display flex items-center gap-2"><RefreshCw className="h-4 w-4" /> Dados simulados do ambiente</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
+          <div className="text-sm text-muted-foreground max-w-xl">
+            Recria empresas, unidades, departamentos, áreas frias, leitores e colaboradores fictícios neste tenant de demonstração. Útil para começar uma apresentação do zero ou randomizar os nomes.
+          </div>
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="auto-regen"
+                checked={autoRegen}
+                onCheckedChange={(v) => { setAutoRegenerate(v); setAutoRegenState(v); toast.success(v ? "Regeneração automática ativada." : "Regeneração automática desativada."); }}
+              />
+              <Label htmlFor="auto-regen" className="cursor-pointer">Regenerar ao entrar</Label>
+            </div>
+            <Button onClick={handleRegenerate} disabled={regenerating}>
+              {regenerating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+              Regenerar agora
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
