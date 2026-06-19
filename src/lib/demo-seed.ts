@@ -169,8 +169,9 @@ export async function regenerateDemoSeed(): Promise<void> {
   const seed = buildSeed();
   await purgeDemoTenant();
 
-  await supabase.from("tenants").upsert(seed.tenant, { onConflict: "id" });
-  await supabase.from("tenant_settings").upsert({
+  await supabase.from("tenants").upsert(seed.tenant as any, { onConflict: "id" });
+  await supabase.from("tenant_settings").delete().eq("tenant_id", TENANT_ID);
+  await supabase.from("tenant_settings").insert({
     tenant_id: TENANT_ID,
     biometric_retention_days: 180,
     logs_retention_days: 730,
@@ -182,7 +183,7 @@ export async function regenerateDemoSeed(): Promise<void> {
     dpo_email: "dpo@friosafe.demo",
     privacy_policy_url: "https://friosafe.demo/privacidade",
     require_consent_before_capture: false,
-  }, { onConflict: "tenant_id" });
+  });
 
   await supabase.from("units").insert(seed.units);
   await supabase.from("departments").insert(seed.departments);
