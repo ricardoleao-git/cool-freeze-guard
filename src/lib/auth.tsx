@@ -20,20 +20,40 @@ type AuthCtx = {
   profile: Profile | null;
   roles: AppRole[];
   loading: boolean;
+  isDemo: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx>({
-  user: null, session: null, profile: null, roles: [], loading: true,
+  user: null, session: null, profile: null, roles: [], loading: true, isDemo: false,
   refresh: async () => {}, signOut: async () => {},
 });
+
+// Identidade virtual exposta enquanto o visitante navega pelas rotas /demo/*.
+const DEMO_USER = {
+  id: "demo-user",
+  email: "demo@frio-safe.app",
+  user_metadata: { full_name: "Visitante (Demo)" },
+} as unknown as User;
+
+const DEMO_PROFILE: Profile = {
+  id: "demo-user",
+  user_id: "demo-user",
+  tenant_id: "demo-tenant",
+  email: "demo@frio-safe.app",
+  full_name: "Visitante (Demo)",
+  avatar_url: "",
+  status: "active",
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const { pathname } = useLocation();
+  const isDemo = pathname === "/demo" || pathname.startsWith("/demo/");
 
   const loadProfile = useCallback(async (uid: string) => {
     const [{ data: prof }, { data: rls }] = await Promise.all([
@@ -48,7 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
       if (s?.user) {
-        // defer to avoid deadlocks inside the callback
         setTimeout(() => { loadProfile(s.user.id); }, 0);
       } else {
         setProfile(null);
@@ -68,13 +87,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (session?.user) await loadProfile(session.user.id);
   }, [session, loadProfile]);
 
+  // Em rotas /demo/* injetamos uma identidade virtual com role super_admin
+  // para que sidebar/badges/guards de UI funcionem sem sessão real.
+  const effectiveUser = isDemo ? DEMO_USER : (session?.user ?? null);
+  const effectiveProfile = isDemo ? DEMO_PROFILE : profile;
+  const effectiveRoles: AppRole[] = isDemo ? ["super_admin"] : roles;
+  const effectiveLoading = isDemo ? false : loading;
+
   return (
     <Ctx.Provider value={{
-      user: session?.user ?? null,
+      user: effectiveUser,
       session,
-      profile,
-      roles,
-      loading,
+      profile: effectiveProfile,
+      roles: effectiveRoles,
+      loading: effectiveLoading,
+      isDemo,
       refresh,
       signOut: async () => { await supabase.auth.signOut(); },
     }}>
@@ -103,11 +130,9 @@ export function RoleGuard({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   if (loading) return null;
 
-  // Sem papéis: usuário ainda não foi liberado por um administrador
   if (roles.length === 0) {
     return <Navigate to="/sem-permissao" replace />;
   }
-  // Sem tenant e não é super admin: precisa ser convidado para uma empresa
   if (!profile?.tenant_id && !roles.includes("super_admin")) {
     return <Navigate to="/sem-permissao" replace />;
   }

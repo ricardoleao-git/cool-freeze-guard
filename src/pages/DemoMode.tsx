@@ -30,7 +30,7 @@ export default function DemoMode() {
         icon={<Sparkles className="h-5 w-5" />}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
-            <Button asChild variant="outline"><Link to="/painel">Painel (autenticado)</Link></Button>
+            <Button asChild variant="outline"><Link to="/demo/painel">Painel Operacional (demo)</Link></Button>
             <Button asChild><a href="/painel-demo" target="_blank" rel="noopener">Abrir Painel TV (sem login)</a></Button>
           </div>
         }
@@ -72,7 +72,7 @@ export default function DemoMode() {
 
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => { resetDemo(); toast.success("Experimento resetado"); }}><RotateCcw className="h-4 w-4 mr-2" /> Resetar experimento</Button>
-              <Button variant="ghost" asChild><Link to="/como-funciona"><Play className="h-4 w-4 mr-2" /> Roteiro de apresentação</Link></Button>
+              <Button variant="ghost" asChild><Link to="/demo/como-funciona"><Play className="h-4 w-4 mr-2" /> Roteiro de apresentação</Link></Button>
             </div>
           </CardContent>
         </Card>
