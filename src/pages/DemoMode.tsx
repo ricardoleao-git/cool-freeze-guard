@@ -53,6 +53,31 @@ export default function DemoMode() {
         }
       />
 
+      <Card className="glass-card mb-4">
+        <CardHeader>
+          <CardTitle className="font-display flex items-center gap-2"><RefreshCw className="h-4 w-4" /> Dados simulados do ambiente</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
+          <div className="text-sm text-muted-foreground max-w-xl">
+            Recria empresas, unidades, departamentos, áreas frias, leitores e colaboradores fictícios neste tenant de demonstração. Útil para começar uma apresentação do zero ou randomizar os nomes.
+          </div>
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="auto-regen"
+                checked={autoRegen}
+                onCheckedChange={(v) => { setAutoRegenerate(v); setAutoRegenState(v); toast.success(v ? "Regeneração automática ativada." : "Regeneração automática desativada."); }}
+              />
+              <Label htmlFor="auto-regen" className="cursor-pointer">Regenerar ao entrar</Label>
+            </div>
+            <Button onClick={handleRegenerate} disabled={regenerating}>
+              {regenerating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+              Regenerar agora
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="glass-card lg:col-span-2">
