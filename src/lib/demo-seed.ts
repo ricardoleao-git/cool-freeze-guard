@@ -144,25 +144,21 @@ function buildSeed(): Built {
 
 async function purgeDemoTenant() {
   // Ordem segura (não há FKs, mas mantemos coerência lógica).
-  const tables = [
-    "access_event_corrections",
-    "access_events",
-    "alerts",
-    "thermal_breaks",
-    "occurrence_attachments",
-    "occurrence_notes",
-    "occurrences",
-    "employee_consents",
-    "employee_cold_areas",
-    "devices",
-    "employees",
-    "cold_areas",
-    "departments",
-    "units",
-  ] as const;
-  for (const t of tables) {
-    await supabase.from(t).delete().eq("tenant_id", TENANT_ID);
-  }
+  // Unrolled para preservar a tipagem por tabela do Supabase client.
+  await supabase.from("access_event_corrections").delete().eq("tenant_id", TENANT_ID);
+  await supabase.from("access_events").delete().eq("tenant_id", TENANT_ID);
+  await supabase.from("alerts").delete().eq("tenant_id", TENANT_ID);
+  await supabase.from("thermal_breaks").delete().eq("tenant_id", TENANT_ID);
+  await supabase.from("occurrence_attachments").delete().eq("tenant_id", TENANT_ID);
+  await supabase.from("occurrence_notes").delete().eq("tenant_id", TENANT_ID);
+  await supabase.from("occurrences").delete().eq("tenant_id", TENANT_ID);
+  await supabase.from("employee_consents").delete().eq("tenant_id", TENANT_ID);
+  await supabase.from("employee_cold_areas").delete().eq("tenant_id", TENANT_ID);
+  await supabase.from("devices").delete().eq("tenant_id", TENANT_ID);
+  await supabase.from("employees").delete().eq("tenant_id", TENANT_ID);
+  await supabase.from("cold_areas").delete().eq("tenant_id", TENANT_ID);
+  await supabase.from("departments").delete().eq("tenant_id", TENANT_ID);
+  await supabase.from("units").delete().eq("tenant_id", TENANT_ID);
 }
 
 export async function regenerateDemoSeed(): Promise<void> {
