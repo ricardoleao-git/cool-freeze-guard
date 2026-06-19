@@ -21,7 +21,22 @@ export default function DemoMode() {
   useEffect(() => { setActiveTenantId("demo-tenant"); }, [setActiveTenantId]);
   const { employees } = useTenantScoped();
   const [emp, setEmp] = useState<string>("");
+  const [autoRegen, setAutoRegenState] = useState<boolean>(() => getAutoRegenerate());
+  const [regenerating, setRegenerating] = useState(false);
   useEffect(() => { if (!emp && employees[0]) setEmp(employees[0].id); }, [employees, emp]);
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    try {
+      await regenerateDemoSeed();
+      toast.success("Dados simulados regenerados. Recarregando…");
+      setTimeout(() => window.location.reload(), 500);
+    } catch (e) {
+      console.error(e);
+      toast.error("Falha ao regenerar dados de demonstração.");
+      setRegenerating(false);
+    }
+  };
 
   return (
     <div className="container py-6 md:py-8">
