@@ -149,8 +149,13 @@ async function purgeDemoTenant() {
   await supabase.from("access_events").delete().eq("tenant_id", TENANT_ID);
   await supabase.from("alerts").delete().eq("tenant_id", TENANT_ID);
   await supabase.from("thermal_breaks").delete().eq("tenant_id", TENANT_ID);
-  await supabase.from("occurrence_attachments").delete().eq("tenant_id", TENANT_ID);
-  await supabase.from("occurrence_notes").delete().eq("tenant_id", TENANT_ID);
+  // notes/attachments não têm tenant_id — purgamos via occurrence_id.
+  const { data: occRows } = await supabase.from("occurrences").select("id").eq("tenant_id", TENANT_ID);
+  const occIds = (occRows || []).map(o => o.id);
+  if (occIds.length > 0) {
+    await supabase.from("occurrence_attachments").delete().in("occurrence_id", occIds);
+    await supabase.from("occurrence_notes").delete().in("occurrence_id", occIds);
+  }
   await supabase.from("occurrences").delete().eq("tenant_id", TENANT_ID);
   await supabase.from("employee_consents").delete().eq("tenant_id", TENANT_ID);
   await supabase.from("employee_cold_areas").delete().eq("tenant_id", TENANT_ID);
