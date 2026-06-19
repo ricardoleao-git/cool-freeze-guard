@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, MonitorPlay, Users, Snowflake, Cpu, Activity, Timer,
-  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning, UserCog, ClipboardList, FileLock2, ClipboardCheck, Bell, Stethoscope,
+  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning, UserCog, ClipboardList, FileLock2, ClipboardCheck, Bell, Stethoscope, FlaskConical,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -54,11 +54,55 @@ const groups = [
   },
 ];
 
+const demoGroups = [
+  {
+    label: "Operação (Demo)",
+    items: [
+      { to: "/demo", title: "Dashboard", icon: LayoutDashboard },
+      { to: "/demo/painel", title: "Painel Operacional", icon: MonitorPlay },
+      { to: "/demo/alertas", title: "Alertas & Ocorrências", icon: AlertTriangle },
+      { to: "/demo/ocorrencias", title: "Ocorrências (RH/SST)", icon: FileWarning },
+      { to: "/demo/historico", title: "Histórico RH/SST", icon: ClipboardList },
+      { to: "/demo/pausas", title: "Pausas Térmicas", icon: Timer },
+      { to: "/demo/eventos", title: "Eventos de Acesso", icon: Activity },
+      { to: "/demo/ajustes", title: "Ajustes & Inconsistências", icon: ClipboardCheck },
+      { to: "/demo/resumo-diario", title: "Resumo Diário (RH/SST)", icon: Stethoscope },
+      { to: "/demo/meu-dia", title: "Meu Dia (Colaborador)", icon: Bell },
+    ],
+  },
+  {
+    label: "Cadastros",
+    items: [
+      { to: "/demo/colaboradores", title: "Colaboradores", icon: Users },
+      { to: "/demo/ambientes", title: "Ambientes Frios", icon: Snowflake },
+      { to: "/demo/dispositivos", title: "Dispositivos", icon: Cpu },
+    ],
+  },
+  {
+    label: "Gestão",
+    items: [
+      { to: "/demo/relatorios", title: "Relatórios", icon: FileBarChart2 },
+      { to: "/demo/integracoes", title: "Integrações / API", icon: PlugZap },
+      { to: "/demo/usuarios", title: "Usuários & Permissões", icon: UserCog },
+      { to: "/demo/lgpd", title: "Privacidade & LGPD", icon: FileLock2 },
+      { to: "/demo/empresas", title: "Empresas (Multi-tenant)", icon: Building2 },
+    ],
+  },
+  {
+    label: "Apresentação",
+    items: [
+      { to: "/demo/experimento", title: "Simulador ao vivo", icon: FlaskConical },
+      { to: "/demo/como-funciona", title: "Como Funciona", icon: BookOpenCheck },
+    ],
+  },
+];
+
 export function AppSidebar() {
   const { pathname } = useLocation();
-  const { roles } = useAuth();
-  const visibleGroups = groups
-    .map(g => ({ ...g, items: g.items.filter(i => i.to === "/demo" || canAccess(i.to, roles)) }))
+  const { roles, isDemo } = useAuth();
+  const sourceGroups = isDemo ? demoGroups : groups;
+  const visibleGroups = sourceGroups
+    .map(g => ({ ...g, items: g.items.filter(i => isDemo || i.to === "/demo" || canAccess(i.to, roles)) }))
     .filter(g => g.items.length > 0);
   const primaryRole = roles[0];
   return (
@@ -72,7 +116,9 @@ export function AppSidebar() {
             <div className="font-display font-bold text-[15px]">FrioSafe</div>
             <div className="text-[10.5px] text-muted-foreground uppercase tracking-wider">Controle Térmico</div>
           </div>
-          {primaryRole && (
+          {isDemo ? (
+            <Badge variant="outline" className="ml-auto border-status-yellow/60 text-status-yellow text-[9px] px-1.5">DEMO</Badge>
+          ) : primaryRole && (
             <Badge variant="outline" className="ml-auto border-primary/40 text-primary text-[9px] px-1.5">
               {ROLE_LABELS[primaryRole].toUpperCase()}
             </Badge>
@@ -90,7 +136,7 @@ export function AppSidebar() {
                   return (
                     <SidebarMenuItem key={item.to}>
                       <SidebarMenuButton asChild isActive={active}>
-                        <NavLink to={item.to} className="flex items-center gap-2.5">
+                        <NavLink to={item.to} end={item.to === "/demo" || item.to === "/"} className="flex items-center gap-2.5">
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
                         </NavLink>
@@ -106,7 +152,7 @@ export function AppSidebar() {
       <SidebarFooter className="px-4 py-4">
         <div className="rounded-xl border border-sidebar-border bg-sidebar-accent/40 p-3 text-xs leading-relaxed">
           <div className="flex items-center gap-1.5 font-medium mb-1"><ShieldCheck className="h-3.5 w-3.5 text-primary" /> Compliance ocupacional</div>
-          <p className="text-muted-foreground">Independente do ponto eletrônico. Evidência para SST, RH e Jurídico.</p>
+          <p className="text-muted-foreground">{isDemo ? "Modo demonstração — dados simulados, sem login." : "Independente do ponto eletrônico. Evidência para SST, RH e Jurídico."}</p>
         </div>
       </SidebarFooter>
     </Sidebar>
