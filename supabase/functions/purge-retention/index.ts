@@ -156,6 +156,20 @@ async function purgeForTenant(
   return result;
 }
 
+function unauthorized(msg = "unauthorized") {
+  return new Response(JSON.stringify({ error: msg }), {
+    status: 401,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -171,7 +185,33 @@ Deno.serve(async (req) => {
     if (req.method === "POST") body = await req.json().catch(() => ({}));
   } catch (_) { /* ignore */ }
 
-  const triggeredBy = body.triggered_by ?? "cron";
+  // Autorização: aceita (a) header X-Purge-Secret para chamadas de cron
+  // OU (b) JWT válido de um usuário com papel super_admin. Em ambos os casos
+  // o campo triggered_by é derivado da identidade, nunca do corpo.
+  const cronSecret = Deno.env.get("PURGE_RETENTION_SECRET") ?? "";
+  const providedSecret =
+    req.headers.get("x-purge-secret") ?? req.headers.get("X-Purge-Secret") ?? "";
+  let triggeredBy: string;
+  if (cronSecret && providedSecret && safeEqual(providedSecret, cronSecret)) {
+    triggeredBy = "cron";
+  } else {
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!authHeader.startsWith("Bearer ")) return unauthorized();
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const authed = createClient(SUPABASE_URL, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claims, error: claimsErr } = await authed.auth.getClaims(token);
+    if (claimsErr || !claims?.claims?.sub) return unauthorized();
+    const userId = claims.claims.sub as string;
+    const { data: isSuper, error: roleErr } = await admin.rpc("is_super_admin", {
+      _user_id: userId,
+    });
+    if (roleErr || !isSuper) return unauthorized("forbidden");
+    triggeredBy = `user:${userId}`;
+  }
 
   // Lista tenants alvo
   let query = admin
