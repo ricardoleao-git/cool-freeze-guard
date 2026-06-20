@@ -42,7 +42,8 @@ export const ROUTE_ACCESS: Record<string, AppRole[]> = {
 export function canAccess(path: string, roles: AppRole[]): boolean {
   if (roles.includes("super_admin")) return true;
   const allowed = ROUTE_ACCESS[path];
-  if (!allowed) return true;
+  // Deny-by-default: rotas não mapeadas exigem inclusão explícita em ROUTE_ACCESS.
+  if (!allowed) return false;
   return roles.some(r => allowed.includes(r));
 }
 

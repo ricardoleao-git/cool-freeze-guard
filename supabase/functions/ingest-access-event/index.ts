@@ -25,9 +25,33 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+// Helper de comparação resistente a timing attacks.
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+
+  // Autenticação obrigatória: a chave do dispositivo deve corresponder ao segredo
+  // configurado em DEVICE_INGEST_API_KEY. Sem isso, qualquer pessoa poderia
+  // injetar eventos biométricos falsos no audit trail.
+  const expectedKey = Deno.env.get("DEVICE_INGEST_API_KEY") ?? "";
+  if (!expectedKey) {
+    console.error("DEVICE_INGEST_API_KEY não configurado; rejeitando requisição");
+    return json({ error: "server_misconfigured" }, 503);
+  }
+  const providedKey =
+    req.headers.get("x-api-key") ??
+    req.headers.get("X-Api-Key") ??
+    "";
+  if (!providedKey || !safeEqual(providedKey, expectedKey)) {
+    return json({ error: "unauthorized" }, 401);
+  }
 
   let payload: Payload;
   try { payload = await req.json(); } catch { return json({ error: "invalid_json" }, 400); }
