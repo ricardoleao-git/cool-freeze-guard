@@ -299,7 +299,7 @@ export default function Occurrences() {
                     <span className="text-xs text-muted-foreground">· {cat.label}</span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2 flex-wrap">
-                    {emp && <span className="flex items-center gap-1.5"><Avatar className="h-4 w-4"><AvatarImage src={emp.avatar} /><AvatarFallback>{emp.name[0]}</AvatarFallback></Avatar>{emp.name}</span>}
+                    {emp && <span className="flex items-center gap-1.5"><EmpAvatar path={emp.avatar} name={emp.name} className="h-4 w-4" />{emp.name}</span>}
                     <span>· aberta {format(new Date(o.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
                     <span>· por {o.created_by}</span>
                   </div>
