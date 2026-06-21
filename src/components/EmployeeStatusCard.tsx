@@ -36,7 +36,7 @@ export function EmployeeStatusCard({ employee, size = "md" }: { employee: Employ
   return (
     <div className={cn("rounded-2xl border p-4 transition-all backdrop-blur-sm animate-fade-in", statusStyles[employee.current_status], size === "lg" && "p-5")}>
       <div className="flex items-start gap-3">
-        <img src={employee.avatar} alt={employee.name} className={cn("h-12 w-12 rounded-full ring-2", ringStyles[employee.current_status], size === "lg" && "h-14 w-14")} />
+        <StorageImage bucket="employee-avatars" path={employee.avatar} alt={employee.name} className={cn("h-12 w-12 rounded-full ring-2 object-cover", ringStyles[employee.current_status], size === "lg" && "h-14 w-14")} fallback={<div className={cn("h-12 w-12 rounded-full ring-2 bg-muted grid place-items-center text-xs font-semibold", ringStyles[employee.current_status], size === "lg" && "h-14 w-14")}>{employee.name.split(" ").map(s => s[0]).slice(0,2).join("")}</div>} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <div className={cn("font-display font-semibold truncate", size === "lg" ? "text-lg" : "text-sm")}>{employee.name}</div>
