@@ -10,6 +10,7 @@ import { STATUS_LABEL, STATUS_COLOR, type Employee } from "@/lib/demo-data";
 import { toast } from "sonner";
 import { EmployeeFormDialog } from "@/components/EmployeeFormDialog";
 import { EmployeeAreaAuthDialog } from "@/components/EmployeeAreaAuthDialog";
+import { StorageImage } from "@/components/StorageImage";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
