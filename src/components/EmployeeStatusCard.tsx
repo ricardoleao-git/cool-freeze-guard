@@ -3,6 +3,7 @@ import { Employee, EmployeeStatus, STATUS_LABEL } from "@/lib/demo-data";
 import { useTenantScoped } from "@/lib/demo-store";
 import { Snowflake, Timer, MapPin } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { StorageImage } from "@/components/StorageImage";
 
 const statusStyles: Record<EmployeeStatus, string> = {
   outside: "bg-muted/40 border-border text-foreground",
