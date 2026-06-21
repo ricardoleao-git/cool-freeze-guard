@@ -6,6 +6,7 @@ import {
   AlertTriangle, ShieldAlert, ShieldCheck, Cpu, PencilLine, EyeOff, FileText, Download, Trash2, Image as ImageIcon, Loader2, Eye,
 } from "lucide-react";
 import { AttachmentPreviewDialog } from "@/components/AttachmentPreviewDialog";
+import { StorageImage, useStorageUrl } from "@/components/StorageImage";
 import type { OccurrenceAttachment } from "@/lib/demo-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,16 @@ function fmtSize(n: number) {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
   return `${(n / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function EmpAvatar({ path, name, className }: { path?: string | null; name: string; className?: string }) {
+  const url = useStorageUrl("employee-avatars", path);
+  return (
+    <Avatar className={className}>
+      {url && <AvatarImage src={url} />}
+      <AvatarFallback>{name[0]}</AvatarFallback>
+    </Avatar>
+  );
 }
 
 export default function Occurrences() {
@@ -298,7 +309,7 @@ export default function Occurrences() {
                     <span className="text-xs text-muted-foreground">· {cat.label}</span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-2 flex-wrap">
-                    {emp && <span className="flex items-center gap-1.5"><Avatar className="h-4 w-4"><AvatarImage src={emp.avatar} /><AvatarFallback>{emp.name[0]}</AvatarFallback></Avatar>{emp.name}</span>}
+                    {emp && <span className="flex items-center gap-1.5"><EmpAvatar path={emp.avatar} name={emp.name} className="h-4 w-4" />{emp.name}</span>}
                     <span>· aberta {format(new Date(o.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
                     <span>· por {o.created_by}</span>
                   </div>
@@ -332,7 +343,7 @@ export default function Occurrences() {
               <div className="grid gap-4 py-2">
                 {detailEmp && (
                   <div className="flex items-center gap-3 rounded-xl border border-border p-3 bg-card/40">
-                    <Avatar className="h-10 w-10"><AvatarImage src={detailEmp.avatar} /><AvatarFallback>{detailEmp.name[0]}</AvatarFallback></Avatar>
+                    <EmpAvatar path={detailEmp.avatar} name={detailEmp.name} className="h-10 w-10" />
                     <div className="text-sm">
                       <div className="font-semibold">{detailEmp.name}</div>
                       <div className="text-xs text-muted-foreground">Matrícula {detailEmp.registration_number} · {detailDept?.name} · {detailUnit?.name}</div>
@@ -394,14 +405,14 @@ export default function Occurrences() {
                         const isRemoving = removingId === a.id;
                         return (
                           <div key={a.id} className="flex items-center gap-2 rounded-lg border border-border p-2 bg-card/40">
-                            {isImage && a.data_url ? (
+                            {isImage && a.storage_path ? (
                               <button
                                 type="button"
                                 onClick={() => setPreviewAtt(a)}
                                 className="h-9 w-9 rounded overflow-hidden ring-1 ring-border shrink-0 focus:outline-none focus:ring-2 focus:ring-primary"
                                 title="Pré-visualizar"
                               >
-                                <img src={a.data_url} alt={a.name} className="h-full w-full object-cover" />
+                                <StorageImage bucket="occurrence-attachments" path={a.storage_path} alt={a.name} className="h-full w-full object-cover" fallback={<ImageIcon className="h-4 w-4 text-muted-foreground" />} />
                               </button>
                             ) : (
                               <button

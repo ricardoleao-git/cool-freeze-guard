@@ -131,11 +131,10 @@ const mapNote = (r: any): OccurrenceNote => ({
   id: r.id, author: r.author, text: r.text, created_at: toMs(r.created_at) || Date.now(),
 });
 const mapAttachment = (r: any): OccurrenceAttachment => {
-  const { data } = supabase.storage.from(ATTACHMENT_BUCKET).getPublicUrl(r.storage_path);
+  // Bucket is private — consumers should resolve via signed URL (StorageImage / getAttachmentDownloadUrl).
   return {
     id: r.id, name: r.name, size: Number(r.size) || 0, mime: r.mime,
     storage_path: r.storage_path,
-    data_url: data.publicUrl,
   };
 };
 
@@ -875,9 +874,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data, error } = await supabase.storage
       .from(ATTACHMENT_BUCKET)
       .createSignedUrl(storagePath, 60, fileName ? { download: fileName } : undefined);
-    if (error || !data) {
-      return supabase.storage.from(ATTACHMENT_BUCKET).getPublicUrl(storagePath).data.publicUrl;
-    }
+    if (error || !data) throw error ?? new Error("Falha ao gerar URL assinada");
     return data.signedUrl;
   }, []);
 
@@ -889,8 +886,8 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
       upsert: true,
     });
     if (up.error) throw up.error;
-    const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(storage_path);
-    return data.publicUrl;
+    // Bucket is private — return the storage path; <StorageImage> resolves a signed URL on render.
+    return storage_path;
   }, []);
 
   const createEmployee: Ctx["createEmployee"] = useCallback(async (data) => {

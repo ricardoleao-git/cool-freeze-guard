@@ -10,6 +10,7 @@ import { STATUS_LABEL, STATUS_COLOR, type Employee } from "@/lib/demo-data";
 import { toast } from "sonner";
 import { EmployeeFormDialog } from "@/components/EmployeeFormDialog";
 import { EmployeeAreaAuthDialog } from "@/components/EmployeeAreaAuthDialog";
+import { StorageImage } from "@/components/StorageImage";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -85,7 +86,7 @@ export default function Employees() {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       {e.avatar
-                        ? <img src={e.avatar} alt={e.name} className="h-9 w-9 rounded-full ring-1 ring-border object-cover" />
+                        ? <StorageImage bucket="employee-avatars" path={e.avatar} alt={e.name} className="h-9 w-9 rounded-full ring-1 ring-border object-cover" fallback={<div className="h-9 w-9 rounded-full ring-1 ring-border bg-muted grid place-items-center text-xs font-semibold">{e.name.split(" ").map(s => s[0]).slice(0, 2).join("")}</div>} />
                         : <div className="h-9 w-9 rounded-full ring-1 ring-border bg-muted grid place-items-center text-xs font-semibold">{e.name.split(" ").map(s => s[0]).slice(0, 2).join("")}</div>
                       }
                       <div>

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import type { Occurrence, OccurrencePriority, OccurrenceCategory, OccurrenceAttachment } from "@/lib/demo-data";
 import { AttachmentPreviewDialog } from "@/components/AttachmentPreviewDialog";
+import { StorageImage } from "@/components/StorageImage";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
@@ -659,7 +660,7 @@ export default function History() {
                             {images.slice(0, 4).map(a => (
                               <button key={a.id} onClick={() => setOpenOcc(o)}
                                 className="h-16 w-16 rounded-md overflow-hidden border bg-muted">
-                                <img src={a.data_url} alt={a.name} className="h-full w-full object-cover" />
+                                <StorageImage bucket="occurrence-attachments" path={a.storage_path} alt={a.name} className="h-full w-full object-cover" />
                               </button>
                             ))}
                             {images.length > 4 && (
@@ -772,7 +773,7 @@ export default function History() {
                               title="Pré-visualizar"
                             >
                               {a.mime.startsWith("image/") ? (
-                                <img src={a.data_url} alt={a.name} className="h-32 w-full object-cover" />
+                                <StorageImage bucket="occurrence-attachments" path={a.storage_path} alt={a.name} className="h-32 w-full object-cover" />
                               ) : (
                                 <div className="h-32 grid place-items-center bg-muted">
                                   <FileText className="h-10 w-10 text-muted-foreground" />
