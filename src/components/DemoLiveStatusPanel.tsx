@@ -6,6 +6,7 @@ import { useTenantScoped } from "@/lib/demo-store";
 import { STATUS_LABEL, STATUS_COLOR, type EmployeeStatus } from "@/lib/demo-data";
 import { Snowflake, Timer, Activity, Thermometer, AlertTriangle, ShieldAlert, CheckCircle2, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { StorageImage } from "@/components/StorageImage";
 
 const fmt = (min: number) => {
   const m = Math.floor(min);
