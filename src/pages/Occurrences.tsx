@@ -53,6 +53,16 @@ function fmtSize(n: number) {
   return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function EmpAvatar({ path, name, className }: { path?: string | null; name: string; className?: string }) {
+  const url = useStorageUrl("employee-avatars", path);
+  return (
+    <Avatar className={className}>
+      {url && <AvatarImage src={url} />}
+      <AvatarFallback>{name[0]}</AvatarFallback>
+    </Avatar>
+  );
+}
+
 export default function Occurrences() {
   const { occurrences, employees, units, departments } = useTenantScoped();
   const { addOccurrence, updateOccurrence, resolveOccurrence, addOccurrenceNote, addOccurrenceAttachment, removeOccurrenceAttachment, getAttachmentDownloadUrl, activeTenantId } = useDemo();
