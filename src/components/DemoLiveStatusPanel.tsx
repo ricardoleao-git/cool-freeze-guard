@@ -81,7 +81,7 @@ export function DemoLiveStatusPanel({ employeeId }: { employeeId: string }) {
         {/* Cabeçalho colaborador */}
         <div className="flex items-center gap-3">
           {emp.avatar
-            ? <img src={emp.avatar} alt={emp.name} className="h-12 w-12 rounded-full ring-2 ring-primary/40 object-cover" />
+            ? <StorageImage bucket="employee-avatars" path={emp.avatar} alt={emp.name} className="h-12 w-12 rounded-full ring-2 ring-primary/40 object-cover" fallback={<div className="h-12 w-12 rounded-full bg-muted grid place-items-center font-semibold">{emp.name.split(" ").map(s => s[0]).slice(0, 2).join("")}</div>} />
             : <div className="h-12 w-12 rounded-full bg-muted grid place-items-center font-semibold">{emp.name.split(" ").map(s => s[0]).slice(0, 2).join("")}</div>
           }
           <div className="min-w-0">
