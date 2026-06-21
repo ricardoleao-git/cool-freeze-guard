@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import type { Occurrence, OccurrencePriority, OccurrenceCategory, OccurrenceAttachment } from "@/lib/demo-data";
 import { AttachmentPreviewDialog } from "@/components/AttachmentPreviewDialog";
+import { StorageImage } from "@/components/StorageImage";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
