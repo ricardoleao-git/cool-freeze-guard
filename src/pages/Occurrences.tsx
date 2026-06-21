@@ -6,6 +6,7 @@ import {
   AlertTriangle, ShieldAlert, ShieldCheck, Cpu, PencilLine, EyeOff, FileText, Download, Trash2, Image as ImageIcon, Loader2, Eye,
 } from "lucide-react";
 import { AttachmentPreviewDialog } from "@/components/AttachmentPreviewDialog";
+import { StorageImage, useStorageUrl } from "@/components/StorageImage";
 import type { OccurrenceAttachment } from "@/lib/demo-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
