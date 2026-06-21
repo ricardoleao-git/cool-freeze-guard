@@ -888,8 +888,8 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
       upsert: true,
     });
     if (up.error) throw up.error;
-    const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(storage_path);
-    return data.publicUrl;
+    // Bucket is private — return the storage path; <StorageImage> resolves a signed URL on render.
+    return storage_path;
   }, []);
 
   const createEmployee: Ctx["createEmployee"] = useCallback(async (data) => {
