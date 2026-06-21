@@ -874,9 +874,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data, error } = await supabase.storage
       .from(ATTACHMENT_BUCKET)
       .createSignedUrl(storagePath, 60, fileName ? { download: fileName } : undefined);
-    if (error || !data) {
-      return supabase.storage.from(ATTACHMENT_BUCKET).getPublicUrl(storagePath).data.publicUrl;
-    }
+    if (error || !data) throw error ?? new Error("Falha ao gerar URL assinada");
     return data.signedUrl;
   }, []);
 
