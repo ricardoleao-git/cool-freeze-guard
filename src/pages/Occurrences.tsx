@@ -395,14 +395,14 @@ export default function Occurrences() {
                         const isRemoving = removingId === a.id;
                         return (
                           <div key={a.id} className="flex items-center gap-2 rounded-lg border border-border p-2 bg-card/40">
-                            {isImage && a.data_url ? (
+                            {isImage && a.storage_path ? (
                               <button
                                 type="button"
                                 onClick={() => setPreviewAtt(a)}
                                 className="h-9 w-9 rounded overflow-hidden ring-1 ring-border shrink-0 focus:outline-none focus:ring-2 focus:ring-primary"
                                 title="Pré-visualizar"
                               >
-                                <img src={a.data_url} alt={a.name} className="h-full w-full object-cover" />
+                                <StorageImage bucket="occurrence-attachments" path={a.storage_path} alt={a.name} className="h-full w-full object-cover" fallback={<ImageIcon className="h-4 w-4 text-muted-foreground" />} />
                               </button>
                             ) : (
                               <button
