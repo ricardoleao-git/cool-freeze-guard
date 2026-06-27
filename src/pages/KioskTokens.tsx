@@ -251,7 +251,7 @@ export default function KioskTokens() {
         open={createOpen}
         onOpenChange={(o) => {
           setCreateOpen(o);
-          if (!o) setCreatedToken(null);
+          if (!o) { setCreatedToken(null); setShowQR(false); }
         }}
       >
         <DialogContent className="max-w-lg">
