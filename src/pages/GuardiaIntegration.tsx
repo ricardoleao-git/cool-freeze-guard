@@ -165,6 +165,7 @@ export default function GuardiaIntegration() {
       <Tabs defaultValue="config" className="space-y-4">
         <TabsList>
           <TabsTrigger value="config">Configuração</TabsTrigger>
+          <TabsTrigger value="devices">Câmaras / Leitores</TabsTrigger>
           <TabsTrigger value="log" onClick={loadEvents}>Log de Eventos</TabsTrigger>
         </TabsList>
 
