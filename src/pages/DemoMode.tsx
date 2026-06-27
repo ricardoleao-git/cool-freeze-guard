@@ -102,6 +102,53 @@ export default function DemoMode() {
         </CardContent>
       </Card>
 
+      <Card className="glass-card mb-4 border-primary/30">
+        <CardHeader>
+          <CardTitle className="font-display flex items-center gap-2">
+            <CalendarRange className="h-4 w-4" /> Histórico para treinamento (3 meses · mai → jul 2026)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4 items-start">
+            <div className="text-sm text-muted-foreground space-y-2">
+              <p>Popula o demo-tenant com volume <strong className="text-foreground">pesado (~300 eventos/dia)</strong> e os casos de uso completos para apresentação a RH, Jurídico, SST e Gestão:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li><strong className="text-foreground">Excessos e bloqueio preventivo</strong> com pausas térmicas (incluindo interrompidas — NR-36).</li>
+                <li><strong className="text-foreground">Saídas esquecidas</strong> indo para a fila de correções (pendente, aprovado e rejeitado).</li>
+                <li><strong className="text-foreground">Fechamentos assinados em cadeia</strong> mai/jun (Supervisor→RH→Jurídico) e jul pendente (apenas supervisor).</li>
+                <li><strong className="text-foreground">Contestações de extrato</strong> pelo colaborador e revisões de inconsistência.</li>
+                <li><strong className="text-foreground">Falhas da integração GuardIA</strong> (auth/timeout/normalização) com erro persistente para acender alertas.</li>
+              </ul>
+              <p className="text-xs">A geração demora aproximadamente <strong>2–4 minutos</strong>. Execute apenas no ambiente de demonstração.</p>
+            </div>
+            <div className="space-y-3">
+              <Button onClick={handleSeedHistory} disabled={seeding} className="w-full">
+                {seeding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CalendarRange className="h-4 w-4 mr-2" />}
+                {seeding ? "Gerando histórico…" : "Gerar 3 meses de histórico"}
+              </Button>
+              {seeding && (
+                <>
+                  <Progress value={seedPct} />
+                  <p className="text-xs text-muted-foreground">{seedPct}% · {seedLabel}</p>
+                </>
+              )}
+              {seedLog.length > 0 && (
+                <ScrollArea className="h-40 rounded border bg-muted/20 p-2 text-xs">
+                  {seedLog.map((r, i) => (
+                    <div key={i} className={r.ok ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"}>
+                      {r.ok ? "✓" : "✗"} <strong>{r.phase}</strong>{" "}
+                      {r.ok ? JSON.stringify(r.info) : r.error}
+                    </div>
+                  ))}
+                </ScrollArea>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="glass-card lg:col-span-2">
