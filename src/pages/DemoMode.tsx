@@ -12,6 +12,10 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { DemoLiveStatusPanel } from "@/components/DemoLiveStatusPanel";
 import { regenerateDemoSeed, getAutoRegenerate, setAutoRegenerate } from "@/lib/demo-seed";
+import { generateDemoHistory, type SeedPhaseReport } from "@/lib/demo-history";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { CalendarRange } from "lucide-react";
 
 
 export default function DemoMode() {
