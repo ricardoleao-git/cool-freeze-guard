@@ -1,5 +1,7 @@
 // guardia-webhook: receives access events from GuardIA facial recognition system.
-// Public endpoint, but authenticated via X-GuardIA-Token per tenant.
+// Public endpoint, authenticated via X-GuardIA-Token per tenant.
+// Modelo de presença: o leitor mapeado tem FUNÇÃO (entrada/externo) que é a autoridade do estado.
+// guardia_events é append-only (nada se apaga). access_events é imutável (só INSERT).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -21,7 +23,6 @@ function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-// CPF é a chave do colaborador em todo o sistema. Remove pontos, traços e espaços.
 function normalizeCpf(v?: string | null): string {
   return String(v ?? "").replace(/\D/g, "");
 }
@@ -57,7 +58,6 @@ Deno.serve(async (req) => {
     return json({ error: "invalid_tipo" }, 400);
   }
 
-  // Normaliza CPF do colaborador (chave do sistema).
   const colaboradorCpf = normalizeCpf(payload.colaborador_id);
   if (!colaboradorCpf) return json({ error: "invalid_colaborador_id" }, 400);
 
@@ -65,10 +65,10 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(url, serviceKey);
 
-  // Load integration config for tenant and validate token + active flag.
+  // Load integration config (token, active, debounce, sessao_longa)
   const { data: config, error: cfgErr } = await supabase
     .from("integration_config")
-    .select("guardia_token, active")
+    .select("guardia_token, active, janela_tolerancia_segundos, sessao_longa_alerta_minutos")
     .eq("tenant_id", tenantId)
     .maybeSingle();
   if (cfgErr) { console.error("config_load_error", cfgErr.message); return json({ error: "server_error" }, 500); }
@@ -76,21 +76,22 @@ Deno.serve(async (req) => {
   if (!safeEqual(providedToken, config.guardia_token)) return json({ error: "unauthorized" }, 401);
   if (!config.active) return json({ error: "integration_disabled" }, 403);
 
-  // Idempotency: skip if (tenant_id, evento_id) already exists.
+  const globalDebounceSec: number = config.janela_tolerancia_segundos ?? 180;
+
+  // Idempotency by (tenant_id, evento_id) — preserves raw record regardless.
   const { data: existing } = await supabase
     .from("guardia_events")
-    .select("id, processed")
+    .select("id")
     .eq("tenant_id", tenantId)
     .eq("evento_id", payload.evento_id!)
     .maybeSingle();
-
   if (existing) {
     return json({ recebido: true, evento_id: payload.evento_id, duplicate: true }, 200);
   }
 
   const occurredAt = new Date(payload.timestamp!).toISOString();
 
-  // Insert raw guardia_events row first.
+  // Always persist raw event first (append-only).
   const { data: rawRow, error: rawErr } = await supabase
     .from("guardia_events")
     .insert({
@@ -100,7 +101,7 @@ Deno.serve(async (req) => {
       colaborador_nome: payload.colaborador_nome ?? null,
       local_id: payload.local_id,
       local_nome: payload.local_nome ?? null,
-      tipo: payload.tipo,
+      tipo: payload.tipo, // sugestão do dispositivo — só auditoria
       event_timestamp: occurredAt,
       dispositivo_id: payload.dispositivo_id ?? null,
       processed: false,
@@ -112,62 +113,136 @@ Deno.serve(async (req) => {
     return json({ error: "server_error" }, 500);
   }
 
-  // Resolve employee, device map (by dispositivo_id), and optional device record — all within tenant.
-  const [empRes, mapRes, devRes] = await Promise.all([
-    supabase.from("employees")
-      .select("id, unit_id, current_status, current_area_id, accumulated_minutes")
-      .eq("tenant_id", tenantId).eq("id", colaboradorCpf).maybeSingle(),
-    payload.dispositivo_id
-      ? supabase.from("guardia_device_map")
-          .select("cold_area_id")
-          .eq("tenant_id", tenantId)
-          .eq("guardia_device_id", payload.dispositivo_id)
-          .eq("active", true)
-          .maybeSingle()
-      : Promise.resolve({ data: null, error: null }),
-    payload.dispositivo_id
-      ? supabase.from("devices").select("id").eq("tenant_id", tenantId)
-          .or(`external_device_id.eq.${payload.dispositivo_id},id.eq.${payload.dispositivo_id}`).maybeSingle()
-      : Promise.resolve({ data: null, error: null }),
-  ]);
+  const markRaw = async (processed: boolean, note: string | null) => {
+    await supabase.from("guardia_events")
+      .update({ processed, process_note: note })
+      .eq("id", rawRow.id);
+  };
 
-  const employee = empRes.data;
-  const device = devRes.data;
-
-  // Resolve cold area: (a) by device map, (b) fallback by local_id, (c) fail with device_not_mapped.
-  let coldArea: { id: string; unit_id: string } | null = null;
-  if (mapRes.data?.cold_area_id) {
-    const { data } = await supabase.from("cold_areas")
-      .select("id, unit_id")
-      .eq("tenant_id", tenantId).eq("id", mapRes.data.cold_area_id).maybeSingle();
-    coldArea = data ?? null;
-  }
-  if (!coldArea && payload.local_id) {
-    const { data } = await supabase.from("cold_areas")
-      .select("id, unit_id")
-      .eq("tenant_id", tenantId).eq("id", payload.local_id).maybeSingle();
-    coldArea = data ?? null;
+  // (b) Resolve device map — AUTHORITY for cold_area + função.
+  if (!payload.dispositivo_id) {
+    await markRaw(false, "missing_dispositivo_id");
+    return json({ recebido: true, evento_id: payload.evento_id, processed: false, reason: "missing_dispositivo_id" }, 200);
   }
 
-  if (!employee || !coldArea) {
-    let reason: string;
-    if (!employee) reason = "employee_not_found";
-    else if (payload.dispositivo_id && !mapRes.data) reason = "device_not_mapped";
-    else reason = "cold_area_not_found";
-    console.warn(
-      `guardia event ${payload.evento_id} unmapped: ${reason}` +
-      (payload.dispositivo_id ? ` (dispositivo_id=${payload.dispositivo_id})` : "")
-    );
+  const { data: mapping } = await supabase
+    .from("guardia_device_map")
+    .select("cold_area_id, funcao, janela_tolerancia_segundos")
+    .eq("tenant_id", tenantId)
+    .eq("guardia_device_id", payload.dispositivo_id)
+    .eq("active", true)
+    .maybeSingle();
+
+  if (!mapping) {
+    await markRaw(false, `device_not_mapped:${payload.dispositivo_id}`);
+    console.warn(`guardia ${payload.evento_id} device_not_mapped dispositivo_id=${payload.dispositivo_id}`);
     return json({
-      recebido: true,
-      evento_id: payload.evento_id,
-      processed: false,
-      reason,
-      dispositivo_id: payload.dispositivo_id ?? null,
+      recebido: true, evento_id: payload.evento_id, processed: false,
+      reason: "device_not_mapped", dispositivo_id: payload.dispositivo_id,
     }, 200);
   }
 
-  const eventType = payload.tipo === "entrada" ? "entry" : "exit";
+  const funcao: "entrada" | "externo" = mapping.funcao;
+
+  // Resolve cold_area (for unit_id)
+  const { data: coldArea } = await supabase.from("cold_areas")
+    .select("id, unit_id")
+    .eq("tenant_id", tenantId).eq("id", mapping.cold_area_id).maybeSingle();
+  if (!coldArea) {
+    await markRaw(false, "cold_area_not_found");
+    return json({ recebido: true, evento_id: payload.evento_id, processed: false, reason: "cold_area_not_found" }, 200);
+  }
+
+  // Resolve employee
+  const { data: employee } = await supabase.from("employees")
+    .select("id, current_status, current_area_id, accumulated_minutes, inside_since")
+    .eq("tenant_id", tenantId).eq("id", colaboradorCpf).maybeSingle();
+  if (!employee) {
+    await markRaw(false, `employee_not_found:${colaboradorCpf}`);
+    return json({ recebido: true, evento_id: payload.evento_id, processed: false, reason: "employee_not_found" }, 200);
+  }
+
+  // Optional device record (for last_seen_at)
+  const { data: device } = await supabase.from("devices")
+    .select("id").eq("tenant_id", tenantId)
+    .or(`external_device_id.eq.${payload.dispositivo_id},id.eq.${payload.dispositivo_id}`)
+    .maybeSingle();
+
+  // (d) DE-BOUNCE: last processed access_event for same employee on same device.
+  const debounceSec: number = mapping.janela_tolerancia_segundos ?? globalDebounceSec;
+  if (debounceSec > 0 && device?.id) {
+    const since = new Date(new Date(occurredAt).getTime() - debounceSec * 1000).toISOString();
+    const { data: lastEv } = await supabase.from("access_events")
+      .select("id, occurred_at")
+      .eq("tenant_id", tenantId)
+      .eq("employee_id", employee.id)
+      .eq("device_id", device.id)
+      .gte("occurred_at", since)
+      .order("occurred_at", { ascending: false })
+      .limit(1).maybeSingle();
+    if (lastEv) {
+      await markRaw(true, `debounced:${debounceSec}s:prev=${lastEv.id}`);
+      return json({
+        recebido: true, evento_id: payload.evento_id, processed: true,
+        debounced: true, window_seconds: debounceSec,
+      }, 200);
+    }
+  }
+
+  // (e) State machine driven by FUNÇÃO of the reader.
+  const statusBefore = employee.current_status as string;
+  let statusAfter: "inside" | "outside";
+  let eventType: "entry" | "exit";
+  let newAccumulated: number = Number(employee.accumulated_minutes ?? 0);
+  let employeeUpdate: Record<string, unknown> = {};
+  const nowIso = new Date().toISOString();
+  let sessionFlag: string | null = null;
+
+  if (funcao === "entrada") {
+    eventType = "entry";
+    statusAfter = "inside";
+    if (statusBefore !== "inside") {
+      employeeUpdate = {
+        current_area_id: coldArea.id,
+        current_status: "inside",
+        inside_since: occurredAt,
+        updated_at: nowIso,
+      };
+    } else {
+      // already inside — just refresh area if changed; do not reset inside_since.
+      if (employee.current_area_id !== coldArea.id) {
+        employeeUpdate = { current_area_id: coldArea.id, updated_at: nowIso };
+      }
+    }
+  } else {
+    // funcao === 'externo'
+    eventType = "exit";
+    statusAfter = "outside";
+    if (statusBefore === "inside" && employee.inside_since) {
+      const minutes = (new Date(occurredAt).getTime() - new Date(employee.inside_since).getTime()) / 60000;
+      const safeMinutes = Math.max(0, minutes);
+      newAccumulated = Number(employee.accumulated_minutes ?? 0) + safeMinutes;
+      const sessaoLonga = config.sessao_longa_alerta_minutos ?? 240;
+      if (safeMinutes >= sessaoLonga) {
+        sessionFlag = `long_session:${safeMinutes.toFixed(1)}min>=${sessaoLonga}`;
+      }
+      employeeUpdate = {
+        current_status: "outside",
+        inside_since: null,
+        current_area_id: null,
+        accumulated_minutes: newAccumulated,
+        updated_at: nowIso,
+      };
+    } else if (statusBefore !== "outside") {
+      employeeUpdate = {
+        current_status: "outside",
+        inside_since: null,
+        current_area_id: null,
+        updated_at: nowIso,
+      };
+    }
+    // se já 'outside': ainda inserimos access_events (prova de não-exposição), sem alterar contadores.
+  }
 
   const { error: aeErr } = await supabase.from("access_events").insert({
     tenant_id: tenantId,
@@ -180,37 +255,41 @@ Deno.serve(async (req) => {
     occurred_at: occurredAt,
     validation_status: "valid",
     confidence_score: 0.95,
-    status_before: employee.current_status,
-    accumulated_at_event: employee.accumulated_minutes,
+    status_before: statusBefore,
+    status_after: statusAfter,
+    accumulated_at_event: newAccumulated,
   });
 
   if (aeErr) {
     console.error("access_events_insert_failed", aeErr.message);
+    await markRaw(false, `access_event_insert_failed:${aeErr.message.slice(0, 200)}`);
     return json({ recebido: true, evento_id: payload.evento_id, processed: false, reason: "access_event_insert_failed" }, 200);
   }
 
-  // Update employee state mirroring ingest-access-event semantics.
-  const nowIso = new Date().toISOString();
-  if (eventType === "entry") {
-    await supabase.from("employees").update({
-      current_area_id: coldArea.id,
-      current_status: "inside",
-      inside_since: occurredAt,
-      updated_at: nowIso,
-    }).eq("id", employee.id);
-  } else {
-    await supabase.from("employees").update({
-      current_status: "outside",
-      inside_since: null,
-      updated_at: nowIso,
-    }).eq("id", employee.id);
+  if (Object.keys(employeeUpdate).length > 0) {
+    const { error: empErr } = await supabase.from("employees").update(employeeUpdate).eq("id", employee.id);
+    if (empErr) console.error("employee_update_failed", empErr.message);
   }
 
   if (device) {
     await supabase.from("devices").update({ last_seen_at: nowIso }).eq("id", device.id);
   }
 
-  await supabase.from("guardia_events").update({ processed: true }).eq("id", rawRow.id);
+  const note = [
+    `funcao=${funcao}`,
+    `${statusBefore}->${statusAfter}`,
+    sessionFlag,
+  ].filter(Boolean).join("|");
+  await markRaw(true, note);
 
-  return json({ recebido: true, evento_id: payload.evento_id, processed: true }, 200);
+  return json({
+    recebido: true,
+    evento_id: payload.evento_id,
+    processed: true,
+    funcao,
+    status_before: statusBefore,
+    status_after: statusAfter,
+    accumulated_minutes: newAccumulated,
+    long_session: !!sessionFlag,
+  }, 200);
 });
