@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { EventCorrectionDialog } from "@/components/EventCorrectionDialog";
 import { EmptyState } from "@/components/EmptyState";
+import { useAnnouncer } from "@/lib/announcer";
 import type { AccessEvent } from "@/lib/demo-data";
 import { Link } from "react-router-dom";
 
@@ -16,13 +17,18 @@ export default function Events() {
   const { events, employees, coldAreas, devices } = useTenantScoped();
   const [editEvent, setEditEvent] = useState<AccessEvent | null>(null);
   const [exporting, setExporting] = useState(false);
+  const announce = useAnnouncer();
 
   const handleExport = async () => {
     setExporting(true);
+    announce("Exportando CSV de eventos…");
     try {
-      // Simulated export — real CSV generation goes here.
       await new Promise(r => setTimeout(r, 600));
       toast.success("Exportação CSV pronta — pronto para integração real.");
+      announce("Exportação CSV concluída com sucesso.");
+    } catch {
+      toast.error("Falha ao exportar CSV.");
+      announce("Falha ao exportar CSV.", "assertive");
     } finally {
       setExporting(false);
     }

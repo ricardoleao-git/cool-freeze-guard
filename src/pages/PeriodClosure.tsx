@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useAnnouncer } from "@/lib/announcer";
 
 type PeriodType = "week" | "month";
 type Stage = "supervisor" | "rh" | "legal";
@@ -139,6 +140,7 @@ export default function PeriodClosurePage() {
   const [signing, setSigning] = useState<Stage | null>(null);
   const [agree, setAgree] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const announce = useAnnouncer();
 
   const refDateStr = useMemo(() => format(refDate, "yyyy-MM-dd"), [refDate]);
 
@@ -178,6 +180,7 @@ export default function PeriodClosurePage() {
     if (!data || !tenantId) return;
     if (!agree) { toast.error("Confirme a leitura para assinar"); return; }
     setSubmitting(true);
+    announce(`Assinando etapa ${STAGE_LABEL[stage]}…`);
     try {
       const { data: resp, error } = await supabase.functions.invoke("closure-sign", {
         body: {
@@ -210,16 +213,19 @@ export default function PeriodClosurePage() {
       }
       if ((resp as any)?.already) {
         toast.info(`Etapa ${STAGE_LABEL[stage]} já estava assinada`);
+        announce(`Etapa ${STAGE_LABEL[stage]} já estava assinada.`);
       } else {
         toast.success(`Assinado como ${STAGE_LABEL[stage]}`, {
           description: `Selo ${shortHash((resp as any)?.record_hash)}`,
         });
+        announce(`Fechamento de período assinado com sucesso na etapa ${STAGE_LABEL[stage]}.`);
       }
       setSigning(null);
       setAgree(false);
       await load();
     } catch (e: any) {
       toast.error("Falha ao assinar", { description: e?.message ?? "Tente novamente" });
+      announce(`Falha ao assinar etapa ${STAGE_LABEL[stage]}: ${e?.message ?? "tente novamente"}.`, "assertive");
     } finally {
       setSubmitting(false);
     }

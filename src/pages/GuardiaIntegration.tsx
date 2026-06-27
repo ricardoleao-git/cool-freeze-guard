@@ -17,6 +17,7 @@ import GuardiaDeviceMapTab from "@/components/guardia/GuardiaDeviceMapTab";
 import GuardiaPresenceTab from "@/components/guardia/GuardiaPresenceTab";
 import GuardiaIntegrityTab from "@/components/guardia/GuardiaIntegrityTab";
 import GuardiaStatusTab from "@/components/guardia/GuardiaStatusTab";
+import { useAnnouncer } from "@/lib/announcer";
 
 const WEBHOOK_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/guardia-webhook`;
 
@@ -81,6 +82,7 @@ export default function GuardiaIntegration() {
   const [syncing, setSyncing] = useState(false);
   const [pushing, setPushing] = useState(false);
   const [polling, setPolling] = useState(false);
+  const announce = useAnnouncer();
 
   const [events, setEvents] = useState<GuardiaEvent[]>([]);
   const [filterDate, setFilterDate] = useState("");
@@ -196,26 +198,44 @@ export default function GuardiaIntegration() {
 
   const pushNow = async () => {
     setPushing(true);
+    announce("Sincronizando colaboradores com GuardIA…");
     const { data, error } = await supabase.functions.invoke("guardia-sync-employees", {
       body: { tenant_id: tenantId, only_active: true },
     });
     setPushing(false);
-    if (error) { toast.error(error.message || "Erro ao enviar"); return; }
+    if (error) {
+      toast.error(error.message || "Erro ao enviar");
+      announce(`Falha na sincronização GuardIA: ${error.message || "erro desconhecido"}.`, "assertive");
+      return;
+    }
     const r = data as { created?: number; updated?: number; deleted?: number; skipped?: number; errors?: unknown[]; atualizado_em?: string };
-    toast.success(`Enviados: ${r.created ?? 0} novos, ${r.updated ?? 0} atualizados${r.errors?.length ? ` · ${r.errors.length} erros` : ""}`);
+    const msg = `Enviados: ${r.created ?? 0} novos, ${r.updated ?? 0} atualizados${r.errors?.length ? ` · ${r.errors.length} erros` : ""}`;
+    toast.success(msg);
+    announce(`Sincronização GuardIA concluída. ${msg}.`);
     setCfg(c => ({ ...c, last_push_at: r.atualizado_em ?? new Date().toISOString(), last_push_count: (r.created ?? 0) + (r.updated ?? 0) }));
   };
 
   const pollNow = async () => {
     setPolling(true);
+    announce("Iniciando polling de eventos GuardIA…");
     const { data, error } = await supabase.functions.invoke("guardia-poll-events", {
       body: { tenant_id: tenantId },
     });
     setPolling(false);
-    if (error) { toast.error(error.message || "Erro no polling"); return; }
+    if (error) {
+      toast.error(error.message || "Erro no polling");
+      announce(`Falha no polling GuardIA: ${error.message || "erro"}.`, "assertive");
+      return;
+    }
     const r = data as { polled?: boolean; fetched?: number; staged?: number; dispatched?: number; reason?: string };
-    if (r.reason === "no_events_endpoint") { toast.warning("Endpoint de eventos não configurado (OpenAPI 1.0 não documenta histórico)"); return; }
-    toast.success(`Polling: ${r.fetched ?? 0} eventos · ${r.dispatched ?? 0} processados`);
+    if (r.reason === "no_events_endpoint") {
+      toast.warning("Endpoint de eventos não configurado (OpenAPI 1.0 não documenta histórico)");
+      announce("Endpoint de eventos não configurado.");
+      return;
+    }
+    const msg = `Polling: ${r.fetched ?? 0} eventos · ${r.dispatched ?? 0} processados`;
+    toast.success(msg);
+    announce(msg);
     setCfg(c => ({ ...c, last_event_poll_at: new Date().toISOString() }));
     loadEvents();
   };

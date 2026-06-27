@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Outlet, useNavigate, Link } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -20,6 +20,26 @@ export default function AppLayout() {
   const { user, signOut, isDemo } = useAuth();
   const nav = useNavigate();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const desktopSearchRef = useRef<HTMLInputElement>(null);
+
+  // Global Ctrl/Cmd+K — focus desktop search if visible, otherwise open mobile sheet.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const isK = e.key === "k" || e.key === "K";
+      if (!isK || !(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault();
+      const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+      if (isDesktop) {
+        desktopSearchRef.current?.focus();
+        desktopSearchRef.current?.select();
+      } else {
+        setMobileSearchOpen(true);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const handleLogout = async () => { await signOut(); nav("/login", { replace: true }); };
   const open = alerts.filter(a => a.status === "open").length;
   return (
@@ -41,7 +61,15 @@ export default function AppLayout() {
             <div className="hidden md:flex items-center gap-2 max-w-md flex-1">
               <div className="relative w-full">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar colaborador, ambiente, dispositivo…" className="pl-8 bg-muted/30" aria-label="Buscar" />
+                <Input
+                  ref={desktopSearchRef}
+                  placeholder="Buscar colaborador, ambiente, dispositivo…"
+                  className="pl-8 pr-14 bg-muted/30"
+                  aria-label="Buscar (atalho Control K)"
+                />
+                <kbd className="kbd absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none hidden lg:inline-flex">
+                  Ctrl K
+                </kbd>
               </div>
             </div>
             <div className="ml-auto flex items-center gap-2">

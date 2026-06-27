@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DemoProvider } from "@/lib/demo-store";
 import { AuthProvider, ProtectedRoute, RoleGuard } from "@/lib/auth";
+import { AnnouncerProvider } from "@/lib/announcer";
 import AppLayout from "@/components/AppLayout";
 import DemoShell from "@/components/DemoShell";
 import Dashboard from "./pages/Dashboard";
@@ -46,6 +47,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <DemoProvider>
+            <AnnouncerProvider>
             <Toaster />
             <Sonner />
             <Routes>
@@ -114,6 +116,7 @@ const App = () => (
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </AnnouncerProvider>
           </DemoProvider>
         </AuthProvider>
       </BrowserRouter>

@@ -329,11 +329,49 @@ export default function Kiosk() {
   if (invalid) return <InvalidScreen />;
 
   if (!data) {
+    const reconnecting = consecutiveFailures > 0;
     return (
-      <div className="min-h-screen grid place-items-center bg-zinc-950 text-zinc-300 text-xl">
-        {consecutiveFailures > 0
-          ? `Sem resposta do servidor (tentativa ${consecutiveFailures})…`
-          : "Carregando painel…"}
+      <div
+        data-testid="kiosk-loading"
+        className="min-h-screen bg-zinc-950 text-zinc-100 p-8 flex flex-col gap-6"
+        aria-busy="true"
+        aria-live="polite"
+      >
+        <header className="flex items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <Snowflake className="h-12 w-12 text-sky-400" />
+            <div className="space-y-2">
+              <div className="h-3 w-32 rounded bg-zinc-800 animate-pulse" />
+              <div className="h-8 w-72 rounded bg-zinc-800 animate-pulse" />
+            </div>
+          </div>
+          <div className="space-y-2 text-right">
+            <div className="h-14 w-44 rounded bg-zinc-800 animate-pulse ml-auto" />
+            <div className="h-3 w-32 rounded bg-zinc-800 animate-pulse ml-auto" />
+          </div>
+        </header>
+        <section className="grid grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border-2 border-zinc-800 bg-zinc-900/40 px-6 py-5 h-28 animate-pulse" />
+          ))}
+        </section>
+        <section className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border-2 border-zinc-800 bg-zinc-900/40 h-32 animate-pulse" />
+          ))}
+        </section>
+        <footer
+          className={`flex items-center justify-center gap-3 rounded-2xl border px-6 py-4 text-base ${
+            reconnecting
+              ? "border-amber-700/50 bg-amber-900/20 text-amber-200"
+              : "border-zinc-800 bg-zinc-900/40 text-zinc-400"
+          }`}
+        >
+          {reconnecting && <WifiOff className="h-5 w-5" />}
+          {reconnecting
+            ? `Sem resposta do servidor — reconectando (tentativa ${consecutiveFailures})…`
+            : "Carregando painel…"}
+        </footer>
       </div>
     );
   }
