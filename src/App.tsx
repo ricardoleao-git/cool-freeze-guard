@@ -101,6 +101,7 @@ const App = () => (
                 <Route path="/resumo-diario" element={<DailySummary />} />
                 <Route path="/configuracoes/integracao-guardia" element={<GuardiaIntegration />} />
                 <Route path="/extrato" element={<Statement />} />
+                <Route path="/inconsistencias" element={<Inconsistencies />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
