@@ -82,6 +82,7 @@ export default function GuardiaIntegration() {
   const [syncing, setSyncing] = useState(false);
   const [pushing, setPushing] = useState(false);
   const [polling, setPolling] = useState(false);
+  const announce = useAnnouncer();
 
   const [events, setEvents] = useState<GuardiaEvent[]>([]);
   const [filterDate, setFilterDate] = useState("");
