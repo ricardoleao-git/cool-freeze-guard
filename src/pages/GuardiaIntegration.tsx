@@ -151,25 +151,38 @@ export default function GuardiaIntegration() {
   };
 
   const testConnection = async () => {
+    if (!tenantId) return;
     if (!cfg.guardia_url || !cfg.guardia_token) { toast.error("Preencha URL e token"); return; }
     setTesting(true);
     try {
-      const base = cfg.guardia_url.replace(/\/+$/, "");
-      const path = (cfg.api_base_path || "/guardiaapi").replace(/\/+$/, "");
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 10000);
-      // Probe with a HEAD/GET on /person/__ping (404 is OK → server alive; 401/403 → auth wrong).
-      const resp = await fetch(`${base}${path}/person/__connectivity_probe__`, {
-        method: "GET",
-        headers: { ...authHeader(), Accept: "application/json" },
-        signal: ctrl.signal,
+      // Persist current config first so the server uses the latest values.
+      await supabase.from("integration_config").upsert({
+        tenant_id: tenantId,
+        guardia_url: cfg.guardia_url.trim(),
+        guardia_token: cfg.guardia_token.trim(),
+        auth_header_name: cfg.auth_header_name.trim() || "X-GuardIA-Token",
+        auth_scheme: cfg.auth_scheme || "header",
+        api_base_path: cfg.api_base_path.trim() || "/guardiaapi",
+        events_endpoint: cfg.events_endpoint?.trim() || null,
+      }, { onConflict: "tenant_id" });
+
+      const { data, error } = await supabase.functions.invoke("guardia-poll-events", {
+        body: { tenant_id: tenantId, test_only: true },
       });
-      clearTimeout(t);
-      if (resp.status === 401 || resp.status === 403) toast.error(`Auth recusada (HTTP ${resp.status}) — verifique header/scheme`);
-      else if (resp.status >= 200 && resp.status < 500) toast.success(`Conexão OK (HTTP ${resp.status})`);
-      else toast.error(`GuardIA respondeu HTTP ${resp.status}`);
+      if (error) { toast.error(error.message || "Falha no teste"); return; }
+      const r = data as {
+        ok?: boolean;
+        auth?: { ok: boolean; message?: string };
+        events?: { ok: boolean; configured: boolean; message?: string };
+      };
+      const authMsg = r.auth?.message || "auth desconhecido";
+      const evMsg = r.events?.configured ? (r.events.message || "events desconhecido") : "events_endpoint não configurado";
+      if (r.ok) toast.success(`Conexão OK — ${authMsg} · ${evMsg}`);
+      else if (r.auth?.ok && r.events?.configured && !r.events.ok)
+        toast.warning(`Auth OK, mas events_endpoint falhou: ${evMsg}`);
+      else toast.error(`Falha: ${authMsg}${r.events?.configured ? ` · ${evMsg}` : ""}`);
     } catch (e) {
-      toast.error(`Falha de conexão: ${(e as Error).message}`);
+      toast.error(`Erro inesperado: ${(e as Error).message}`);
     } finally {
       setTesting(false);
     }
