@@ -88,6 +88,7 @@ const demoGroups = [
     label: "Gestão",
     items: [
       { to: "/demo/relatorios", title: "Relatórios", icon: FileBarChart2 },
+      { to: "/demo/fechamento", title: "Fechamento de Período", icon: Stamp },
       { to: "/demo/integracoes", title: "Integrações / API", icon: PlugZap },
       { to: "/demo/configuracoes/integracao-guardia", title: "Integração GuardIA", icon: ScanFace },
       { to: "/demo/usuarios", title: "Usuários & Permissões", icon: UserCog },
