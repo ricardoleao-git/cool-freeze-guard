@@ -84,7 +84,7 @@ export default function Login() {
             <div><div className="font-display font-bold text-xl">FrioSafe</div></div>
           </div>
           <h2 className="font-display text-2xl font-bold">Acesse a plataforma</h2>
-          <p className="text-[13px] text-muted-foreground mt-1">Entre com sua conta ou cadastre-se. Ou explore sem login no <Link to="/demo" className="text-primary underline">modo Experimentação</Link>.</p>
+          <p className="text-[13px] text-muted-foreground mt-1">Entre com sua conta ou cadastre-se para acessar a plataforma.</p>
 
           <Tabs defaultValue="signin" className="mt-6">
             <TabsList className="grid grid-cols-2 w-full">
@@ -114,13 +114,24 @@ export default function Login() {
           </Tabs>
 
 
-          <div className="mt-6 rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-start gap-2 text-xs">
-            <Sparkles className="h-4 w-4 text-primary mt-0.5" />
-            <div>
-              <div className="font-semibold">Quer só explorar?</div>
-              <div className="text-muted-foreground">Acesse <Link to="/demo" className="text-primary underline">/demo</Link> para uma sessão de Experimentação sem cadastro.</div>
+          <Link
+            to="/demo"
+            className="mt-6 block rounded-xl border border-primary/30 bg-primary/5 p-4 transition hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <div className="flex items-start gap-3">
+              <Sparkles className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <div className="font-semibold text-sm">Experimente sem cadastro</div>
+                <p className="text-[13px] text-muted-foreground mt-1">
+                  Entre no modo demonstração com dados simulados (3 meses de operação, alertas, fechamentos e painel TV). Nenhum dado real é gravado e você pode sair quando quiser.
+                </p>
+                <div className="mt-2 inline-flex items-center gap-1 text-[13px] font-medium text-primary">
+                  Abrir modo demonstração <ArrowRight className="h-3.5 w-3.5" />
+                </div>
+              </div>
             </div>
-          </div>
+          </Link>
+
         </div>
       </div>
     </div>
