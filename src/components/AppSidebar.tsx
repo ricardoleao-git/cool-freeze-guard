@@ -23,6 +23,7 @@ const groups = [
       { to: "/pausas", title: "Pausas Térmicas", icon: Timer },
       { to: "/eventos", title: "Eventos de Acesso", icon: Activity },
       { to: "/ajustes", title: "Ajustes & Inconsistências", icon: ClipboardCheck },
+      { to: "/inconsistencias", title: "Fila de Inconsistências", icon: ShieldAlert },
       { to: "/resumo-diario", title: "Resumo Diário (RH/SST)", icon: Stethoscope },
       { to: "/meu-dia", title: "Meu Dia (Colaborador)", icon: Bell },
       { to: "/extrato", title: "Extrato de Exposição", icon: Receipt },
