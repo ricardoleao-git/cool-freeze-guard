@@ -110,6 +110,7 @@ const App = () => (
                 <Route path="/extrato" element={<Statement />} />
                 <Route path="/inconsistencias" element={<Inconsistencies />} />
                 <Route path="/fechamento" element={<PeriodClosure />} />
+                <Route path="/configuracoes/painel-externo" element={<KioskTokens />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
