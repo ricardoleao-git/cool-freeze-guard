@@ -16,7 +16,7 @@ const groups = [
     label: "Operação",
     items: [
       { to: "/", title: "Dashboard", icon: LayoutDashboard },
-      { to: "/painel", title: "Painel Operacional", icon: MonitorPlay },
+      { to: "/painel-operacional", title: "Painel Operacional", icon: MonitorPlay },
       { to: "/alertas", title: "Alertas & Ocorrências", icon: AlertTriangle },
       { to: "/ocorrencias", title: "Ocorrências (RH/SST)", icon: FileWarning },
       { to: "/historico", title: "Histórico RH/SST", icon: ClipboardList },
