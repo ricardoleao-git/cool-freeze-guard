@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, MonitorPlay, Users, Snowflake, Cpu, Activity, Timer,
-  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning, UserCog, ClipboardList, FileLock2, ClipboardCheck, Bell, Stethoscope, FlaskConical, ScanFace, Receipt,
+  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning, UserCog, ClipboardList, FileLock2, ClipboardCheck, Bell, Stethoscope, FlaskConical, ScanFace, Receipt, ShieldAlert,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -23,6 +23,7 @@ const groups = [
       { to: "/pausas", title: "Pausas Térmicas", icon: Timer },
       { to: "/eventos", title: "Eventos de Acesso", icon: Activity },
       { to: "/ajustes", title: "Ajustes & Inconsistências", icon: ClipboardCheck },
+      { to: "/inconsistencias", title: "Fila de Inconsistências", icon: ShieldAlert },
       { to: "/resumo-diario", title: "Resumo Diário (RH/SST)", icon: Stethoscope },
       { to: "/meu-dia", title: "Meu Dia (Colaborador)", icon: Bell },
       { to: "/extrato", title: "Extrato de Exposição", icon: Receipt },
@@ -68,6 +69,7 @@ const demoGroups = [
       { to: "/demo/pausas", title: "Pausas Térmicas", icon: Timer },
       { to: "/demo/eventos", title: "Eventos de Acesso", icon: Activity },
       { to: "/demo/ajustes", title: "Ajustes & Inconsistências", icon: ClipboardCheck },
+      { to: "/demo/inconsistencias", title: "Fila de Inconsistências", icon: ShieldAlert },
       { to: "/demo/resumo-diario", title: "Resumo Diário (RH/SST)", icon: Stethoscope },
       { to: "/demo/meu-dia", title: "Meu Dia (Colaborador)", icon: Bell },
       { to: "/demo/extrato", title: "Extrato de Exposição", icon: Receipt },
