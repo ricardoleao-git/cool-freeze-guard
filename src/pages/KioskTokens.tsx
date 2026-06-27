@@ -318,8 +318,28 @@ export default function KioskTokens() {
                   >
                     <Link2 className="h-4 w-4" />
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowQR((v) => !v)}
+                    title="Mostrar QR code"
+                  >
+                    <QrCode className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
+              {showQR && (
+                <div className="flex flex-col items-center gap-2 rounded-lg border border-zinc-700 bg-white p-4">
+                  <QRCodeSVG
+                    value={`${window.location.origin}/painel?token=${createdToken}`}
+                    size={220}
+                    includeMargin
+                  />
+                  <p className="text-xs text-zinc-700 text-center">
+                    Aponte a câmera do quiosque para abrir o painel
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
