@@ -2,3 +2,6 @@ project_id = "ipserapauilkiwpzsshk"
 
 [functions.ingest-access-event]
 verify_jwt = false
+
+[functions.guardia-webhook]
+verify_jwt = false
