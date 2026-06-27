@@ -12,6 +12,10 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { DemoLiveStatusPanel } from "@/components/DemoLiveStatusPanel";
 import { regenerateDemoSeed, getAutoRegenerate, setAutoRegenerate } from "@/lib/demo-seed";
+import { generateDemoHistory, type SeedPhaseReport } from "@/lib/demo-history";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { CalendarRange } from "lucide-react";
 
 
 export default function DemoMode() {
@@ -23,6 +27,10 @@ export default function DemoMode() {
   const [emp, setEmp] = useState<string>("");
   const [autoRegen, setAutoRegenState] = useState<boolean>(() => getAutoRegenerate());
   const [regenerating, setRegenerating] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [seedPct, setSeedPct] = useState(0);
+  const [seedLabel, setSeedLabel] = useState("");
+  const [seedLog, setSeedLog] = useState<SeedPhaseReport[]>([]);
   useEffect(() => { if (!emp && employees[0]) setEmp(employees[0].id); }, [employees, emp]);
 
   const handleRegenerate = async () => {
@@ -35,6 +43,22 @@ export default function DemoMode() {
       console.error(e);
       toast.error("Falha ao regenerar dados de demonstração.");
       setRegenerating(false);
+    }
+  };
+
+  const handleSeedHistory = async () => {
+    setSeeding(true); setSeedPct(0); setSeedLabel("Iniciando…"); setSeedLog([]);
+    try {
+      await generateDemoHistory((pct, label, last) => {
+        setSeedPct(pct); setSeedLabel(label);
+        if (last) setSeedLog(prev => [...prev, last]);
+      }, { year: 2026, density: "heavy" });
+      toast.success("Histórico de 3 meses gerado no demo-tenant.");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(`Falha ao gerar histórico: ${e.message}`);
+    } finally {
+      setSeeding(false);
     }
   };
 
@@ -77,6 +101,53 @@ export default function DemoMode() {
           </div>
         </CardContent>
       </Card>
+
+      <Card className="glass-card mb-4 border-primary/30">
+        <CardHeader>
+          <CardTitle className="font-display flex items-center gap-2">
+            <CalendarRange className="h-4 w-4" /> Histórico para treinamento (3 meses · mai → jul 2026)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4 items-start">
+            <div className="text-sm text-muted-foreground space-y-2">
+              <p>Popula o demo-tenant com volume <strong className="text-foreground">pesado (~300 eventos/dia)</strong> e os casos de uso completos para apresentação a RH, Jurídico, SST e Gestão:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li><strong className="text-foreground">Excessos e bloqueio preventivo</strong> com pausas térmicas (incluindo interrompidas — NR-36).</li>
+                <li><strong className="text-foreground">Saídas esquecidas</strong> indo para a fila de correções (pendente, aprovado e rejeitado).</li>
+                <li><strong className="text-foreground">Fechamentos assinados em cadeia</strong> mai/jun (Supervisor→RH→Jurídico) e jul pendente (apenas supervisor).</li>
+                <li><strong className="text-foreground">Contestações de extrato</strong> pelo colaborador e revisões de inconsistência.</li>
+                <li><strong className="text-foreground">Falhas da integração GuardIA</strong> (auth/timeout/normalização) com erro persistente para acender alertas.</li>
+              </ul>
+              <p className="text-xs">A geração demora aproximadamente <strong>2–4 minutos</strong>. Execute apenas no ambiente de demonstração.</p>
+            </div>
+            <div className="space-y-3">
+              <Button onClick={handleSeedHistory} disabled={seeding} className="w-full">
+                {seeding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CalendarRange className="h-4 w-4 mr-2" />}
+                {seeding ? "Gerando histórico…" : "Gerar 3 meses de histórico"}
+              </Button>
+              {seeding && (
+                <>
+                  <Progress value={seedPct} />
+                  <p className="text-xs text-muted-foreground">{seedPct}% · {seedLabel}</p>
+                </>
+              )}
+              {seedLog.length > 0 && (
+                <ScrollArea className="h-40 rounded border bg-muted/20 p-2 text-xs">
+                  {seedLog.map((r, i) => (
+                    <div key={i} className={r.ok ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"}>
+                      {r.ok ? "✓" : "✗"} <strong>{r.phase}</strong>{" "}
+                      {r.ok ? JSON.stringify(r.info) : r.error}
+                    </div>
+                  ))}
+                </ScrollArea>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+
 
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.kiosk-panel]
 verify_jwt = false
+
+[functions.demo-seed-history]
+verify_jwt = false
