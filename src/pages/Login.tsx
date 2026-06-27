@@ -52,7 +52,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
-      <div className="relative hidden lg:flex flex-col justify-between p-12 bg-gradient-hero overflow-hidden">
+      <div className="relative hidden lg:flex flex-col justify-between p-12 bg-gradient-hero overflow-hidden hero-on-dark">
         <div className="absolute inset-0 bg-grid opacity-30" />
         <div className="relative">
           <div className="flex items-center gap-2.5">
@@ -61,25 +61,25 @@ export default function Login() {
             </div>
             <div>
               <div className="font-display font-bold text-xl">FrioSafe</div>
-              <div className="text-xs uppercase tracking-[0.2em] text-primary/80">Controle Térmico Ocupacional</div>
+              <div className="text-xs uppercase tracking-[0.2em] hero-eyebrow">Controle Térmico Ocupacional</div>
             </div>
           </div>
         </div>
         <div className="relative">
           <h1 className="font-display text-4xl xl:text-5xl font-bold leading-tight">
             Proteja o colaborador.<br />
-            <span className="text-gradient">Comprove compliance.</span>
+            <span className="text-gradient-on-hero">Comprove compliance.</span>
           </h1>
-          <p className="mt-4 text-muted-foreground max-w-md">
+          <p className="mt-4 hero-muted max-w-md text-[15px] leading-relaxed">
             Plataforma SaaS multi-tenant para controle de exposição ao frio e pausa térmica em câmaras frias, açougues, frigoríficos e centros de distribuição.
           </p>
           <div className="mt-8 grid grid-cols-3 gap-3 text-center max-w-md">
-            <div className="rounded-xl border border-status-yellow/40 bg-status-yellow/10 p-3"><div className="text-status-yellow font-display text-xl font-bold">80'</div><div className="text-xs uppercase mt-1">Atenção</div></div>
-            <div className="rounded-xl border border-status-orange/40 bg-status-orange/10 p-3"><div className="text-status-orange font-display text-xl font-bold">90'</div><div className="text-xs uppercase mt-1">Crítico</div></div>
-            <div className="rounded-xl border border-status-red/50 bg-status-red/10 p-3"><div className="text-status-red font-display text-xl font-bold">100'</div><div className="text-xs uppercase mt-1">Bloqueio</div></div>
+            <div className="rounded-xl border border-white/30 bg-white/10 p-3 backdrop-blur-sm"><div className="font-display text-xl font-bold text-white">80'</div><div className="text-xs uppercase mt-1 hero-eyebrow">Atenção</div></div>
+            <div className="rounded-xl border border-white/30 bg-white/10 p-3 backdrop-blur-sm"><div className="font-display text-xl font-bold text-white">90'</div><div className="text-xs uppercase mt-1 hero-eyebrow">Crítico</div></div>
+            <div className="rounded-xl border border-white/40 bg-white/15 p-3 backdrop-blur-sm"><div className="font-display text-xl font-bold text-white">100'</div><div className="text-xs uppercase mt-1 hero-eyebrow">Bloqueio</div></div>
           </div>
         </div>
-        <div className="relative text-xs text-muted-foreground flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> Independente do ponto eletrônico — evidência para SST, RH e Jurídico.</div>
+        <div className="relative text-[13px] hero-muted flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-white" /> Independente do ponto eletrônico — evidência para SST, RH e Jurídico.</div>
       </div>
 
       <div className="flex items-center justify-center p-6 md:p-12">
@@ -89,7 +89,7 @@ export default function Login() {
             <div><div className="font-display font-bold text-xl">FrioSafe</div></div>
           </div>
           <h2 className="font-display text-2xl font-bold">Acesse a plataforma</h2>
-          <p className="text-sm text-muted-foreground mt-1">Entre com sua conta ou cadastre-se. Ou explore sem login no <Link to="/demo" className="text-primary underline">modo Experimentação</Link>.</p>
+          <p className="text-[13px] text-muted-foreground mt-1">Entre com sua conta ou cadastre-se. Ou explore sem login no <Link to="/demo" className="text-primary underline">modo Experimentação</Link>.</p>
 
           <Tabs defaultValue="signin" className="mt-6">
             <TabsList className="grid grid-cols-2 w-full">
