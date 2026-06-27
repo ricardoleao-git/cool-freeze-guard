@@ -229,8 +229,36 @@
     width: 18rem; height: 18rem; border-radius: 9999px;
     background: hsl(var(--primary) / 0.18);
     filter: blur(80px); pointer-events: none;
+
+  /* ─── Semantic alert blocks (work in light + dark) ─── */
+  .alert-ok      { background: hsl(var(--status-ok-soft));     color: hsl(var(--status-ok-fg));     border: 1px solid hsl(var(--status-ok) / 0.35); }
+  .alert-yellow  { background: hsl(var(--status-yellow-soft)); color: hsl(var(--status-yellow-fg)); border: 1px solid hsl(var(--status-yellow) / 0.45); }
+  .alert-orange  { background: hsl(var(--status-orange-soft)); color: hsl(var(--status-orange-fg)); border: 1px solid hsl(var(--status-orange) / 0.5); }
+  .alert-red     { background: hsl(var(--status-red-soft));    color: hsl(var(--status-red-fg));    border: 1px solid hsl(var(--status-red) / 0.5); }
+  .alert-break   { background: hsl(var(--status-break-soft));  color: hsl(var(--status-break-fg));  border: 1px solid hsl(var(--status-break) / 0.45); }
+
+  /* Solid status pills */
+  .pill-ok      { background: hsl(var(--status-ok));     color: hsl(0 0% 100%); }
+  .pill-yellow  { background: hsl(var(--status-yellow)); color: hsl(30 90% 12%); }
+  .pill-orange  { background: hsl(var(--status-orange)); color: hsl(0 0% 100%); }
+  .pill-red     { background: hsl(var(--status-red));    color: hsl(0 0% 100%); }
+
+  /* Modern surface for inputs/cards in light mode (auto-themed) */
+  .surface-input {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 1px 0 hsl(var(--foreground) / 0.02), 0 1px 2px hsl(var(--foreground) / 0.04);
+    transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+  }
+  .surface-input:hover { border-color: hsl(var(--primary) / 0.45); }
+  .surface-input:focus-within,
+  .surface-input:focus {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.15);
+    outline: none;
   }
 }
+
 
 @layer utilities {
   .bg-grid {
