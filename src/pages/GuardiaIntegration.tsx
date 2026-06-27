@@ -449,6 +449,10 @@ export default function GuardiaIntegration() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="status" className="space-y-4">
+          <GuardiaStatusTab tenantId={tenantId} />
+        </TabsContent>
+
         <TabsContent value="devices" className="space-y-4">
           <GuardiaDeviceMapTab tenantId={tenantId} />
         </TabsContent>
