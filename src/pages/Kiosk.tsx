@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Snowflake, AlertCircle, ShieldCheck, Sparkles, WifiOff } from "lucide-react";
+import { ageSeconds, computeOffsetMs } from "@/lib/kiosk-age";
 
 const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kiosk-panel`;
 const ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
@@ -252,8 +253,12 @@ export default function Kiosk() {
         if (!res.ok) throw new Error(`http_${res.status}`);
         const json = (await res.json()) as Payload;
         if (cancelled) return;
+        // On success we update the in-memory snapshot. On failure we deliberately
+        // keep the previous `data`, `offsetRef` and `lastServerTimeRef` so the kiosk
+        // continues to show the last semáforo and grid while the "atualizado há Ns"
+        // label keeps growing — only the next successful poll resets it.
         const serverMs = new Date(json.server_time).getTime();
-        offsetRef.current = serverMs - Date.now();
+        offsetRef.current = computeOffsetMs(json.server_time, Date.now());
         lastServerTimeRef.current = serverMs;
         setData(json);
         setInvalid(false);
