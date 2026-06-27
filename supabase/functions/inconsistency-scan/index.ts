@@ -343,16 +343,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
-  const auth = req.headers.get("Authorization") ?? "";
-  if (!auth.startsWith("Bearer ")) return json({ error: "unauthorized" }, 401);
-
   const url = Deno.env.get("SUPABASE_URL")!;
   const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
   const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-  const userClient = createClient(url, anon, { global: { headers: { Authorization: auth } } });
-  const { data: userRes, error: userErr } = await userClient.auth.getUser();
-  if (userErr || !userRes?.user) return json({ error: "unauthorized" }, 401);
 
   let body: any;
   try { body = await req.json(); } catch { return json({ error: "invalid_json" }, 400); }
@@ -361,10 +354,22 @@ Deno.serve(async (req) => {
   if (!["day", "week"].includes(period)) return json({ error: "invalid_period" }, 400);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(reference_date)) return json({ error: "invalid_date" }, 400);
 
-  const supabase = createClient(url, service);
-  const { data: canRead } = await supabase.rpc("can_read_tenant", { _user_id: userRes.user.id, _tenant_id: tenant_id });
-  if (!canRead) return json({ error: "forbidden" }, 403);
+  // Demo tenant is public (read-only via RLS demo policies).
+  const isDemo = tenant_id === "demo-tenant";
 
+  if (!isDemo) {
+    const auth = req.headers.get("Authorization") ?? "";
+    if (!auth.startsWith("Bearer ")) return json({ error: "unauthorized" }, 401);
+    const userClient = createClient(url, anon, { global: { headers: { Authorization: auth } } });
+    const { data: userRes, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userRes?.user) return json({ error: "unauthorized" }, 401);
+
+    const supabaseAuthCheck = createClient(url, service);
+    const { data: canRead } = await supabaseAuthCheck.rpc("can_read_tenant", { _user_id: userRes.user.id, _tenant_id: tenant_id });
+    if (!canRead) return json({ error: "forbidden" }, 403);
+  }
+
+  const supabase = createClient(url, service);
   try {
     const result = await scan(supabase, tenant_id, period as Period, reference_date);
     return json(result, 200);
