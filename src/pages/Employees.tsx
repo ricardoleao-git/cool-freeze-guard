@@ -1,16 +1,19 @@
 import { PageHeader } from "@/components/PageHeader";
 import { useTenantScoped, useDemo } from "@/lib/demo-store";
-import { Users, LogIn, LogOut, AlertTriangle, ShieldAlert, Plus, Pencil, Trash2, ShieldCheck } from "lucide-react";
+import { Users, LogIn, LogOut, AlertTriangle, ShieldAlert, Plus, Pencil, Trash2, ShieldCheck, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { STATUS_LABEL, STATUS_COLOR, type Employee } from "@/lib/demo-data";
 import { toast } from "sonner";
 import { EmployeeFormDialog } from "@/components/EmployeeFormDialog";
 import { EmployeeAreaAuthDialog } from "@/components/EmployeeAreaAuthDialog";
+import { SetEmployeePinDialog } from "@/components/SetEmployeePinDialog";
 import { StorageImage } from "@/components/StorageImage";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -19,11 +22,27 @@ import {
 export default function Employees() {
   const { employees, units, departments, employeeColdAreaAuth } = useTenantScoped();
   const { simulateEntry, simulateExit, forceStatus, deleteEmployee } = useDemo();
+  const { roles, profile, isDemo } = useAuth();
+  const canManagePin = !isDemo && roles.some(r => r === "super_admin" || r === "administrador");
+  const tenantId = profile?.tenant_id ?? "";
   const [q, setQ] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [deleting, setDeleting] = useState<Employee | null>(null);
   const [authFor, setAuthFor] = useState<Employee | null>(null);
+  const [pinFor, setPinFor] = useState<Employee | null>(null);
+  const [pinSetMap, setPinSetMap] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!canManagePin || !tenantId) return;
+    supabase.from("employees").select("id, pin_set_at").eq("tenant_id", tenantId)
+      .then(({ data }) => {
+        const m: Record<string, boolean> = {};
+        (data ?? []).forEach((r: any) => { m[r.id] = !!r.pin_set_at; });
+        setPinSetMap(m);
+      });
+  }, [canManagePin, tenantId, pinFor]);
+
 
   const filtered = employees.filter(e =>
     e.name.toLowerCase().includes(q.toLowerCase()) || e.registration_number.includes(q),
