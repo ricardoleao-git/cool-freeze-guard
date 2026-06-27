@@ -925,6 +925,39 @@ export type Database = {
         }
         Relationships: []
       }
+      inconsistency_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          reviewed_at: string
+          reviewed_by_name: string | null
+          reviewed_by_user_id: string | null
+          signature_key: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          reviewed_at?: string
+          reviewed_by_name?: string | null
+          reviewed_by_user_id?: string | null
+          signature_key: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          reviewed_at?: string
+          reviewed_by_name?: string | null
+          reviewed_by_user_id?: string | null
+          signature_key?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       integration_config: {
         Row: {
           active: boolean
