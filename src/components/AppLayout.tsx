@@ -61,7 +61,15 @@ export default function AppLayout() {
             <div className="hidden md:flex items-center gap-2 max-w-md flex-1">
               <div className="relative w-full">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar colaborador, ambiente, dispositivo…" className="pl-8 bg-muted/30" aria-label="Buscar" />
+                <Input
+                  ref={desktopSearchRef}
+                  placeholder="Buscar colaborador, ambiente, dispositivo…"
+                  className="pl-8 pr-14 bg-muted/30"
+                  aria-label="Buscar (atalho Control K)"
+                />
+                <kbd className="kbd absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none hidden lg:inline-flex">
+                  Ctrl K
+                </kbd>
               </div>
             </div>
             <div className="ml-auto flex items-center gap-2">
