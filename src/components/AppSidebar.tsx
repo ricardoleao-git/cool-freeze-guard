@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, MonitorPlay, Users, Snowflake, Cpu, Activity, Timer,
-  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning, UserCog, ClipboardList, FileLock2, ClipboardCheck, Bell, Stethoscope, FlaskConical,
+  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning, UserCog, ClipboardList, FileLock2, ClipboardCheck, Bell, Stethoscope, FlaskConical, ScanFace,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
