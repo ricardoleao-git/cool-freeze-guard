@@ -349,9 +349,7 @@ export default function Kiosk() {
     day: "2-digit",
     month: "long",
   });
-  const ageSec = lastServerTimeRef.current
-    ? Math.max(0, Math.floor((now + offsetRef.current - lastServerTimeRef.current) / 1000))
-    : 0;
+  const ageSec = ageSeconds(lastServerTimeRef.current, now, offsetRef.current);
 
   return (
     <div
