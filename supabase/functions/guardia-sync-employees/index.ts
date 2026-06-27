@@ -106,6 +106,9 @@ Deno.serve(async (req) => {
     return json({ error: "missing_defaults", message: "Cadastre ao menos uma unidade e um departamento antes de sincronizar." }, 400);
   }
 
+  let imported = 0, updated = 0, skipped = 0;
+  const errors: Array<{ id?: string; message: string }> = [];
+
   // CPF é a chave do colaborador. Remove pontos, traços e espaços.
   const normalizeCpf = (v?: string | null) => String(v ?? "").replace(/\D/g, "");
 
