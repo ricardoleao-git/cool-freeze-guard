@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { MonitorPlay, Plus, Copy, Link2, Trash2, ShieldAlert } from "lucide-react";
+import { MonitorPlay, Plus, Copy, Link2, Trash2, ShieldAlert, QrCode } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
