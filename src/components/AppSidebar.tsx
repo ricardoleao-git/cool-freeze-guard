@@ -41,6 +41,7 @@ const groups = [
     label: "Gestão",
     items: [
       { to: "/relatorios", title: "Relatórios", icon: FileBarChart2 },
+      { to: "/fechamento", title: "Fechamento de Período", icon: Stamp },
       { to: "/integracoes", title: "Integrações / API", icon: PlugZap },
       { to: "/configuracoes/integracao-guardia", title: "Integração GuardIA", icon: ScanFace },
       { to: "/usuarios", title: "Usuários & Permissões", icon: UserCog },
