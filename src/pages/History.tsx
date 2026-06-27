@@ -197,7 +197,7 @@ export default function History() {
   };
 
   const handleSavePreset = async () => {
-    if (!user) return;
+    if (!canPersistPresets) { toast.error("Faça login para salvar presets"); return; }
     const name = newPresetName.trim();
     if (!name) return toast.error("Informe um nome para o preset");
     const payload = {
