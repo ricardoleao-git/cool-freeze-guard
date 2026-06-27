@@ -69,6 +69,7 @@ const demoGroups = [
       { to: "/demo/pausas", title: "Pausas Térmicas", icon: Timer },
       { to: "/demo/eventos", title: "Eventos de Acesso", icon: Activity },
       { to: "/demo/ajustes", title: "Ajustes & Inconsistências", icon: ClipboardCheck },
+      { to: "/demo/inconsistencias", title: "Fila de Inconsistências", icon: ShieldAlert },
       { to: "/demo/resumo-diario", title: "Resumo Diário (RH/SST)", icon: Stethoscope },
       { to: "/demo/meu-dia", title: "Meu Dia (Colaborador)", icon: Bell },
       { to: "/demo/extrato", title: "Extrato de Exposição", icon: Receipt },
