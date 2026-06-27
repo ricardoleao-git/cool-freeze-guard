@@ -47,6 +47,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <DemoProvider>
+            <AnnouncerProvider>
             <Toaster />
             <Sonner />
             <Routes>
