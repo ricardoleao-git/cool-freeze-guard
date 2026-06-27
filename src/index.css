@@ -229,6 +229,9 @@
     width: 18rem; height: 18rem; border-radius: 9999px;
     background: hsl(var(--primary) / 0.18);
     filter: blur(80px); pointer-events: none;
+  }
+
+
 
   /* ─── Semantic alert blocks (work in light + dark) ─── */
   .alert-ok      { background: hsl(var(--status-ok-soft));     color: hsl(var(--status-ok-fg));     border: 1px solid hsl(var(--status-ok) / 0.35); }
