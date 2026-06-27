@@ -297,6 +297,10 @@ export default function GuardiaIntegration() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="devices" className="space-y-4">
+          <GuardiaDeviceMapTab tenantId={tenantId} />
+        </TabsContent>
+
         <TabsContent value="log" className="space-y-4">
           <Card className="glass-card">
             <CardHeader className="flex flex-row items-center justify-between gap-3">
