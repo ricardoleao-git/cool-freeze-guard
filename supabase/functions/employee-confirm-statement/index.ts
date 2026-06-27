@@ -3,7 +3,7 @@
 // confirming an outdated snapshot, then writes an append-only confirmation.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { verifyPin, validatePinFormat } from "../_shared/pin.ts";
-import { buildStatement } from "../employee-statement/index.ts";
+import { buildStatement } from "../_shared/statement.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
