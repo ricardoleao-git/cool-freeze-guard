@@ -154,9 +154,13 @@ export default function History() {
     dateFrom, dateTo, hasAttach, sort,
   }), [search, employeeId, unitId, priority, category, status, dateFrom, dateTo, hasAttach, sort]);
 
+  // Presets require a real authenticated UUID. Demo/anonymous users skip persistence.
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const canPersistPresets = !!user && UUID_RE.test(user.id);
+
   // Load presets on mount / user change
   useEffect(() => {
-    if (!user) { setPresets([]); setPresetsLoaded(true); return; }
+    if (!canPersistPresets) { setPresets([]); setPresetsLoaded(true); return; }
     let cancelled = false;
     (async () => {
       const { data, error } = await supabase
