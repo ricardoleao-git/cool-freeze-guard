@@ -155,19 +155,22 @@ export default function GuardiaIntegration() {
 
   const testConnection = async () => {
     if (!tenantId) return;
-    if (!cfg.guardia_url || !cfg.guardia_token) { toast.error("Preencha URL e token"); return; }
+    if (!cfg.guardia_url) { toast.error("Preencha URL"); return; }
     setTesting(true);
     try {
       // Persist current config first so the server uses the latest values.
-      await supabase.from("integration_config").upsert({
+      const baseTestPayload = {
         tenant_id: tenantId,
         guardia_url: cfg.guardia_url.trim(),
-        guardia_token: cfg.guardia_token.trim(),
         auth_header_name: cfg.auth_header_name.trim() || "X-GuardIA-Token",
         auth_scheme: cfg.auth_scheme || "header",
         api_base_path: cfg.api_base_path.trim() || "/guardiaapi",
         events_endpoint: cfg.events_endpoint?.trim() || null,
-      }, { onConflict: "tenant_id" });
+      };
+      const testPayload = cfg.guardia_token.trim()
+        ? { ...baseTestPayload, guardia_token: cfg.guardia_token.trim() }
+        : baseTestPayload;
+      await supabase.from("integration_config").upsert(testPayload, { onConflict: "tenant_id" });
 
       const { data, error } = await supabase.functions.invoke("guardia-poll-events", {
         body: { tenant_id: tenantId, test_only: true },
