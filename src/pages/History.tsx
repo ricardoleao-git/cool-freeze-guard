@@ -884,3 +884,24 @@ function SortButton({ active, onClick, icon, label }: {
     </button>
   );
 }
+
+function ExportCsvButton({ onRun }: { onRun: () => void | Promise<void> }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button
+      variant="outline"
+      disabled={busy}
+      aria-busy={busy}
+      onClick={async () => {
+        setBusy(true);
+        try { await onRun(); } finally {
+          // Give the user visible feedback even on synchronous exports
+          setTimeout(() => setBusy(false), 350);
+        }
+      }}
+    >
+      {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+      {busy ? "Exportando…" : "Exportar CSV"}
+    </Button>
+  );
+}
