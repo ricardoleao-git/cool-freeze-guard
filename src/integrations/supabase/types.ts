@@ -1126,6 +1126,50 @@ export type Database = {
           },
         ]
       }
+      kiosk_tokens: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by_user_id: string | null
+          id: string
+          label: string | null
+          last_used_at: string | null
+          revoked_at: string | null
+          tenant_id: string
+          token: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          label?: string | null
+          last_used_at?: string | null
+          revoked_at?: string | null
+          tenant_id: string
+          token: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          label?: string | null
+          last_used_at?: string | null
+          revoked_at?: string | null
+          tenant_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kiosk_tokens_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monthly_report_signatures: {
         Row: {
           clickwrap_text: string
