@@ -494,7 +494,7 @@ export default function History() {
               </CardTitle>
               <CardDescription>Combine critérios para investigar incidentes específicos.</CardDescription>
             </div>
-            {user && presetsLoaded && (
+            {canPersistPresets && presetsLoaded && (
               <div className="flex flex-wrap items-center gap-2">
                 <Select value={presetId} onValueChange={handleSelectPreset}>
                   <SelectTrigger className="h-9 w-[220px]">
