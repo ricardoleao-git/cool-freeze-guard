@@ -44,6 +44,7 @@ const groups = [
       { to: "/fechamento", title: "Fechamento de Período", icon: Stamp },
       { to: "/integracoes", title: "Integrações / API", icon: PlugZap },
       { to: "/configuracoes/integracao-guardia", title: "Integração GuardIA", icon: ScanFace },
+      { to: "/configuracoes/painel-externo", title: "Painel Externo (Quiosque)", icon: MonitorPlay },
       { to: "/usuarios", title: "Usuários & Permissões", icon: UserCog },
       { to: "/lgpd", title: "Privacidade & LGPD", icon: FileLock2 },
       { to: "/empresas", title: "Empresas (Multi-tenant)", icon: Building2 },
