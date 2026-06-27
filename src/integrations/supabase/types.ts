@@ -1026,6 +1026,54 @@ export type Database = {
         }
         Relationships: []
       }
+      integration_audit_log: {
+        Row: {
+          code: string | null
+          created_at: string
+          cursor_used: string | null
+          details: Json | null
+          duration_ms: number | null
+          fetched_count: number | null
+          id: string
+          integration: string
+          message: string | null
+          processed_count: number | null
+          severity: string
+          source: string
+          tenant_id: string
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          cursor_used?: string | null
+          details?: Json | null
+          duration_ms?: number | null
+          fetched_count?: number | null
+          id?: string
+          integration?: string
+          message?: string | null
+          processed_count?: number | null
+          severity?: string
+          source: string
+          tenant_id: string
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          cursor_used?: string | null
+          details?: Json | null
+          duration_ms?: number | null
+          fetched_count?: number | null
+          id?: string
+          integration?: string
+          message?: string | null
+          processed_count?: number | null
+          severity?: string
+          source?: string
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       integration_config: {
         Row: {
           active: boolean
@@ -1033,12 +1081,16 @@ export type Database = {
           auth_header_name: string
           auth_scheme: string
           created_at: string
+          cron_interval_minutes: number
           events_endpoint: string | null
+          events_processed_total: number
           guardia_token: string | null
           guardia_url: string | null
           id: string
           janela_tolerancia_segundos: number
           last_event_cursor: string | null
+          last_event_error: string | null
+          last_event_error_at: string | null
           last_event_poll_at: string | null
           last_push_at: string | null
           last_push_count: number | null
@@ -1055,12 +1107,16 @@ export type Database = {
           auth_header_name?: string
           auth_scheme?: string
           created_at?: string
+          cron_interval_minutes?: number
           events_endpoint?: string | null
+          events_processed_total?: number
           guardia_token?: string | null
           guardia_url?: string | null
           id?: string
           janela_tolerancia_segundos?: number
           last_event_cursor?: string | null
+          last_event_error?: string | null
+          last_event_error_at?: string | null
           last_event_poll_at?: string | null
           last_push_at?: string | null
           last_push_count?: number | null
@@ -1077,12 +1133,16 @@ export type Database = {
           auth_header_name?: string
           auth_scheme?: string
           created_at?: string
+          cron_interval_minutes?: number
           events_endpoint?: string | null
+          events_processed_total?: number
           guardia_token?: string | null
           guardia_url?: string | null
           id?: string
           janela_tolerancia_segundos?: number
           last_event_cursor?: string | null
+          last_event_error?: string | null
+          last_event_error_at?: string | null
           last_event_poll_at?: string | null
           last_push_at?: string | null
           last_push_count?: number | null
