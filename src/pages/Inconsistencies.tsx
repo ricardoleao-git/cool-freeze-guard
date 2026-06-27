@@ -296,7 +296,7 @@ function ItemCard({
 }
 
 export default function Inconsistencies() {
-  const { profile, roles } = useAuth();
+  const { profile, roles, session, isDemo } = useAuth();
   const tenantId = profile?.tenant_id ?? "";
   const canAct = roles.some((r) => ["super_admin", "administrador", "gestor"].includes(r));
 
@@ -316,10 +316,24 @@ export default function Inconsistencies() {
     if (!tenantId) return;
     setLoading(true);
     try {
-      const { data: res, error } = await supabase.functions.invoke("inconsistency-scan", {
-        body: { tenant_id: tenantId, period, reference_date: refDate },
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      };
+
+      if (!isDemo) {
+        const accessToken = session?.access_token;
+        if (!accessToken) throw new Error("Sessão expirada. Entre novamente para carregar inconsistências.");
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/inconsistency-scan`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ tenant_id: tenantId, period, reference_date: refDate }),
       });
-      if (error) throw error;
+      const res = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(res?.error ?? `Erro ${response.status} ao carregar inconsistências`);
       if ((res as any)?.error) throw new Error((res as any).error);
       setData(res as ScanResult);
     } catch (e: any) {
