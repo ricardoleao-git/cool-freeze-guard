@@ -270,8 +270,9 @@ export default function GuardiaIntegration() {
                       type={showToken ? "text" : "password"}
                       value={cfg.guardia_token}
                       onChange={e => setCfg(c => ({ ...c, guardia_token: e.target.value }))}
-                      placeholder="Token fornecido pelo GuardIA"
+                      placeholder="••• salvo • preencha para substituir"
                       className="pr-10"
+                      autoComplete="new-password"
                     />
                     <Button type="button" size="icon" variant="ghost" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
                       onClick={() => setShowToken(s => !s)}>
