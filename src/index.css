@@ -54,6 +54,18 @@
     --status-break: 222 82% 65%;
     --status-outside: 220 12% 60%;
 
+    /* Soft tinted alert surfaces (dark) */
+    --status-ok-soft: 158 60% 18%;
+    --status-ok-fg: 158 80% 78%;
+    --status-yellow-soft: 42 70% 16%;
+    --status-yellow-fg: 45 100% 75%;
+    --status-orange-soft: 22 70% 18%;
+    --status-orange-fg: 24 100% 78%;
+    --status-red-soft: 354 60% 20%;
+    --status-red-fg: 0 95% 82%;
+    --status-break-soft: 224 60% 22%;
+    --status-break-fg: 222 95% 82%;
+
     /* Gradients & glows */
     --gradient-hero: radial-gradient(120% 80% at 100% 0%, hsl(222 82% 65% / 0.18), transparent 60%), linear-gradient(160deg, hsl(228 60% 22%) 0%, hsl(224 67% 11%) 100%);
     --gradient-frost: linear-gradient(180deg, hsl(222 82% 65% / 0.18), hsl(222 82% 65% / 0));
