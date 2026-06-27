@@ -133,7 +133,7 @@ export default function KioskTokens() {
   if (!canManage) {
     return (
       <div className="p-6">
-        <PageHeader title="Painel Externo (Quiosque)" icon={MonitorPlay} />
+        <PageHeader title="Painel Externo (Quiosque)" icon={<MonitorPlay className="h-5 w-5" />} />
         <Card className="glass-card mt-6">
           <CardContent className="py-10 text-center text-muted-foreground">
             Apenas administradores podem gerenciar tokens do painel externo.
@@ -147,9 +147,10 @@ export default function KioskTokens() {
     <div className="p-6 space-y-6">
       <PageHeader
         title="Painel Externo (Quiosque)"
-        subtitle="Tokens de acesso para TVs/monitores sem login"
-        icon={MonitorPlay}
+        description="Tokens de acesso para TVs/monitores sem login"
+        icon={<MonitorPlay className="h-5 w-5" />}
       />
+
 
       <Card className="glass-card border-amber-500/30 bg-amber-500/5">
         <CardContent className="py-4 flex items-start gap-3">
