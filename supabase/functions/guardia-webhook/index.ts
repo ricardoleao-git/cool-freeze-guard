@@ -112,14 +112,19 @@ Deno.serve(async (req) => {
     return json({ error: "server_error" }, 500);
   }
 
-  // Resolve employee, cold_area, optional device — all within tenant.
-  const [empRes, areaRes, devRes] = await Promise.all([
+  // Resolve employee, device map (by dispositivo_id), and optional device record — all within tenant.
+  const [empRes, mapRes, devRes] = await Promise.all([
     supabase.from("employees")
       .select("id, unit_id, current_status, current_area_id, accumulated_minutes")
       .eq("tenant_id", tenantId).eq("id", colaboradorCpf).maybeSingle(),
-    supabase.from("cold_areas")
-      .select("id, unit_id")
-      .eq("tenant_id", tenantId).eq("id", payload.local_id!).maybeSingle(),
+    payload.dispositivo_id
+      ? supabase.from("guardia_device_map")
+          .select("cold_area_id")
+          .eq("tenant_id", tenantId)
+          .eq("guardia_device_id", payload.dispositivo_id)
+          .eq("active", true)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
     payload.dispositivo_id
       ? supabase.from("devices").select("id").eq("tenant_id", tenantId)
           .or(`external_device_id.eq.${payload.dispositivo_id},id.eq.${payload.dispositivo_id}`).maybeSingle()
@@ -127,13 +132,39 @@ Deno.serve(async (req) => {
   ]);
 
   const employee = empRes.data;
-  const coldArea = areaRes.data;
   const device = devRes.data;
 
+  // Resolve cold area: (a) by device map, (b) fallback by local_id, (c) fail with device_not_mapped.
+  let coldArea: { id: string; unit_id: string } | null = null;
+  if (mapRes.data?.cold_area_id) {
+    const { data } = await supabase.from("cold_areas")
+      .select("id, unit_id")
+      .eq("tenant_id", tenantId).eq("id", mapRes.data.cold_area_id).maybeSingle();
+    coldArea = data ?? null;
+  }
+  if (!coldArea && payload.local_id) {
+    const { data } = await supabase.from("cold_areas")
+      .select("id, unit_id")
+      .eq("tenant_id", tenantId).eq("id", payload.local_id).maybeSingle();
+    coldArea = data ?? null;
+  }
+
   if (!employee || !coldArea) {
-    const reason = !employee ? "employee_not_found" : "cold_area_not_found";
-    console.warn(`guardia event ${payload.evento_id} unmapped: ${reason}`);
-    return json({ recebido: true, evento_id: payload.evento_id, processed: false, reason }, 200);
+    let reason: string;
+    if (!employee) reason = "employee_not_found";
+    else if (payload.dispositivo_id && !mapRes.data) reason = "device_not_mapped";
+    else reason = "cold_area_not_found";
+    console.warn(
+      `guardia event ${payload.evento_id} unmapped: ${reason}` +
+      (payload.dispositivo_id ? ` (dispositivo_id=${payload.dispositivo_id})` : "")
+    );
+    return json({
+      recebido: true,
+      evento_id: payload.evento_id,
+      processed: false,
+      reason,
+      dispositivo_id: payload.dispositivo_id ?? null,
+    }, 200);
   }
 
   const eventType = payload.tipo === "entrada" ? "entry" : "exit";

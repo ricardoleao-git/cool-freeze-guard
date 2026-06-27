@@ -698,6 +698,57 @@ export type Database = {
           },
         ]
       }
+      guardia_device_map: {
+        Row: {
+          active: boolean
+          cold_area_id: string
+          created_at: string
+          guardia_device_id: string
+          guardia_local_id: string | null
+          id: string
+          label: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          cold_area_id: string
+          created_at?: string
+          guardia_device_id: string
+          guardia_local_id?: string | null
+          id?: string
+          label?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          cold_area_id?: string
+          created_at?: string
+          guardia_device_id?: string
+          guardia_local_id?: string | null
+          id?: string
+          label?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guardia_device_map_cold_area_id_fkey"
+            columns: ["cold_area_id"]
+            isOneToOne: false
+            referencedRelation: "cold_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guardia_device_map_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guardia_events: {
         Row: {
           colaborador_id: string
