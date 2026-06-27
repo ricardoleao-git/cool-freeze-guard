@@ -425,6 +425,10 @@ export default function GuardiaIntegration() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="integrity" className="space-y-4">
+          <GuardiaIntegrityTab tenantId={tenantId} />
+        </TabsContent>
       </Tabs>
     </div>
   );
