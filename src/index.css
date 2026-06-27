@@ -31,7 +31,7 @@
     --secondary-foreground: 220 38% 97%;
 
     --muted: 226 40% 18%;
-    --muted-foreground: 220 22% 72%;
+    --muted-foreground: 220 26% 80%;
 
     /* Jade ice · #A8F0E5 */
     --accent: 171 75% 80%;
@@ -114,7 +114,7 @@
     --secondary-foreground: 224 70% 22%;
 
     --muted: 216 45% 94%;
-    --muted-foreground: 224 22% 38%;
+    --muted-foreground: 224 28% 30%;
 
     /* Punchy jade */
     --accent: 168 78% 46%;
@@ -198,6 +198,23 @@
     letter-spacing: -0.02em;
   }
   .tabular { font-variant-numeric: tabular-nums; }
+
+  /* Global keyboard focus safety net — every interactive element gets a
+     visible ring even when a component forgets its own focus styles. */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  [role="link"]:focus-visible,
+  [role="menuitem"]:focus-visible,
+  [role="tab"]:focus-visible,
+  summary:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
+    border-radius: 0.5rem;
+  }
 }
 
 @layer components {
@@ -210,7 +227,7 @@
   .stat-card { @apply glass-card p-6; }
   .status-dot { @apply inline-block h-2.5 w-2.5 rounded-full; }
   .kbd {
-    @apply inline-flex items-center justify-center rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground;
+    @apply inline-flex items-center justify-center rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-xs font-medium text-muted-foreground;
   }
   .pulse-ring {
     box-shadow: 0 0 0 0 hsl(var(--status-red) / 0.6);

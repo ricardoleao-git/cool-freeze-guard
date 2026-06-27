@@ -187,7 +187,7 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
                         <SelectItem value="externo">Externo (fora da câmara)</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-[11px] text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Define o estado do colaborador a cada leitura. A função do mapeamento prevalece sobre o campo "tipo" enviado pelo dispositivo.
                     </p>
                   </div>
@@ -203,7 +203,7 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
                       onChange={e => setForm(f => ({ ...f, janela_tolerancia_segundos: e.target.value }))}
                       placeholder="usar padrão global"
                     />
-                    <p className="text-[11px] text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Opcional. Substitui a janela global apenas para este leitor.
                     </p>
                   </div>
@@ -246,7 +246,7 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
                   <TableRow key={row.id}>
                     <TableCell>
                       <div className="font-medium text-sm">{row.label || <span className="text-muted-foreground italic">sem apelido</span>}</div>
-                      <div className="text-[11px] text-muted-foreground font-mono">{row.guardia_device_id}</div>
+                      <div className="text-xs text-muted-foreground font-mono">{row.guardia_device_id}</div>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={row.funcao === "externo"
@@ -255,7 +255,7 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
                         {row.funcao === "externo" ? "Externo" : "Entrada"}
                       </Badge>
                       {row.janela_tolerancia_segundos != null && (
-                        <div className="text-[10px] text-muted-foreground mt-1">tolerância: {row.janela_tolerancia_segundos}s</div>
+                        <div className="text-xs text-muted-foreground mt-1">tolerância: {row.janela_tolerancia_segundos}s</div>
                       )}
                     </TableCell>
                     <TableCell className="text-sm">

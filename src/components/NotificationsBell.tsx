@@ -126,7 +126,7 @@ export function NotificationsBell() {
         <Button variant="ghost" size="sm" className="relative">
           <Bell className="h-4 w-4" />
           {unread.length > 0 && (
-            <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-primary text-[10px] font-bold grid place-items-center text-primary-foreground">
+            <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-primary text-xs font-bold grid place-items-center text-primary-foreground">
               {unread.length}
             </span>
           )}
@@ -135,7 +135,7 @@ export function NotificationsBell() {
       <DropdownMenuContent align="end" className="w-[360px] p-0">
         <div className="px-3 py-2.5 border-b border-border/60 flex items-center justify-between">
           <span className="text-sm font-semibold">Notificações</span>
-          <Badge variant="outline" className="text-[10px]">{unread.length} pendente(s)</Badge>
+          <Badge variant="outline" className="text-xs">{unread.length} pendente(s)</Badge>
         </div>
         <ScrollArea className="max-h-[420px]">
           {items.length === 0 ? (
@@ -155,16 +155,16 @@ export function NotificationsBell() {
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs font-medium truncate">{employeeName(c.employee_id)}</span>
-                        <Badge variant="outline" className={`text-[10px] ${meta.cls}`}>
+                        <Badge variant="outline" className={`text-xs ${meta.cls}`}>
                           <Icon className="h-3 w-3 mr-1" />{meta.label}
                         </Badge>
                       </div>
-                      <p className="text-[11px] text-muted-foreground line-clamp-2">
+                      <p className="text-xs text-muted-foreground line-clamp-2">
                         {REASON_LABEL[c.reason_category] || c.reason_category}
                         {c.status === "rejected" && c.rejection_reason ? ` · ${c.rejection_reason}` : ""}
                         {c.status === "employee_contested" && c.employee_response ? ` · ${c.employee_response}` : ""}
                       </p>
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         {format(new Date(when), "dd/MM HH:mm", { locale: ptBR })}
                       </span>
                     </Link>

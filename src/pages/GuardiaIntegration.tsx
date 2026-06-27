@@ -309,7 +309,7 @@ export default function GuardiaIntegration() {
                     onChange={e => setCfg(c => ({ ...c, api_base_path: e.target.value }))}
                     placeholder="/guardiaapi"
                   />
-                  <p className="text-[11px] text-muted-foreground mt-1">OpenAPI 1.0.0 usa <code>/guardiaapi</code>.</p>
+                  <p className="text-xs text-muted-foreground mt-1">OpenAPI 1.0.0 usa <code>/guardiaapi</code>.</p>
                 </div>
               </div>
 
@@ -320,7 +320,7 @@ export default function GuardiaIntegration() {
                   onChange={e => setCfg(c => ({ ...c, events_endpoint: e.target.value }))}
                   placeholder="/events ou /access-history (vazio = polling desabilitado)"
                 />
-                <p className="text-[11px] text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   O OpenAPI 1.0.0 não documenta histórico de eventos. Preencha apenas se a sua instância expõe um endpoint customizado.
                 </p>
               </div>
@@ -349,7 +349,7 @@ export default function GuardiaIntegration() {
                     value={cfg.janela_tolerancia_segundos}
                     onChange={e => setCfg(c => ({ ...c, janela_tolerancia_segundos: Number(e.target.value) }))}
                   />
-                  <p className="text-[11px] text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Leituras repetidas do mesmo leitor dentro deste intervalo não contam como nova passagem (mas o registro bruto é sempre preservado).
                   </p>
                 </div>
@@ -360,12 +360,12 @@ export default function GuardiaIntegration() {
                     value={cfg.sessao_longa_alerta_minutos}
                     onChange={e => setCfg(c => ({ ...c, sessao_longa_alerta_minutos: Number(e.target.value) }))}
                   />
-                  <p className="text-[11px] text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Sessões de exposição acima deste tempo são sinalizadas para revisão (não são encerradas automaticamente).
                   </p>
                 </div>
               </div>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Estes parâmetros são salvos junto com a configuração da integração.
               </p>
             </CardContent>
@@ -388,7 +388,7 @@ export default function GuardiaIntegration() {
                       <SelectItem value="manual">Somente manual</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-[11px] text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Salve a configuração para aplicar o novo intervalo.
                   </p>
                 </div>
@@ -417,7 +417,7 @@ export default function GuardiaIntegration() {
                     : "nunca executado"}
                 </div>
               </div>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Conforme OpenAPI 1.0.0 da GuardIA, colaboradores são <strong>empurrados</strong> via <code>POST/PUT/DELETE /guardiaapi/person/&#123;remoteid&#125;</code> usando o CPF como <code>remoteid</code>.
               </p>
             </CardContent>
@@ -536,7 +536,7 @@ export default function GuardiaIntegration() {
                         <TableCell className="text-xs tabular-nums">{new Date(e.event_timestamp).toLocaleString("pt-BR")}</TableCell>
                         <TableCell className="text-sm">
                           <div>{e.colaborador_nome || <span className="text-muted-foreground italic">sem nome</span>}</div>
-                          <div className="text-[11px] text-muted-foreground font-mono">{e.colaborador_id}</div>
+                          <div className="text-xs text-muted-foreground font-mono">{e.colaborador_id}</div>
                         </TableCell>
                         <TableCell className="text-sm">{e.local_nome || e.local_id}</TableCell>
                         <TableCell>

@@ -7,7 +7,7 @@ export function PageHeader({
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-6">
       <div>
-        {eyebrow && <div className="text-[11px] uppercase tracking-[0.18em] text-primary/90 font-semibold mb-1.5">{eyebrow}</div>}
+        {eyebrow && <div className="text-xs uppercase tracking-[0.18em] text-primary/90 font-semibold mb-1.5">{eyebrow}</div>}
         <div className="flex items-center gap-3">
           {icon && <div className="h-10 w-10 grid place-items-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 text-primary">{icon}</div>}
           <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>

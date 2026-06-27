@@ -303,7 +303,7 @@ export default function TimeAdjustments() {
                       <TableCell className="text-xs max-w-[240px]">
                         <div className="font-medium">{REASON_LABEL[c.reason_category] || c.reason_category}</div>
                         <div className="text-muted-foreground truncate" title={c.reason_detail}>{c.reason_detail}</div>
-                        {c.employee_response && <div className="mt-1 text-[11px] italic">"{c.employee_response}"</div>}
+                        {c.employee_response && <div className="mt-1 text-xs italic">"{c.employee_response}"</div>}
                       </TableCell>
                       <TableCell><Badge variant="outline" className={st.cls}>{st.label}</Badge></TableCell>
                       <TableCell className="text-right">

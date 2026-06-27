@@ -145,7 +145,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }: Props) {
                 {avatar && <Button type="button" variant="ghost" size="sm" onClick={() => setAvatar("")}>Remover</Button>}
               </div>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
-              <p className="text-[11px] text-muted-foreground mt-1">JPG/PNG/WebP, até 3MB.</p>
+              <p className="text-xs text-muted-foreground mt-1">JPG/PNG/WebP, até 3MB.</p>
             </div>
           </div>
 
@@ -216,7 +216,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee }: Props) {
                         <span className="font-medium">{d.name}</span>
                         <span className="text-muted-foreground">· {area?.name}</span>
                       </span>
-                      <Badge variant="outline" className="text-[10px]">{d.device_type === "entry" ? "Entrada" : "Saída"} · {d.status}</Badge>
+                      <Badge variant="outline" className="text-xs">{d.device_type === "entry" ? "Entrada" : "Saída"} · {d.status}</Badge>
                     </li>
                   );
                 })}

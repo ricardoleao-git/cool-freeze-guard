@@ -21,7 +21,7 @@ import {
 import {
   ClipboardList, Download, FileText, Filter, ImageIcon, Paperclip, Search, X, Eye,
   ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
-  BookmarkPlus, Star, Trash2, Save,
+  BookmarkPlus, Star, Trash2, Save, Loader2,
 } from "lucide-react";
 import type { Occurrence, OccurrencePriority, OccurrenceCategory, OccurrenceAttachment } from "@/lib/demo-data";
 import { AttachmentPreviewDialog } from "@/components/AttachmentPreviewDialog";
@@ -473,9 +473,7 @@ export default function History() {
             Trilha de auditoria completa de ocorrências, evidências e ações corretivas.
           </p>
         </div>
-        <Button variant="outline" onClick={exportCsv}>
-          <Download className="h-4 w-4 mr-2" /> Exportar CSV
-        </Button>
+        <ExportCsvButton onRun={exportCsv} />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -847,7 +845,7 @@ function KPI({ label, value, tone }: { label: string; value: number; tone?: "red
   return (
     <div className={`rounded-xl border p-4 ${cls}`}>
       <div className="text-2xl font-display font-bold">{value}</div>
-      <div className="text-[11px] uppercase tracking-wider mt-1 opacity-80">{label}</div>
+      <div className="text-xs uppercase tracking-wider mt-1 opacity-80">{label}</div>
     </div>
   );
 }
@@ -884,5 +882,26 @@ function SortButton({ active, onClick, icon, label }: {
       {icon}
       <span className="hidden sm:inline">{label}</span>
     </button>
+  );
+}
+
+function ExportCsvButton({ onRun }: { onRun: () => void | Promise<void> }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button
+      variant="outline"
+      disabled={busy}
+      aria-busy={busy}
+      onClick={async () => {
+        setBusy(true);
+        try { await onRun(); } finally {
+          // Give the user visible feedback even on synchronous exports
+          setTimeout(() => setBusy(false), 350);
+        }
+      }}
+    >
+      {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+      {busy ? "Exportando…" : "Exportar CSV"}
+    </Button>
   );
 }

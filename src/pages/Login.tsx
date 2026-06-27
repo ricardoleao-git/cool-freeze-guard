@@ -61,7 +61,7 @@ export default function Login() {
             </div>
             <div>
               <div className="font-display font-bold text-xl">FrioSafe</div>
-              <div className="text-[11px] uppercase tracking-[0.2em] text-primary/80">Controle Térmico Ocupacional</div>
+              <div className="text-xs uppercase tracking-[0.2em] text-primary/80">Controle Térmico Ocupacional</div>
             </div>
           </div>
         </div>
@@ -74,9 +74,9 @@ export default function Login() {
             Plataforma SaaS multi-tenant para controle de exposição ao frio e pausa térmica em câmaras frias, açougues, frigoríficos e centros de distribuição.
           </p>
           <div className="mt-8 grid grid-cols-3 gap-3 text-center max-w-md">
-            <div className="rounded-xl border border-status-yellow/40 bg-status-yellow/10 p-3"><div className="text-status-yellow font-display text-xl font-bold">80'</div><div className="text-[10px] uppercase mt-1">Atenção</div></div>
-            <div className="rounded-xl border border-status-orange/40 bg-status-orange/10 p-3"><div className="text-status-orange font-display text-xl font-bold">90'</div><div className="text-[10px] uppercase mt-1">Crítico</div></div>
-            <div className="rounded-xl border border-status-red/50 bg-status-red/10 p-3"><div className="text-status-red font-display text-xl font-bold">100'</div><div className="text-[10px] uppercase mt-1">Bloqueio</div></div>
+            <div className="rounded-xl border border-status-yellow/40 bg-status-yellow/10 p-3"><div className="text-status-yellow font-display text-xl font-bold">80'</div><div className="text-xs uppercase mt-1">Atenção</div></div>
+            <div className="rounded-xl border border-status-orange/40 bg-status-orange/10 p-3"><div className="text-status-orange font-display text-xl font-bold">90'</div><div className="text-xs uppercase mt-1">Crítico</div></div>
+            <div className="rounded-xl border border-status-red/50 bg-status-red/10 p-3"><div className="text-status-red font-display text-xl font-bold">100'</div><div className="text-xs uppercase mt-1">Bloqueio</div></div>
           </div>
         </div>
         <div className="relative text-xs text-muted-foreground flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> Independente do ponto eletrônico — evidência para SST, RH e Jurídico.</div>
@@ -120,7 +120,7 @@ export default function Login() {
 
           <div className="flex items-center gap-3 my-4">
             <div className="flex-1 h-px bg-border" />
-            <span className="text-[11px] uppercase text-muted-foreground tracking-wider">ou</span>
+            <span className="text-xs uppercase text-muted-foreground tracking-wider">ou</span>
             <div className="flex-1 h-px bg-border" />
           </div>
 

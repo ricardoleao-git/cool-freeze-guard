@@ -240,7 +240,7 @@ export default function Occurrences() {
           <Card key={k.label} className="glass-card">
             <CardContent className="p-4 flex items-center justify-between">
               <div>
-                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{k.label}</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">{k.label}</div>
                 <div className="font-display text-2xl font-bold">{k.value}</div>
               </div>
               <k.icon className={`h-5 w-5 ${k.tone}`} />
@@ -478,7 +478,7 @@ export default function Occurrences() {
                   <div className="space-y-2 mb-2">
                     {detail.notes.map(n => (
                       <div key={n.id} className="rounded-lg border border-border bg-card/40 p-2.5">
-                        <div className="text-[11px] text-muted-foreground">{n.author} · {format(new Date(n.created_at), "dd/MM HH:mm")}</div>
+                        <div className="text-xs text-muted-foreground">{n.author} · {format(new Date(n.created_at), "dd/MM HH:mm")}</div>
                         <p className="text-sm mt-0.5">{n.text}</p>
                       </div>
                     ))}
@@ -500,7 +500,7 @@ export default function Occurrences() {
                   <div className="rounded-xl border border-status-ok/40 bg-status-ok/10 p-3">
                     <div className="text-xs uppercase tracking-wider text-status-ok flex items-center gap-1.5 mb-1"><CheckCircle2 className="h-3.5 w-3.5" /> Resolução</div>
                     <p className="text-sm">{detail.resolution}</p>
-                    <div className="text-[11px] text-muted-foreground mt-1">por {detail.resolved_by} · {detail.resolved_at && format(new Date(detail.resolved_at), "dd/MM/yyyy HH:mm")}</div>
+                    <div className="text-xs text-muted-foreground mt-1">por {detail.resolved_by} · {detail.resolved_at && format(new Date(detail.resolved_at), "dd/MM/yyyy HH:mm")}</div>
                   </div>
                 ) : (
                   <div>

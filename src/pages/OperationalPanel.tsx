@@ -136,7 +136,7 @@ export default function OperationalPanel() {
       <div className="container py-6 md:py-8">
         <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.2em] text-primary/90 font-semibold mb-1">Painel Operacional · Tempo Real</div>
+            <div className="text-xs uppercase tracking-[0.2em] text-primary/90 font-semibold mb-1">Painel Operacional · Tempo Real</div>
             <h1 className="font-display text-2xl md:text-4xl font-bold">Monitoramento de Exposição ao Frio</h1>
           </div>
           <div className="flex items-center gap-2">
@@ -194,7 +194,7 @@ export default function OperationalPanel() {
             <Snowflake className="h-4 w-4 md:h-6 md:w-6 text-primary" />
           </div>
           <div className="min-w-0">
-            <div className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] md:tracking-[0.25em] text-primary font-semibold">Painel · Tempo Real</div>
+            <div className="text-xs md:text-xs uppercase tracking-[0.2em] md:tracking-[0.25em] text-primary font-semibold">Painel · Tempo Real</div>
             <h1 className="font-display text-base sm:text-xl md:text-2xl xl:text-3xl font-bold leading-tight truncate">Exposição ao Frio</h1>
           </div>
         </div>
@@ -202,7 +202,7 @@ export default function OperationalPanel() {
         <div className="flex items-center gap-2 md:gap-6 shrink-0">
           <div className="text-right hidden sm:block">
             <div className="font-display text-xl md:text-3xl xl:text-4xl font-bold tabular-nums leading-none">{timeStr}</div>
-            <div className="text-[10px] md:text-[11px] uppercase tracking-wider text-muted-foreground mt-1 capitalize hidden md:block">{dateStr}</div>
+            <div className="text-xs md:text-xs uppercase tracking-wider text-muted-foreground mt-1 capitalize hidden md:block">{dateStr}</div>
           </div>
           <div className="h-8 md:h-10 w-px bg-border hidden sm:block" />
           <div className="flex items-center gap-1.5 md:gap-2">
@@ -230,7 +230,7 @@ export default function OperationalPanel() {
       {/* Mobile clock row */}
       <div className="sm:hidden px-3 py-1.5 flex items-center justify-between border-b border-border/40 bg-background/40">
         <span className="font-display text-lg font-bold tabular-nums">{timeStr}</span>
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground capitalize">{dateStr}</span>
+        <span className="text-xs uppercase tracking-wider text-muted-foreground capitalize">{dateStr}</span>
       </div>
 
       {/* View tabs + rotation progress */}
@@ -240,7 +240,7 @@ export default function OperationalPanel() {
             key={v.id}
             onClick={() => { setView(v.id); setRotateTick(0); }}
             className={cn(
-              "shrink-0 px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[10px] md:text-xs uppercase tracking-wider font-medium border transition-colors",
+              "shrink-0 px-3 md:px-4 py-1 md:py-1.5 rounded-full text-xs md:text-xs uppercase tracking-wider font-medium border transition-colors",
               view === v.id ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:text-foreground",
             )}
           >
@@ -256,7 +256,7 @@ export default function OperationalPanel() {
                 style={{ width: `${((rotateTick + 1) / ROTATE_SECONDS) * 100}%` }}
               />
             </div>
-            <span className="text-[10px] tabular-nums text-muted-foreground w-10 text-right">{ROTATE_SECONDS - rotateTick}s</span>
+            <span className="text-xs tabular-nums text-muted-foreground w-10 text-right">{ROTATE_SECONDS - rotateTick}s</span>
           </div>
         )}
       </div>
@@ -275,7 +275,7 @@ export default function OperationalPanel() {
                 isAlert && count > 0 && "pulse-ring",
               )}
             >
-              <div className="flex items-center gap-1.5 md:gap-2 text-[9px] md:text-[10px] uppercase tracking-wider font-semibold">
+              <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-xs uppercase tracking-wider font-semibold">
                 {g.icon}<span className="truncate">{g.title}</span>
               </div>
               <div className="font-display text-2xl md:text-5xl xl:text-6xl font-black mt-1 md:mt-2 tabular-nums">{count}</div>
@@ -331,7 +331,7 @@ export default function OperationalPanel() {
                         if (c === 0) return null;
                         return (
                           <div key={g.title} className={cn("min-w-[44px] text-center rounded-md border px-2 py-1", g.accent)}>
-                            <div className="text-[9px] uppercase tracking-wider font-semibold">{STATUS_LABEL[g.key[0]]}</div>
+                            <div className="text-xs uppercase tracking-wider font-semibold">{STATUS_LABEL[g.key[0]]}</div>
                             <div className="font-display font-bold text-lg tabular-nums leading-none">{c}</div>
                           </div>
                         );

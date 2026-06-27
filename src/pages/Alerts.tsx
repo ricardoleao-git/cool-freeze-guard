@@ -116,7 +116,7 @@ export default function Alerts() {
                 <button
                   key={f.id}
                   onClick={() => setSevFilter(f.id)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] uppercase tracking-wider font-medium border transition-colors ${sevFilter === f.id ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
+                  className={`px-2.5 py-1 rounded-full text-xs uppercase tracking-wider font-medium border transition-colors ${sevFilter === f.id ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
                 >
                   {f.label}
                 </button>

@@ -223,7 +223,7 @@ function AndroidInstructions() {
   return (
     <div className="space-y-1">
       <Step number={1} icon={<Download className="h-3.5 w-3.5 text-primary" />} title="Toque em 'Instalar app'">
-        No Chrome, toque no menu <span className="font-mono text-[10px] border border-border rounded px-1">⋮</span> e selecione <strong>Instalar app</strong> ou aguarde o banner nativo aparecer.
+        No Chrome, toque no menu <span className="font-mono text-xs border border-border rounded px-1">⋮</span> e selecione <strong>Instalar app</strong> ou aguarde o banner nativo aparecer.
       </Step>
       <Step number={2} icon={<CheckCircle2 className="h-3.5 w-3.5 text-primary" />} title="Confirme a instalação">
         Toque em <strong>Instalar</strong> no dialogo que aparecer. O Chrome baixará e criará o atalho.

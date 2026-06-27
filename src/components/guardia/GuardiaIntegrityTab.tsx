@@ -122,7 +122,7 @@ export default function GuardiaIntegrityTab({ tenantId }: Props) {
 function Stat({ label, value, danger, small }: { label: string; value: string; danger?: boolean; small?: boolean }) {
   return (
     <div className={`rounded-lg border p-3 ${danger ? "border-red-500/40 bg-red-500/5" : "border-border bg-background/40"}`}>
-      <div className="text-[11px] text-muted-foreground">{label}</div>
+      <div className="text-xs text-muted-foreground">{label}</div>
       <div className={`${small ? "text-sm" : "text-xl"} font-display tabular-nums ${danger ? "text-red-500" : ""}`}>{value}</div>
     </div>
   );
