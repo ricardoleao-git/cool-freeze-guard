@@ -81,63 +81,77 @@
     --backdrop-2: radial-gradient(1000px 560px at 100% 0%, hsl(171 75% 70% / 0.08), transparent 60%);
   }
 
-  /* ───── LIGHT — Glacier morning ───── */
+  /* ───── LIGHT — Glacier morning (vibrant) ───── */
   .light {
-    --background: 220 40% 98%;
-    --foreground: 226 55% 12%;
+    /* Soft icy blue canvas instead of flat white */
+    --background: 214 60% 97%;
+    --foreground: 226 60% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 226 55% 12%;
+    --card-foreground: 226 60% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 226 55% 12%;
+    --popover-foreground: 226 60% 10%;
 
-    --primary: 222 78% 52%;
+    /* Vivid cobalt */
+    --primary: 224 92% 56%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 222 90% 68%;
+    --primary-glow: 222 100% 70%;
 
-    --secondary: 220 35% 94%;
-    --secondary-foreground: 226 55% 12%;
+    /* Tinted secondary — pale frost */
+    --secondary: 214 70% 93%;
+    --secondary-foreground: 224 70% 22%;
 
-    --muted: 220 30% 94%;
-    --muted-foreground: 226 18% 42%;
+    --muted: 216 45% 94%;
+    --muted-foreground: 224 22% 38%;
 
-    --accent: 171 68% 60%;
-    --accent-foreground: 226 55% 12%;
+    /* Punchy jade */
+    --accent: 168 78% 46%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 78% 52%;
+    --destructive: 354 84% 56%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 25% 88%;
-    --input: 220 25% 90%;
-    --ring: 222 78% 52%;
+    --border: 218 40% 86%;
+    --input: 218 40% 90%;
+    --ring: 224 92% 56%;
 
-    --status-ok: 158 68% 42%;
-    --status-yellow: 38 95% 50%;
-    --status-orange: 24 95% 52%;
-    --status-red: 0 78% 52%;
-    --status-break: 222 78% 52%;
-    --status-outside: 220 12% 50%;
+    --status-ok: 158 72% 40%;
+    --status-yellow: 42 100% 50%;
+    --status-orange: 22 100% 54%;
+    --status-red: 354 84% 56%;
+    --status-break: 224 92% 56%;
+    --status-outside: 220 14% 50%;
 
-    --gradient-hero: radial-gradient(120% 80% at 100% 0%, hsl(222 90% 70% / 0.22), transparent 60%), linear-gradient(160deg, hsl(220 40% 98%) 0%, hsl(220 50% 94%) 100%);
-    --gradient-frost: linear-gradient(180deg, hsl(222 90% 65% / 0.16), hsl(222 90% 65% / 0));
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 40% 98%) 100%);
+    /* Richer gradients with cobalt + jade glow */
+    --gradient-hero:
+      radial-gradient(60% 80% at 100% 0%, hsl(168 90% 60% / 0.28), transparent 60%),
+      radial-gradient(80% 80% at 0% 100%, hsl(258 90% 70% / 0.22), transparent 60%),
+      linear-gradient(135deg, hsl(224 92% 56%) 0%, hsl(238 88% 62%) 55%, hsl(258 84% 64%) 100%);
+    --gradient-frost: linear-gradient(180deg, hsl(224 92% 70% / 0.18), hsl(168 78% 60% / 0.06));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(214 70% 97%) 100%);
+    --gradient-danger: linear-gradient(135deg, hsl(354 84% 56%), hsl(18 95% 58%));
+    --gradient-warning: linear-gradient(135deg, hsl(42 100% 54%), hsl(22 100% 56%));
+    --gradient-ok: linear-gradient(135deg, hsl(158 72% 44%), hsl(168 78% 52%));
 
-    --shadow-glow: 0 0 50px -14px hsl(var(--primary) / 0.35);
-    --shadow-card: 0 16px 40px -24px hsl(226 60% 30% / 0.18);
-    --shadow-elevated: 0 28px 60px -28px hsl(226 60% 30% / 0.22);
+    --shadow-glow: 0 0 60px -12px hsl(var(--primary) / 0.45);
+    --shadow-card: 0 18px 44px -22px hsl(224 70% 30% / 0.22);
+    --shadow-elevated: 0 32px 70px -28px hsl(224 70% 30% / 0.28);
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 226 40% 20%;
-    --sidebar-primary: 222 78% 52%;
+    /* Sidebar — faint cobalt wash */
+    --sidebar-background: 216 65% 98%;
+    --sidebar-foreground: 226 45% 18%;
+    --sidebar-primary: 224 92% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 35% 95%;
-    --sidebar-accent-foreground: 226 55% 12%;
-    --sidebar-border: 220 25% 90%;
-    --sidebar-ring: 222 78% 52%;
+    --sidebar-accent: 214 75% 94%;
+    --sidebar-accent-foreground: 224 70% 22%;
+    --sidebar-border: 218 40% 88%;
+    --sidebar-ring: 224 92% 56%;
 
-    --backdrop-1: radial-gradient(900px 480px at 0% -10%, hsl(222 90% 70% / 0.18), transparent 60%);
-    --backdrop-2: radial-gradient(1000px 560px at 100% 0%, hsl(171 75% 70% / 0.14), transparent 60%);
+    /* Ambient colored backdrops — this is what gives the page its color */
+    --backdrop-1: radial-gradient(900px 520px at 0% -10%, hsl(224 92% 65% / 0.22), transparent 60%);
+    --backdrop-2: radial-gradient(1000px 600px at 100% 0%, hsl(168 90% 60% / 0.20), transparent 60%);
   }
+
 }
 
 @layer base {
