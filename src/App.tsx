@@ -33,6 +33,7 @@ import MyDay from "./pages/MyDay";
 import DailySummary from "./pages/DailySummary";
 import GuardiaIntegration from "./pages/GuardiaIntegration";
 import Statement from "./pages/Statement";
+import Inconsistencies from "./pages/Inconsistencies";
 
 const queryClient = new QueryClient();
 
