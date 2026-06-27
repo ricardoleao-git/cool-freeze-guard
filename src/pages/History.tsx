@@ -473,9 +473,7 @@ export default function History() {
             Trilha de auditoria completa de ocorrências, evidências e ações corretivas.
           </p>
         </div>
-        <Button variant="outline" onClick={exportCsv}>
-          <Download className="h-4 w-4 mr-2" /> Exportar CSV
-        </Button>
+        <ExportCsvButton onRun={exportCsv} />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
