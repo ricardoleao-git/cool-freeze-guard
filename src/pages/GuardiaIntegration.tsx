@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import GuardiaDeviceMapTab from "@/components/guardia/GuardiaDeviceMapTab";
+import GuardiaPresenceTab from "@/components/guardia/GuardiaPresenceTab";
+import GuardiaIntegrityTab from "@/components/guardia/GuardiaIntegrityTab";
 
 const WEBHOOK_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/guardia-webhook`;
 
@@ -24,6 +26,8 @@ type Config = {
   sync_interval: string;
   last_sync_at: string | null;
   last_sync_count: number | null;
+  janela_tolerancia_segundos: number;
+  sessao_longa_alerta_minutos: number;
 };
 
 type GuardiaEvent = {
@@ -46,6 +50,8 @@ const empty: Config = {
   sync_interval: "1h",
   last_sync_at: null,
   last_sync_count: null,
+  janela_tolerancia_segundos: 180,
+  sessao_longa_alerta_minutos: 240,
 };
 
 export default function GuardiaIntegration() {
@@ -68,7 +74,7 @@ export default function GuardiaIntegration() {
     (async () => {
       const { data } = await supabase
         .from("integration_config")
-        .select("guardia_url, guardia_token, active, sync_interval, last_sync_at, last_sync_count")
+        .select("guardia_url, guardia_token, active, sync_interval, last_sync_at, last_sync_count, janela_tolerancia_segundos, sessao_longa_alerta_minutos")
         .eq("tenant_id", tenantId)
         .maybeSingle();
       if (data) setCfg({ ...empty, ...data });
@@ -111,6 +117,8 @@ export default function GuardiaIntegration() {
       guardia_token: cfg.guardia_token.trim(),
       active: cfg.active,
       sync_interval: cfg.sync_interval,
+      janela_tolerancia_segundos: Math.max(0, Math.floor(Number(cfg.janela_tolerancia_segundos) || 0)),
+      sessao_longa_alerta_minutos: Math.max(1, Math.floor(Number(cfg.sessao_longa_alerta_minutos) || 1)),
     }, { onConflict: "tenant_id" });
     setSaving(false);
     if (error) toast.error("Erro ao salvar"); else toast.success("Configuração salva");
