@@ -425,6 +425,75 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_statement_confirmations: {
+        Row: {
+          clickwrap_text: string
+          clickwrap_text_hash: string
+          confirmed_at: string
+          content_hash: string
+          content_snapshot: Json
+          created_at: string
+          employee_id: string
+          id: string
+          ip_origin: unknown
+          previous_hash: string | null
+          record_hash: string | null
+          reference_date: string
+          signature_method: string
+          tenant_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          clickwrap_text: string
+          clickwrap_text_hash: string
+          confirmed_at?: string
+          content_hash: string
+          content_snapshot: Json
+          created_at?: string
+          employee_id: string
+          id?: string
+          ip_origin?: unknown
+          previous_hash?: string | null
+          record_hash?: string | null
+          reference_date: string
+          signature_method?: string
+          tenant_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          clickwrap_text?: string
+          clickwrap_text_hash?: string
+          confirmed_at?: string
+          content_hash?: string
+          content_snapshot?: Json
+          created_at?: string
+          employee_id?: string
+          id?: string
+          ip_origin?: unknown
+          previous_hash?: string | null
+          record_hash?: string | null
+          reference_date?: string
+          signature_method?: string
+          tenant_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_statement_confirmations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_statement_confirmations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           created_at: string
@@ -622,6 +691,10 @@ export type Database = {
           inside_since: string | null
           name: string
           origem: string
+          pin_failed_attempts: number
+          pin_hash: string | null
+          pin_locked_until: string | null
+          pin_set_at: string | null
           position: string
           registration_number: string
           status: string
@@ -641,6 +714,10 @@ export type Database = {
           inside_since?: string | null
           name: string
           origem?: string
+          pin_failed_attempts?: number
+          pin_hash?: string | null
+          pin_locked_until?: string | null
+          pin_set_at?: string | null
           position?: string
           registration_number: string
           status?: string
@@ -660,6 +737,10 @@ export type Database = {
           inside_since?: string | null
           name?: string
           origem?: string
+          pin_failed_attempts?: number
+          pin_hash?: string | null
+          pin_locked_until?: string | null
+          pin_set_at?: string | null
           position?: string
           registration_number?: string
           status?: string
