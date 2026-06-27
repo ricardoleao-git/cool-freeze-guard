@@ -213,11 +213,18 @@ export default function GuardiaIntegration() {
         title="Integração GuardIA"
         description="Receba eventos de acesso e sincronize colaboradores diretamente do sistema de reconhecimento facial GuardIA."
         icon={<ScanFace className="h-5 w-5" />}
+        actions={
+          <Button onClick={pollNow} disabled={polling}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${polling ? "animate-spin" : ""}`} />
+            {polling ? "Sincronizando…" : "Sincronizar agora"}
+          </Button>
+        }
       />
 
       <Tabs defaultValue="config" className="space-y-4">
         <TabsList>
           <TabsTrigger value="config">Configuração</TabsTrigger>
+          <TabsTrigger value="status">Status</TabsTrigger>
           <TabsTrigger value="devices">Câmaras / Leitores</TabsTrigger>
           <TabsTrigger value="presence">Presença agora</TabsTrigger>
           <TabsTrigger value="log" onClick={loadEvents}>Log de Eventos</TabsTrigger>
