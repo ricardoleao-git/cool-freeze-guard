@@ -50,9 +50,11 @@ const App = () => (
             <Sonner />
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/painel" element={<Kiosk />} />
               <Route path="/painel-demo" element={<PublicPanel />} />
               <Route path="/painel-tv" element={<PublicPanel />} />
               <Route path="/sem-permissao" element={<ProtectedRoute><NoPermission /></ProtectedRoute>} />
+
 
               {/* Modo de demonstração público: navegação completa, sem login,
                   escopado ao tenant 'demo-tenant'. */}
