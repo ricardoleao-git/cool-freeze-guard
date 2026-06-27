@@ -223,6 +223,40 @@ export default function GuardiaIntegration() {
           </Card>
 
           <Card className="glass-card">
+            <CardHeader><CardTitle className="font-display">Parâmetros de presença</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Janela de tolerância global (segundos)</Label>
+                  <Input
+                    type="number" min={0}
+                    value={cfg.janela_tolerancia_segundos}
+                    onChange={e => setCfg(c => ({ ...c, janela_tolerancia_segundos: Number(e.target.value) }))}
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Leituras repetidas do mesmo leitor dentro deste intervalo não contam como nova passagem (mas o registro bruto é sempre preservado).
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-xs">Alerta de sessão longa (minutos)</Label>
+                  <Input
+                    type="number" min={1}
+                    value={cfg.sessao_longa_alerta_minutos}
+                    onChange={e => setCfg(c => ({ ...c, sessao_longa_alerta_minutos: Number(e.target.value) }))}
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Sessões de exposição acima deste tempo são sinalizadas para revisão (não são encerradas automaticamente).
+                  </p>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Estes parâmetros são salvos junto com a configuração da integração.
+              </p>
+            </CardContent>
+          </Card>
+
+
+          <Card className="glass-card">
             <CardHeader><CardTitle className="font-display">Sincronização de colaboradores</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
