@@ -127,15 +127,38 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
             <div className="text-xs text-muted-foreground">Endpoint de eventos</div>
             <div className="font-mono text-xs break-all">{status?.events_endpoint || <span className="text-amber-500">não configurado</span>}</div>
           </div>
-          {status?.last_event_error && (
-            <div className="md:col-span-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-              <div>
-                <div className="text-xs text-destructive font-medium">Última falha · {fmt(status.last_event_error_at)}</div>
-                <div className="text-sm">{status.last_event_error}</div>
+          {status?.last_event_error && (() => {
+            const ageMin = status.last_event_error_at
+              ? Math.floor((Date.now() - new Date(status.last_event_error_at).getTime()) / 60000)
+              : null;
+            const STALE_MIN = 15;
+            const isStale = ageMin !== null && ageMin >= STALE_MIN;
+            const recentErrCount = audit.filter(a =>
+              a.severity === "error" &&
+              (Date.now() - new Date(a.created_at).getTime()) < 60 * 60 * 1000
+            ).length;
+            return (
+              <div className={`md:col-span-2 rounded-lg border p-3 flex items-start gap-2 ${
+                isStale ? "border-destructive bg-destructive/15 ring-1 ring-destructive/40" : "border-destructive/40 bg-destructive/10"
+              }`}>
+                <AlertTriangle className={`h-4 w-4 shrink-0 mt-0.5 ${isStale ? "text-destructive animate-pulse" : "text-destructive"}`} />
+                <div className="flex-1">
+                  <div className="text-xs text-destructive font-medium flex items-center gap-2 flex-wrap">
+                    {isStale ? `⚠ Falha persistente há ${ageMin} min` : "Última falha"} · {fmt(status.last_event_error_at)}
+                    {recentErrCount > 0 && (
+                      <Badge variant="destructive" className="text-[10px]">{recentErrCount} erro(s) na última hora</Badge>
+                    )}
+                  </div>
+                  <div className="text-sm mt-1">{status.last_event_error}</div>
+                  {isStale && (
+                    <div className="mt-2 text-xs">
+                      <a href="#last-errors" className="underline text-destructive hover:opacity-80">Ver lista de erros recentes ↓</a>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
           {!status?.last_event_error && status?.last_event_poll_at && (
             <div className="md:col-span-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="h-4 w-4" />
