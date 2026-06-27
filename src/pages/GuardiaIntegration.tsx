@@ -364,21 +364,33 @@ export default function GuardiaIntegration() {
                     Salve a configuração para aplicar o novo intervalo.
                   </p>
                 </div>
-                <div className="flex flex-col justify-end">
-                  <Button onClick={syncNow} disabled={syncing}>
-                    <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
-                    {syncing ? "Sincronizando…" : "Sincronizar colaboradores agora"}
+                <div className="flex flex-col justify-end gap-2">
+                  <Button onClick={pushNow} disabled={pushing}>
+                    <Send className={`h-4 w-4 mr-2 ${pushing ? "animate-pulse" : ""}`} />
+                    {pushing ? "Enviando…" : "Enviar colaboradores para GuardIA"}
+                  </Button>
+                  <Button variant="outline" onClick={pollNow} disabled={polling}>
+                    <RefreshCw className={`h-4 w-4 mr-2 ${polling ? "animate-spin" : ""}`} />
+                    {polling ? "Buscando…" : "Buscar eventos (polling)"}
                   </Button>
                 </div>
               </div>
-              <div className="text-sm text-muted-foreground">
-                Última sincronização:{" "}
-                {cfg.last_sync_at
-                  ? <span className="text-foreground">{new Date(cfg.last_sync_at).toLocaleString("pt-BR")} — {cfg.last_sync_count ?? 0} colaboradores</span>
-                  : "nunca executada"}
+              <div className="text-sm text-muted-foreground space-y-1">
+                <div>
+                  Último push para GuardIA:{" "}
+                  {cfg.last_push_at
+                    ? <span className="text-foreground">{new Date(cfg.last_push_at).toLocaleString("pt-BR")} — {cfg.last_push_count ?? 0} pessoas</span>
+                    : "nunca executado"}
+                </div>
+                <div>
+                  Último polling de eventos:{" "}
+                  {cfg.last_event_poll_at
+                    ? <span className="text-foreground">{new Date(cfg.last_event_poll_at).toLocaleString("pt-BR")}</span>
+                    : "nunca executado"}
+                </div>
               </div>
               <p className="text-[11px] text-muted-foreground">
-                A chave do colaborador é o CPF (apenas dígitos). Importações e webhooks normalizam pontuação automaticamente.
+                Conforme OpenAPI 1.0.0 da GuardIA, colaboradores são <strong>empurrados</strong> via <code>POST/PUT/DELETE /guardiaapi/person/&#123;remoteid&#125;</code> usando o CPF como <code>remoteid</code>.
               </p>
             </CardContent>
           </Card>
