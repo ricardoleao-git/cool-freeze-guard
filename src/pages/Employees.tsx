@@ -1,16 +1,19 @@
 import { PageHeader } from "@/components/PageHeader";
 import { useTenantScoped, useDemo } from "@/lib/demo-store";
-import { Users, LogIn, LogOut, AlertTriangle, ShieldAlert, Plus, Pencil, Trash2, ShieldCheck } from "lucide-react";
+import { Users, LogIn, LogOut, AlertTriangle, ShieldAlert, Plus, Pencil, Trash2, ShieldCheck, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { STATUS_LABEL, STATUS_COLOR, type Employee } from "@/lib/demo-data";
 import { toast } from "sonner";
 import { EmployeeFormDialog } from "@/components/EmployeeFormDialog";
 import { EmployeeAreaAuthDialog } from "@/components/EmployeeAreaAuthDialog";
+import { SetEmployeePinDialog } from "@/components/SetEmployeePinDialog";
 import { StorageImage } from "@/components/StorageImage";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -19,11 +22,27 @@ import {
 export default function Employees() {
   const { employees, units, departments, employeeColdAreaAuth } = useTenantScoped();
   const { simulateEntry, simulateExit, forceStatus, deleteEmployee } = useDemo();
+  const { roles, profile, isDemo } = useAuth();
+  const canManagePin = !isDemo && roles.some(r => r === "super_admin" || r === "administrador");
+  const tenantId = profile?.tenant_id ?? "";
   const [q, setQ] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [deleting, setDeleting] = useState<Employee | null>(null);
   const [authFor, setAuthFor] = useState<Employee | null>(null);
+  const [pinFor, setPinFor] = useState<Employee | null>(null);
+  const [pinSetMap, setPinSetMap] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!canManagePin || !tenantId) return;
+    supabase.from("employees").select("id, pin_set_at").eq("tenant_id", tenantId)
+      .then(({ data }) => {
+        const m: Record<string, boolean> = {};
+        (data ?? []).forEach((r: any) => { m[r.id] = !!r.pin_set_at; });
+        setPinSetMap(m);
+      });
+  }, [canManagePin, tenantId, pinFor]);
+
 
   const filtered = employees.filter(e =>
     e.name.toLowerCase().includes(q.toLowerCase()) || e.registration_number.includes(q),
@@ -94,6 +113,7 @@ export default function Employees() {
                           {e.name}
                           {e.status === "inactive" && <Badge variant="outline" className="text-[9px] px-1">INATIVO</Badge>}
                           {e.origem === "guardia" && <Badge variant="outline" className="text-[9px] px-1 border-primary/40 text-primary">GuardIA</Badge>}
+                          {canManagePin && pinSetMap[e.id] && <Badge variant="outline" className="text-[9px] px-1 border-status-ok/50 text-status-ok gap-1"><KeyRound className="h-2.5 w-2.5" /> PIN</Badge>}
                         </div>
                         <div className="text-xs text-muted-foreground">#{e.registration_number} · {e.position || "—"}</div>
                       </div>
@@ -124,6 +144,9 @@ export default function Employees() {
                       <Button size="sm" variant="ghost" className="text-status-red" onClick={() => forceStatus(e.id, "blocked")} title="Bloquear"><ShieldAlert className="h-3.5 w-3.5" /></Button>
                       <div className="w-px h-5 bg-border mx-1" />
                       <Button size="sm" variant="ghost" onClick={() => setAuthFor(e)} title="Autorizar áreas frias"><ShieldCheck className="h-3.5 w-3.5" /></Button>
+                      {canManagePin && (
+                        <Button size="sm" variant="ghost" onClick={() => setPinFor(e)} title={pinSetMap[e.id] ? "Redefinir PIN" : "Definir PIN"}><KeyRound className="h-3.5 w-3.5" /></Button>
+                      )}
                       <Button size="sm" variant="ghost" onClick={() => openEdit(e)} title="Editar"><Pencil className="h-3.5 w-3.5" /></Button>
                       <Button size="sm" variant="ghost" className="text-status-red" onClick={() => setDeleting(e)} title="Excluir"><Trash2 className="h-3.5 w-3.5" /></Button>
                     </div>
@@ -137,6 +160,16 @@ export default function Employees() {
 
       <EmployeeFormDialog open={formOpen} onOpenChange={setFormOpen} employee={editing} />
       <EmployeeAreaAuthDialog open={!!authFor} onOpenChange={(o) => !o && setAuthFor(null)} employee={authFor} />
+      {pinFor && (
+        <SetEmployeePinDialog
+          open={!!pinFor}
+          onOpenChange={(o) => !o && setPinFor(null)}
+          tenantId={tenantId}
+          employeeId={pinFor.id}
+          employeeName={pinFor.name}
+          hasPin={pinSetMap[pinFor.id]}
+        />
+      )}
 
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
