@@ -35,6 +35,8 @@ import GuardiaIntegration from "./pages/GuardiaIntegration";
 import Statement from "./pages/Statement";
 import Inconsistencies from "./pages/Inconsistencies";
 import PeriodClosure from "./pages/PeriodClosure";
+import Kiosk from "./pages/Kiosk";
+import KioskTokens from "./pages/KioskTokens";
 
 const queryClient = new QueryClient();
 
