@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Outlet, useNavigate, Link } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -9,6 +10,7 @@ import { Bell, Search, LogOut, User as UserIcon, Sparkles, LogIn } from "lucide-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useTenantScoped } from "@/lib/demo-store";
 import { useAuth } from "@/lib/auth";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -17,6 +19,7 @@ export default function AppLayout() {
   const { alerts } = useTenantScoped();
   const { user, signOut, isDemo } = useAuth();
   const nav = useNavigate();
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const handleLogout = async () => { await signOut(); nav("/login", { replace: true }); };
   const open = alerts.filter(a => a.status === "open").length;
   return (
@@ -25,7 +28,7 @@ export default function AppLayout() {
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {isDemo && (
-            <div className="bg-status-yellow/15 border-b border-status-yellow/40 text-foreground/90 px-4 py-1.5 text-[12px] flex items-center gap-2 flex-wrap">
+            <div className="bg-status-yellow/15 border-b border-status-yellow/40 text-foreground/90 px-4 py-1.5 text-xs flex items-center gap-2 flex-wrap">
               <Sparkles className="h-3.5 w-3.5 text-status-yellow" />
               <span><strong>Modo demonstração</strong> — dados simulados públicos no tenant <code className="px-1 rounded bg-background/60">demo-tenant</code>. Sem login necessário.</span>
               <Button asChild size="sm" variant="outline" className="ml-auto h-7 text-xs">
@@ -33,19 +36,44 @@ export default function AppLayout() {
               </Button>
             </div>
           )}
-          <header className="h-14 flex items-center gap-3 border-b border-border/60 px-3 md:px-5 bg-background/70 backdrop-blur sticky top-0 z-30">
+          <header className="h-14 flex items-center gap-3 border-b border-border px-3 md:px-5 bg-background/70 backdrop-blur sticky top-0 z-30">
             <SidebarTrigger className="text-foreground" />
             <div className="hidden md:flex items-center gap-2 max-w-md flex-1">
               <div className="relative w-full">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar colaborador, ambiente, dispositivo…" className="pl-8 bg-muted/30 border-border/60" />
+                <Input placeholder="Buscar colaborador, ambiente, dispositivo…" className="pl-8 bg-muted/30" aria-label="Buscar" />
               </div>
             </div>
             <div className="ml-auto flex items-center gap-2">
+              {/* Mobile-only search trigger */}
+              <Sheet open={mobileSearchOpen} onOpenChange={setMobileSearchOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden" aria-label="Abrir busca">
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="top" className="p-4">
+                  <SheetHeader>
+                    <SheetTitle>Buscar</SheetTitle>
+                  </SheetHeader>
+                  <div className="relative mt-3">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      autoFocus
+                      placeholder="Buscar colaborador, ambiente, dispositivo…"
+                      className="pl-8"
+                      aria-label="Buscar"
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    A busca global será integrada às páginas em breve.
+                  </p>
+                </SheetContent>
+              </Sheet>
               <ThemeToggle />
               <SoundToggle />
               <NotificationsBell />
-              <Button asChild variant="ghost" size="sm" className="relative">
+              <Button asChild variant="ghost" size="sm" className="relative" aria-label={`Alertas${open > 0 ? ` (${open} pendentes)` : ""}`}>
 
                 <Link to={isDemo ? "/demo/alertas" : "/alertas"}>
                   <Bell className="h-4 w-4" />
