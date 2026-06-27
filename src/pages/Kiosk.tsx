@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Snowflake, AlertCircle, ShieldCheck, Sparkles } from "lucide-react";
+import { Snowflake, AlertCircle, ShieldCheck, Sparkles, WifiOff } from "lucide-react";
 
 const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kiosk-panel`;
 const ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 const POLL_MS = 20_000;
+const BACKOFF_STEPS_MS = [5_000, 10_000, 20_000, 40_000, 60_000];
 
 type Area = {
   id: string;
@@ -100,12 +101,17 @@ function TokenForm({ onSubmit }: { onSubmit: (t: string) => void }) {
 
 function InvalidScreen() {
   return (
-    <div className="min-h-screen grid place-items-center bg-zinc-950 text-zinc-100 px-6 text-center">
-      <div>
+    <div
+      data-testid="kiosk-invalid"
+      className="min-h-screen grid place-items-center bg-zinc-950 text-zinc-100 px-6 text-center"
+    >
+      <div className="max-w-lg">
         <AlertCircle className="mx-auto h-16 w-16 text-rose-500" />
         <h1 className="mt-6 text-3xl font-semibold">Token inválido ou revogado</h1>
         <p className="mt-3 text-zinc-400">
-          Solicite um novo token ao administrador do sistema.
+          O acesso deste quiosque foi negado pelo servidor. O token pode ter sido
+          revogado, expirado ou nunca ter existido. Solicite um novo token ao
+          administrador do sistema e recarregue a página.
         </p>
       </div>
     </div>
@@ -117,11 +123,13 @@ function Tile({
   count,
   tone,
   pulse,
+  testId,
 }: {
   label: string;
   count: number;
   tone: "green" | "yellow" | "orange" | "red";
   pulse?: boolean;
+  testId?: string;
 }) {
   const map = {
     green: "bg-emerald-600/20 border-emerald-500/60 text-emerald-300",
@@ -131,6 +139,7 @@ function Tile({
   } as const;
   return (
     <div
+      data-testid={testId}
       className={`rounded-2xl border-2 px-6 py-5 ${map[tone]} ${
         pulse ? "animate-pulse" : ""
       }`}
@@ -169,7 +178,12 @@ function PersonCard({
       ? "text-amber-200"
       : "text-emerald-200";
   return (
-    <div className={`rounded-2xl border-2 p-5 flex items-center gap-5 ${tone}`}>
+    <div
+      data-testid="kiosk-person"
+      data-risk={risk}
+      data-name={person.primeiro_nome}
+      className={`rounded-2xl border-2 p-5 flex items-center gap-5 ${tone}`}
+    >
       {person.avatar ? (
         <img
           src={person.avatar}
@@ -207,13 +221,16 @@ export default function Kiosk() {
   const [token, setToken] = useState(initialToken);
   const [data, setData] = useState<Payload | null>(null);
   const [invalid, setInvalid] = useState(false);
-  const [fetchedAt, setFetchedAt] = useState<number | null>(null);
   const [now, setNow] = useState<number>(Date.now());
-  const offsetRef = useRef(0); // serverTime - clientTime in ms
+  const [consecutiveFailures, setConsecutiveFailures] = useState(0);
+  const offsetRef = useRef(0); // serverTime - clientTime ms
+  const lastServerTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let failures = 0;
 
     async function load() {
       try {
@@ -230,26 +247,35 @@ export default function Kiosk() {
         if (res.status === 401) {
           setInvalid(true);
           setData(null);
-          return;
+          return; // stop polling
         }
-        if (!res.ok) return;
+        if (!res.ok) throw new Error(`http_${res.status}`);
         const json = (await res.json()) as Payload;
         if (cancelled) return;
         const serverMs = new Date(json.server_time).getTime();
         offsetRef.current = serverMs - Date.now();
+        lastServerTimeRef.current = serverMs;
         setData(json);
         setInvalid(false);
-        setFetchedAt(Date.now());
+        failures = 0;
+        setConsecutiveFailures(0);
       } catch {
-        /* ignore network errors, keep last good payload */
+        failures += 1;
+        setConsecutiveFailures(failures);
+      } finally {
+        if (cancelled) return;
+        const delay =
+          failures === 0
+            ? POLL_MS
+            : BACKOFF_STEPS_MS[Math.min(failures - 1, BACKOFF_STEPS_MS.length - 1)];
+        timer = setTimeout(load, delay);
       }
     }
 
     load();
-    const id = setInterval(load, POLL_MS);
     return () => {
       cancelled = true;
-      clearInterval(id);
+      if (timer) clearTimeout(timer);
     };
   }, [token]);
 
@@ -274,7 +300,15 @@ export default function Kiosk() {
         const area = p.area_id ? areasById.get(p.area_id) : undefined;
         return { person: p, area, minutes, risk: bucket(minutes, area) };
       })
-      .sort((a, b) => b.minutes - a.minutes);
+      .sort((a, b) => {
+        // Risk priority desc, then minutes desc, then name asc (stable, deterministic).
+        const order: Record<Risk, number> = { red: 3, orange: 2, yellow: 1, ok: 0 };
+        const dr = order[b.risk] - order[a.risk];
+        if (dr !== 0) return dr;
+        const dm = b.minutes - a.minutes;
+        if (dm !== 0) return dm;
+        return a.person.primeiro_nome.localeCompare(b.person.primeiro_nome, "pt-BR");
+      });
   }, [data, now, areasById]);
 
   const liveSummary = useMemo(() => {
@@ -286,16 +320,15 @@ export default function Kiosk() {
     return s;
   }, [enrichedInside]);
 
-  if (!token) {
-    return <TokenForm onSubmit={setToken} />;
-  }
-
+  if (!token) return <TokenForm onSubmit={setToken} />;
   if (invalid) return <InvalidScreen />;
 
   if (!data) {
     return (
       <div className="min-h-screen grid place-items-center bg-zinc-950 text-zinc-300 text-xl">
-        Carregando painel…
+        {consecutiveFailures > 0
+          ? `Sem resposta do servidor (tentativa ${consecutiveFailures})…`
+          : "Carregando painel…"}
       </div>
     );
   }
@@ -311,11 +344,15 @@ export default function Kiosk() {
     day: "2-digit",
     month: "long",
   });
-  const ageSec = fetchedAt ? Math.max(0, Math.floor((now - fetchedAt) / 1000)) : 0;
+  const ageSec = lastServerTimeRef.current
+    ? Math.max(0, Math.floor((now + offsetRef.current - lastServerTimeRef.current) / 1000))
+    : 0;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-8 flex flex-col gap-6">
-      {/* Header */}
+    <div
+      data-testid="kiosk-panel"
+      className="min-h-screen bg-zinc-950 text-zinc-100 p-8 flex flex-col gap-6"
+    >
       <header className="flex items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <Snowflake className="h-12 w-12 text-sky-400" />
@@ -334,12 +371,12 @@ export default function Kiosk() {
         </div>
       </header>
 
-      {/* Summary tiles */}
       <section className="grid grid-cols-4 gap-4">
-        <Tile label="OK" count={liveSummary.ok} tone="green" />
-        <Tile label="Atenção" count={liveSummary.yellow} tone="yellow" />
-        <Tile label="Alerta" count={liveSummary.orange} tone="orange" />
+        <Tile testId="tile-ok" label="OK" count={liveSummary.ok} tone="green" />
+        <Tile testId="tile-yellow" label="Atenção" count={liveSummary.yellow} tone="yellow" />
+        <Tile testId="tile-orange" label="Alerta" count={liveSummary.orange} tone="orange" />
         <Tile
+          testId="tile-red"
           label="Crítico"
           count={liveSummary.red}
           tone="red"
@@ -347,7 +384,6 @@ export default function Kiosk() {
         />
       </section>
 
-      {/* Grid */}
       <section className="flex-1">
         {enrichedInside.length === 0 ? (
           <div className="h-full min-h-[40vh] grid place-items-center rounded-2xl border-2 border-dashed border-zinc-800 bg-zinc-900/40">
@@ -360,7 +396,10 @@ export default function Kiosk() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div
+            data-testid="kiosk-grid"
+            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+          >
             {enrichedInside.map((e, i) => (
               <PersonCard
                 key={`${e.person.primeiro_nome}-${i}`}
@@ -374,7 +413,6 @@ export default function Kiosk() {
         )}
       </section>
 
-      {/* Footer */}
       <footer className="flex items-center justify-between gap-4 rounded-2xl border border-emerald-700/50 bg-emerald-900/20 px-6 py-4">
         <div className="flex items-center gap-3 text-emerald-200">
           <Sparkles className="h-6 w-6" />
@@ -390,8 +428,15 @@ export default function Kiosk() {
             leituras externas registradas
           </div>
         </div>
-        <div className="text-xs text-zinc-500">
+        <div
+          data-testid="kiosk-age"
+          className={`text-xs flex items-center gap-2 ${
+            consecutiveFailures > 0 ? "text-amber-400" : "text-zinc-500"
+          }`}
+        >
+          {consecutiveFailures > 0 && <WifiOff className="h-4 w-4" />}
           atualizado há {ageSec}s
+          {consecutiveFailures > 0 && ` · reconectando (tentativa ${consecutiveFailures})`}
         </div>
       </footer>
     </div>

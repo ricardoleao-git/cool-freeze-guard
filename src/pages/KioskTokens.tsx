@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { MonitorPlay, Plus, Copy, Link2, Trash2, ShieldAlert } from "lucide-react";
+import { MonitorPlay, Plus, Copy, Link2, Trash2, ShieldAlert, QrCode } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,7 @@ export default function KioskTokens() {
   const [createdToken, setCreatedToken] = useState<string | null>(null);
 
   const [revokeId, setRevokeId] = useState<string | null>(null);
+  const [showQR, setShowQR] = useState(false);
 
   async function refresh() {
     if (!tenantId) return;
@@ -249,7 +251,7 @@ export default function KioskTokens() {
         open={createOpen}
         onOpenChange={(o) => {
           setCreateOpen(o);
-          if (!o) setCreatedToken(null);
+          if (!o) { setCreatedToken(null); setShowQR(false); }
         }}
       >
         <DialogContent className="max-w-lg">
@@ -316,8 +318,28 @@ export default function KioskTokens() {
                   >
                     <Link2 className="h-4 w-4" />
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowQR((v) => !v)}
+                    title="Mostrar QR code"
+                  >
+                    <QrCode className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
+              {showQR && (
+                <div className="flex flex-col items-center gap-2 rounded-lg border border-zinc-700 bg-white p-4">
+                  <QRCodeSVG
+                    value={`${window.location.origin}/painel?token=${createdToken}`}
+                    size={220}
+                    includeMargin
+                  />
+                  <p className="text-xs text-zinc-700 text-center">
+                    Aponte a câmera do quiosque para abrir o painel
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -335,7 +357,7 @@ export default function KioskTokens() {
               <Button
                 onClick={() => {
                   setCreateOpen(false);
-                  setCreatedToken(null);
+                  setCreatedToken(null); setShowQR(false);
                 }}
               >
                 Concluído
