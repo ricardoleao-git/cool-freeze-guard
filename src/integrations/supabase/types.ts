@@ -1097,6 +1097,7 @@ export type Database = {
           last_sync_at: string | null
           last_sync_count: number
           sessao_longa_alerta_minutos: number
+          stale_error_threshold_minutes: number
           sync_interval: string
           tenant_id: string
           updated_at: string
@@ -1123,6 +1124,7 @@ export type Database = {
           last_sync_at?: string | null
           last_sync_count?: number
           sessao_longa_alerta_minutos?: number
+          stale_error_threshold_minutes?: number
           sync_interval?: string
           tenant_id: string
           updated_at?: string
@@ -1149,6 +1151,7 @@ export type Database = {
           last_sync_at?: string | null
           last_sync_count?: number
           sessao_longa_alerta_minutos?: number
+          stale_error_threshold_minutes?: number
           sync_interval?: string
           tenant_id?: string
           updated_at?: string

@@ -197,6 +197,8 @@ async function pollTenant(
   let staged = 0, dispatched = 0, skipped = 0, deduped = 0;
   let latestTs = cfg.last_event_cursor;
   const normalizeErrors: Array<{ raw: unknown; reason: string }> = [];
+  const dedupSamples: Array<{ evento_id: string; remoteid: string; dispositivo_id: string; reason: string }> = [];
+  const dedupReasonCounts: Record<string, number> = {};
 
   for (const raw of list) {
     const ev = normalizeEvent(raw);
@@ -210,6 +212,16 @@ async function pollTenant(
     // Idempotent: skip events we've already ingested (dedup by tenant_id+evento_id).
     if (knownIds.has(ev.evento_id)) {
       deduped++;
+      const reason = "already_ingested";
+      dedupReasonCounts[reason] = (dedupReasonCounts[reason] ?? 0) + 1;
+      if (dedupSamples.length < 25) {
+        dedupSamples.push({
+          evento_id: ev.evento_id,
+          remoteid: ev.colaborador_id,
+          dispositivo_id: ev.dispositivo_id,
+          reason,
+        });
+      }
       continue;
     }
 
@@ -248,7 +260,7 @@ async function pollTenant(
       tenant_id: tenantId, source: opts.source,
       severity: "warn", code: "normalize_or_dispatch_failed",
       message: `${normalizeErrors.length} evento(s) descartado(s) durante normalização/despacho`,
-      details: { errors: normalizeErrors.slice(0, 20), deduped, capped },
+      details: { errors: normalizeErrors.slice(0, 20), deduped, capped, dedup_samples: dedupSamples, dedup_reason_counts: dedupReasonCounts },
       cursor_used: since, fetched_count: list.length, processed_count: dispatched,
       duration_ms: Date.now() - started,
     });
@@ -256,7 +268,7 @@ async function pollTenant(
     await logAudit(admin, {
       tenant_id: tenantId, source: opts.source, severity: "info", code: "ok",
       message: `OK · ${list.length} recebidos · ${dispatched} processados · ${deduped} duplicados ignorados${isBackfill ? " (backfill)" : ""}`,
-      details: { deduped, capped },
+      details: { deduped, capped, dedup_samples: dedupSamples, dedup_reason_counts: dedupReasonCounts },
       cursor_used: since, fetched_count: list.length, processed_count: dispatched,
       duration_ms: Date.now() - started,
     });
