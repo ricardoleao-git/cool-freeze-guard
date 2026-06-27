@@ -88,7 +88,7 @@ export function EmployeeAreaAuthDialog({ open, onOpenChange, employee }: Props) 
                     <div className="flex items-center gap-2">
                       <Snowflake className="h-3.5 w-3.5 text-primary shrink-0" />
                       <span className="font-medium text-sm truncate">{area.name}</span>
-                      <Badge variant="outline" className="text-[10px]">{area.type}</Badge>
+                      <Badge variant="outline" className="text-xs">{area.type}</Badge>
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5">
                       {unit?.name || "—"} · {area.average_temperature}°C · limite {area.exposure_limit_minutes} min

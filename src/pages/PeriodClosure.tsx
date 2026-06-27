@@ -462,11 +462,11 @@ export default function PeriodClosurePage() {
             <div className="flex justify-end pt-2">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="font-mono text-[11px] text-muted-foreground border border-border rounded px-2 py-1 bg-muted/30">
+                  <div className="font-mono text-xs text-muted-foreground border border-border rounded px-2 py-1 bg-muted/30">
                     selo do consolidado: {shortHash(data.consolidated_hash)}
                   </div>
                 </TooltipTrigger>
-                <TooltipContent className="font-mono text-[10px] max-w-md break-all">
+                <TooltipContent className="font-mono text-xs max-w-md break-all">
                   {data.consolidated_hash}
                 </TooltipContent>
               </Tooltip>
@@ -496,7 +496,7 @@ export default function PeriodClosurePage() {
                   <Checkbox checked={agree} onCheckedChange={(v) => setAgree(v === true)} className="mt-0.5" />
                   <span>Li e concordo com o termo acima. Confirmo que o consolidado exibido reflete os registros do período.</span>
                 </label>
-                <div className="font-mono text-[11px] text-muted-foreground">
+                <div className="font-mono text-xs text-muted-foreground">
                   selo do consolidado: {shortHash(data?.consolidated_hash)}
                 </div>
               </div>
@@ -531,7 +531,7 @@ function KpiCard({
           {label}
         </div>
         <div className="mt-1 font-display text-2xl font-bold">{value}</div>
-        {sub && <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>}
+        {sub && <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>}
       </CardContent>
     </Card>
   );

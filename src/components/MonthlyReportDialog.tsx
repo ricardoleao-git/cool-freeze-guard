@@ -371,7 +371,7 @@ export function MonthlyReportDialog({ employee, open, onOpenChange }: Props) {
                 ["Alertas", totals.alerts],
               ].map(([l, v]) => (
                 <div key={l as string}>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{l}</div>
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground">{l}</div>
                   <div className="text-lg font-display font-semibold">{v as number}</div>
                 </div>
               ))}
@@ -390,7 +390,7 @@ export function MonthlyReportDialog({ employee, open, onOpenChange }: Props) {
               <Checkbox checked={accepted} onCheckedChange={(v) => setAccepted(!!v)} className="mt-0.5" />
               <span>
                 Li e <strong>aceito</strong> os termos acima. Entendo que esta confirmação será registrada com data/hora, IP, user-agent e hash SHA-256 do conteúdo.
-                <Badge variant="outline" className="ml-2 text-[10px]"><Shield className="h-3 w-3 mr-1" />Clickwrap v{CLICKWRAP_VERSION}</Badge>
+                <Badge variant="outline" className="ml-2 text-xs"><Shield className="h-3 w-3 mr-1" />Clickwrap v{CLICKWRAP_VERSION}</Badge>
               </span>
             </label>
 
@@ -433,7 +433,7 @@ export function MonthlyReportDialog({ employee, open, onOpenChange }: Props) {
                 <Label>PDF assinado (.pdf PAdES)</Label>
                 <Input type="file" accept="application/pdf,.pdf" onChange={(e) => setIcpFile(e.target.files?.[0] || null)} />
                 {icpFile && (
-                  <div className="text-[11px] text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     {icpFile.name} · {(icpFile.size / 1024).toFixed(1)} KB
                   </div>
                 )}

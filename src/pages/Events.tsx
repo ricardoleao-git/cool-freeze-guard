@@ -61,7 +61,7 @@ export default function Events() {
                       <span className={isManual ? "text-status-yellow font-medium" : "text-muted-foreground"}>
                         {dev?.name || "Manual"}
                       </span>
-                      <Badge variant="outline" className="ml-1 text-[9px] py-0 px-1">{ev.source}</Badge>
+                      <Badge variant="outline" className="ml-1 text-xs py-0 px-1">{ev.source}</Badge>
                     </div>
                   </TableCell>
                   <TableCell>

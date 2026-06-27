@@ -229,7 +229,7 @@ export default function Users() {
                             <SelectItem key={r} value={r}>
                               <div className="flex flex-col py-0.5">
                                 <span>{ROLE_LABELS[r]}</span>
-                                <span className="text-[10px] text-muted-foreground">{ROLE_DESCRIPTIONS[r]}</span>
+                                <span className="text-xs text-muted-foreground">{ROLE_DESCRIPTIONS[r]}</span>
                               </div>
                             </SelectItem>
                           ))}

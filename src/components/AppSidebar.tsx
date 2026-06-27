@@ -126,9 +126,9 @@ export function AppSidebar() {
             <div className="text-[10.5px] text-muted-foreground uppercase tracking-wider">Controle Térmico</div>
           </div>
           {isDemo ? (
-            <Badge variant="outline" className="ml-auto border-status-yellow/60 text-status-yellow text-[9px] px-1.5">DEMO</Badge>
+            <Badge variant="outline" className="ml-auto border-status-yellow/60 text-status-yellow text-xs px-1.5">DEMO</Badge>
           ) : primaryRole && (
-            <Badge variant="outline" className="ml-auto border-primary/40 text-primary text-[9px] px-1.5">
+            <Badge variant="outline" className="ml-auto border-primary/40 text-primary text-xs px-1.5">
               {ROLE_LABELS[primaryRole].toUpperCase()}
             </Badge>
           )}

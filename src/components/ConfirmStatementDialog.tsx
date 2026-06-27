@@ -84,9 +84,9 @@ export function ConfirmStatementDialog(p: Props) {
             <Label htmlFor="conf-pin">Digite seu PIN pessoal</Label>
             <Input id="conf-pin" type="password" inputMode="numeric" maxLength={8} autoFocus
               value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} />
-            <p className="text-[11px] text-muted-foreground">{p.employeeName}</p>
+            <p className="text-xs text-muted-foreground">{p.employeeName}</p>
           </div>
-          <p className="text-[11px] text-muted-foreground font-mono break-all">
+          <p className="text-xs text-muted-foreground font-mono break-all">
             Hash do extrato: {p.contentHash.slice(0, 16)}…
           </p>
         </div>

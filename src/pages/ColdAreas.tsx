@@ -39,7 +39,7 @@ export default function ColdAreas() {
                   <div className="rounded-lg border border-status-red/30 bg-status-red/10 p-2"><div className="text-status-red font-semibold">Vermelho / Bloqueio</div><div>{a.exposure_limit_minutes} min</div></div>
                   <div className="rounded-lg border border-status-break/30 bg-status-break/10 p-2"><div className="text-status-break font-semibold">Pausa térmica</div><div>{a.break_minutes} min</div></div>
                 </div>
-                <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Modo de contagem: {a.counting_mode === "accumulated" ? "Acumulada no ciclo" : "Contínua"}</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wider">Modo de contagem: {a.counting_mode === "accumulated" ? "Acumulada no ciclo" : "Contínua"}</div>
               </CardContent>
             </Card>
           );

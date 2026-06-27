@@ -490,7 +490,7 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
                   <div className="text-xs text-destructive font-medium flex items-center gap-2 flex-wrap">
                     {isStale ? `⚠ Falha persistente há ${ageMin} min (limite: ${effectiveThreshold} min)` : "Última falha"} · {fmt(status.last_event_error_at)}
                     {recentErrCount > 0 && (
-                      <Badge variant="destructive" className="text-[10px]">{recentErrCount} erro(s) na última hora</Badge>
+                      <Badge variant="destructive" className="text-xs">{recentErrCount} erro(s) na última hora</Badge>
                     )}
                   </div>
                   <div className="text-sm mt-1">{status.last_event_error}</div>
@@ -558,7 +558,7 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
                 {emailSending ? "Enviando…" : "Testar"}
               </Button>
             </div>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Envio requer provider configurado (Resend). Sem provider, somente notificações in-app funcionam.
             </p>
           </CardContent>
@@ -640,7 +640,7 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
                 <div className="text-xs text-muted-foreground mb-1">Contagem por motivo de dedup</div>
                 <div className="flex gap-2 flex-wrap">
                   {Object.entries(lastSummary.details.dedup_reason_counts).map(([k, v]) => (
-                    <Badge key={k} variant="secondary" className="text-[10px]">{k}: {v}</Badge>
+                    <Badge key={k} variant="secondary" className="text-xs">{k}: {v}</Badge>
                   ))}
                 </div>
               </div>
@@ -667,7 +667,7 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
                           <TableCell className="font-mono text-xs">{s.evento_id}</TableCell>
                           <TableCell className="font-mono text-xs">{s.remoteid}</TableCell>
                           <TableCell className="font-mono text-xs">{s.dispositivo_id}</TableCell>
-                          <TableCell><Badge variant="outline" className="text-[10px]">{s.reason}</Badge></TableCell>
+                          <TableCell><Badge variant="outline" className="text-xs">{s.reason}</Badge></TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -728,7 +728,7 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
           {exportProgress && exportingAll && (
             <div className="space-y-1">
               <Progress value={exportProgress.pct} className="h-1.5" />
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {exportProgress.loaded.toLocaleString("pt-BR")} registros carregados (paginação {EXPORT_PAGE_SIZE}/req, teto {EXPORT_HARD_CAP.toLocaleString("pt-BR")})
               </p>
             </div>
@@ -755,8 +755,8 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
                 {filteredErrors.slice(0, 100).map(a => (
                   <TableRow key={a.id}>
                     <TableCell className="text-xs whitespace-nowrap">{fmt(a.created_at)}</TableCell>
-                    <TableCell><Badge variant="outline" className="text-[10px]">{a.source}</Badge></TableCell>
-                    <TableCell><Badge variant={sevColor(a.severity)} className="text-[10px]">{a.severity}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className="text-xs">{a.source}</Badge></TableCell>
+                    <TableCell><Badge variant={sevColor(a.severity)} className="text-xs">{a.severity}</Badge></TableCell>
                     <TableCell className="font-mono text-xs">{a.code ?? "—"}</TableCell>
                     <TableCell>{a.fetched_count ?? "—"}</TableCell>
                     <TableCell>{a.processed_count ?? "—"}</TableCell>
@@ -814,25 +814,25 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
                 <li key={i} className="text-xs">
                   <span className={`absolute -left-[5px] h-2 w-2 rounded-full ${p.ok === false ? "bg-destructive" : p.pct === 100 ? "bg-emerald-500" : "bg-primary"}`} />
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-[10px] text-muted-foreground">{new Date(p.ts).toLocaleTimeString("pt-BR")}</span>
-                    <Badge variant={p.ok === false ? "destructive" : "outline"} className="text-[10px]">{p.pct}%</Badge>
+                    <span className="font-mono text-xs text-muted-foreground">{new Date(p.ts).toLocaleTimeString("pt-BR")}</span>
+                    <Badge variant={p.ok === false ? "destructive" : "outline"} className="text-xs">{p.pct}%</Badge>
                     <span className="font-medium">{p.phase}</span>
-                    {p.attempt && <Badge variant="secondary" className="text-[10px]">tentativa {p.attempt}</Badge>}
+                    {p.attempt && <Badge variant="secondary" className="text-xs">tentativa {p.attempt}</Badge>}
                   </div>
-                  {p.note && <div className="text-[11px] text-muted-foreground mt-0.5 ml-1">{p.note}</div>}
+                  {p.note && <div className="text-xs text-muted-foreground mt-0.5 ml-1">{p.note}</div>}
                 </li>
               ))}
             </ol>
             {backfillResultRow && (
               <div className="rounded-lg border border-border bg-background/40 p-3 text-xs space-y-1">
                 <div className="font-semibold">Registro no audit_log</div>
-                <div className="font-mono text-[10px] break-all">id: {backfillResultRow.id}</div>
-                <div>código: <Badge variant="outline" className="text-[10px]">{backfillResultRow.code ?? "—"}</Badge></div>
+                <div className="font-mono text-xs break-all">id: {backfillResultRow.id}</div>
+                <div>código: <Badge variant="outline" className="text-xs">{backfillResultRow.code ?? "—"}</Badge></div>
                 <div>recebidos: {backfillResultRow.fetched_count ?? 0} · processados: {backfillResultRow.processed_count ?? 0} · duração: {backfillResultRow.duration_ms ?? 0} ms</div>
                 {backfillResultRow.details?.errors && backfillResultRow.details.errors.length > 0 && (
                   <details className="mt-2">
                     <summary className="cursor-pointer text-destructive">{backfillResultRow.details.errors.length} erro(s) no servidor</summary>
-                    <pre className="mt-1 text-[10px] whitespace-pre-wrap">{JSON.stringify(backfillResultRow.details.errors, null, 2)}</pre>
+                    <pre className="mt-1 text-xs whitespace-pre-wrap">{JSON.stringify(backfillResultRow.details.errors, null, 2)}</pre>
                   </details>
                 )}
               </div>

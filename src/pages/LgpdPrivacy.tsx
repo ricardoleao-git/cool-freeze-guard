@@ -806,7 +806,7 @@ function StatTile({ label, value, tone = "primary" }: { label: string; value: nu
   };
   return (
     <div className={`rounded-xl border ${tones[tone]} bg-card p-4`}>
-      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className="text-3xl font-display font-bold mt-1">{value}</div>
     </div>
   );

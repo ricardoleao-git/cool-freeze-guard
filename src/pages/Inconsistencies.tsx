@@ -258,14 +258,14 @@ function ItemCard({
                 </span>
               )}
               {item.reviewed && (
-                <Badge variant="outline" className="border-status-green/40 text-status-green text-[10px] gap-1">
+                <Badge variant="outline" className="border-status-green/40 text-status-green text-xs gap-1">
                   <ShieldCheck className="h-3 w-3" />Revisado{item.reviewed_by_name ? ` por ${item.reviewed_by_name}` : ""}
                 </Badge>
               )}
             </div>
             <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
             {ctxBits.length > 0 && (
-              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-[11px] text-muted-foreground">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
                 {ctxBits.map((b, i) => <span key={i}>• {b}</span>)}
               </div>
             )}

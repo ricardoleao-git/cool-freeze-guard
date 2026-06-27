@@ -324,7 +324,7 @@ export default function Reports() {
                   setFromDate(iso(from));
                   setToDate(iso(to));
                 }}
-                className="px-2.5 py-1 rounded-full text-[11px] uppercase tracking-wider font-medium border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+                className="px-2.5 py-1 rounded-full text-xs uppercase tracking-wider font-medium border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
               >
                 {p.label}
               </button>
@@ -359,7 +359,7 @@ export default function Reports() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          {def.columns.slice(0, 4).map(c => <TableHead key={c.key} className="text-[11px]">{c.header}</TableHead>)}
+                          {def.columns.slice(0, 4).map(c => <TableHead key={c.key} className="text-xs">{c.header}</TableHead>)}
                         </TableRow>
                       </TableHeader>
                       <TableBody>

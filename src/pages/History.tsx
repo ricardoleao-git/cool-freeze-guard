@@ -847,7 +847,7 @@ function KPI({ label, value, tone }: { label: string; value: number; tone?: "red
   return (
     <div className={`rounded-xl border p-4 ${cls}`}>
       <div className="text-2xl font-display font-bold">{value}</div>
-      <div className="text-[11px] uppercase tracking-wider mt-1 opacity-80">{label}</div>
+      <div className="text-xs uppercase tracking-wider mt-1 opacity-80">{label}</div>
     </div>
   );
 }

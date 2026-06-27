@@ -70,7 +70,7 @@ export function DemoLiveStatusPanel({ employeeId }: { employeeId: string }) {
       <CardHeader className="pb-3">
         <CardTitle className="font-display flex items-center justify-between gap-2">
           <span className="flex items-center gap-2"><Activity className="h-5 w-5" /> Status em tempo real</span>
-          <Badge variant="outline" className="gap-1.5 text-[11px]">
+          <Badge variant="outline" className="gap-1.5 text-xs">
             <span className={`status-dot ${STATUS_COLOR[emp.current_status]}`} />
             {STATUS_LABEL[emp.current_status]}
           </Badge>
@@ -96,7 +96,7 @@ export function DemoLiveStatusPanel({ employeeId }: { employeeId: string }) {
         <div className={cn("rounded-xl border p-3 flex items-center gap-3 bg-card/40", "border-border/60")}>
           <PhaseIcon className={cn("h-6 w-6 shrink-0", phase.tone)} />
           <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Fase do ciclo</div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">Fase do ciclo</div>
             <div className={cn("font-display font-semibold", phase.tone)}>{phase.label}</div>
           </div>
         </div>
@@ -113,7 +113,7 @@ export function DemoLiveStatusPanel({ employeeId }: { employeeId: string }) {
             <span className="absolute top-0 h-3 w-px bg-status-yellow/70" style={{ left: `${(yellow / limit) * 100}%` }} title={`${yellow} min`} />
             <span className="absolute top-0 h-3 w-px bg-status-orange/80" style={{ left: `${(orange / limit) * 100}%` }} title={`${orange} min`} />
           </div>
-          <div className="flex justify-between text-[10px] text-muted-foreground mt-1 tabular-nums">
+          <div className="flex justify-between text-xs text-muted-foreground mt-1 tabular-nums">
             <span>0</span>
             <span className="text-status-yellow">{yellow}</span>
             <span className="text-status-orange">{orange}</span>
@@ -155,7 +155,7 @@ export function DemoLiveStatusPanel({ employeeId }: { employeeId: string }) {
               <span className="tabular-nums text-status-break font-semibold">{fmt(breakElapsed)} / {breakLen} min</span>
             </div>
             <Progress value={breakPct} className="h-2.5" />
-            <div className="text-[11px] text-muted-foreground mt-1.5">
+            <div className="text-xs text-muted-foreground mt-1.5">
               Restam <strong className="text-foreground tabular-nums">{breakRemaining.toFixed(1)} min</strong> para liberar retorno à câmara. Exposição acumulada será zerada ao concluir.
             </div>
           </div>
@@ -169,7 +169,7 @@ export function DemoLiveStatusPanel({ employeeId }: { employeeId: string }) {
 
         {/* Indicador do ciclo */}
         <div className="pt-1">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Ciclo do colaborador</div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5">Ciclo do colaborador</div>
           <CycleSteps phase={phase.phase} />
         </div>
       </CardContent>
@@ -189,12 +189,12 @@ function MetricTile({
       active && tone === "break" && "border-status-break/50 bg-status-break/5",
       !active && "border-border/60 opacity-70",
     )}>
-      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">{icon}{label}</div>
+      <div className="flex items-center gap-1 text-xs uppercase tracking-wider text-muted-foreground">{icon}{label}</div>
       <div className={cn("font-display font-bold text-lg tabular-nums mt-0.5",
         active && tone === "primary" && "text-primary",
         active && tone === "break" && "text-status-break",
       )}>{value}</div>
-      <div className="text-[10px] text-muted-foreground">{sub}</div>
+      <div className="text-xs text-muted-foreground">{sub}</div>
     </div>
   );
 }
@@ -231,7 +231,7 @@ function CycleSteps({ phase }: { phase: number }) {
               current && i === 5 && "ring-status-break",
               current && i < 2 && "ring-status-ok",
             )} />
-            <span className={cn("text-[9px] mt-1 uppercase tracking-wider", current ? "text-foreground font-semibold" : "text-muted-foreground")}>{s.label}</span>
+            <span className={cn("text-xs mt-1 uppercase tracking-wider", current ? "text-foreground font-semibold" : "text-muted-foreground")}>{s.label}</span>
           </div>
         );
       })}

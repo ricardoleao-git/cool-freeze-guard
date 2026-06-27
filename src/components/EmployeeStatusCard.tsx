@@ -42,7 +42,7 @@ export function EmployeeStatusCard({ employee, size = "md" }: { employee: Employ
             <div className={cn("font-display font-semibold truncate", size === "lg" ? "text-lg" : "text-sm")}>{employee.name}</div>
           </div>
           <div className="text-xs text-muted-foreground truncate">{employee.position} · #{employee.registration_number}</div>
-          <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
             <MapPin className="h-3 w-3" /> <span className="truncate">{unit?.name} · {dept?.name}</span>
           </div>
         </div>
@@ -56,7 +56,7 @@ export function EmployeeStatusCard({ employee, size = "md" }: { employee: Employ
       </div>
       <Progress value={pct} className="mt-1.5 h-2" />
 
-      <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+      <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
         <span>{area ? area.name : "Fora do ambiente frio"}</span>
         {employee.current_status === "thermal_break" ? (
           <span className="inline-flex items-center gap-1 text-status-break font-medium">
@@ -68,7 +68,7 @@ export function EmployeeStatusCard({ employee, size = "md" }: { employee: Employ
       </div>
 
       {employee.current_status === "blocked" && (
-        <div className="mt-3 rounded-lg bg-status-red/90 text-white text-[11px] font-bold uppercase tracking-wider text-center py-1.5">
+        <div className="mt-3 rounded-lg bg-status-red/90 text-white text-xs font-bold uppercase tracking-wider text-center py-1.5">
           Bloqueio preventivo — pausa térmica obrigatória
         </div>
       )}

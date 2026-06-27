@@ -28,7 +28,7 @@ export default function AppLayout() {
             <div className="bg-status-yellow/15 border-b border-status-yellow/40 text-foreground/90 px-4 py-1.5 text-[12px] flex items-center gap-2 flex-wrap">
               <Sparkles className="h-3.5 w-3.5 text-status-yellow" />
               <span><strong>Modo demonstração</strong> — dados simulados públicos no tenant <code className="px-1 rounded bg-background/60">demo-tenant</code>. Sem login necessário.</span>
-              <Button asChild size="sm" variant="outline" className="ml-auto h-7 text-[11px]">
+              <Button asChild size="sm" variant="outline" className="ml-auto h-7 text-xs">
                 <Link to="/login"><LogIn className="h-3 w-3 mr-1" /> Entrar com minha conta</Link>
               </Button>
             </div>
@@ -50,7 +50,7 @@ export default function AppLayout() {
                 <Link to={isDemo ? "/demo/alertas" : "/alertas"}>
                   <Bell className="h-4 w-4" />
                   {open > 0 && (
-                    <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-status-red text-[10px] font-bold grid place-items-center text-white">
+                    <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-status-red text-xs font-bold grid place-items-center text-white">
                       {open}
                     </span>
                   )}

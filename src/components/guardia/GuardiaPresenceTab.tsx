@@ -89,11 +89,11 @@ export default function GuardiaPresenceTab({ tenantId, longSessionMinutes }: Pro
                     <Badge variant="outline" className="tabular-nums">{r.minutes.toFixed(0)} min</Badge>
                   </div>
                   <div className="text-xs text-muted-foreground">{r.area_name ?? "—"}</div>
-                  <div className="text-[11px] text-muted-foreground tabular-nums">
+                  <div className="text-xs text-muted-foreground tabular-nums">
                     desde {new Date(r.inside_since).toLocaleTimeString("pt-BR")}
                   </div>
                   {r.long && (
-                    <div className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                    <div className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
                       <AlertTriangle className="h-3 w-3" /> possível leitura externa perdida — revisar
                     </div>
                   )}

@@ -377,7 +377,7 @@ export default function DailySummary() {
       <Card>
         <CardContent className="pt-5 flex flex-col md:flex-row md:items-end gap-3 flex-wrap">
           <div className="grid gap-1.5">
-            <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Data</label>
+            <label className="text-xs uppercase tracking-wider text-muted-foreground">Data</label>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-44" />
           </div>
           <div className="flex-1 text-xs text-muted-foreground">
@@ -428,7 +428,7 @@ export default function DailySummary() {
                         <div className="flex items-center justify-between gap-2 flex-wrap">
                           <div>
                             <div className="font-medium text-sm">{emp?.name || empId}</div>
-                            <div className="text-[11px] text-muted-foreground">
+                            <div className="text-xs text-muted-foreground">
                               Matrícula {emp?.registration_number} · {emp?.position || "—"}
                             </div>
                           </div>
@@ -449,11 +449,11 @@ export default function DailySummary() {
                                 <div className="space-y-0.5">
                                   <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                                     {i.title}
-                                    <Badge variant="outline" className="text-[10px]">{SEVERITY_LABEL[i.severity]}</Badge>
+                                    <Badge variant="outline" className="text-xs">{SEVERITY_LABEL[i.severity]}</Badge>
                                   </div>
-                                  <div className="text-[11px] text-muted-foreground">{i.detail}</div>
+                                  <div className="text-xs text-muted-foreground">{i.detail}</div>
                                   {i.occurred_at && (
-                                    <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                    <div className="text-xs text-muted-foreground flex items-center gap-1">
                                       <Clock className="h-3 w-3" /> {format(new Date(i.occurred_at), "dd/MM HH:mm:ss")}
                                     </div>
                                   )}
@@ -496,14 +496,14 @@ export default function DailySummary() {
                         <div key={c.id} className="rounded-md border border-border/60 p-2 text-xs space-y-1">
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-medium">{emp?.name || c.employee_id}</span>
-                            <Badge variant="outline" className="text-[10px] capitalize">{c.status.replace(/_/g, " ")}</Badge>
+                            <Badge variant="outline" className="text-xs capitalize">{c.status.replace(/_/g, " ")}</Badge>
                           </div>
                           <div className="text-muted-foreground">
                             {REASON_LABEL[c.reason_category] || c.reason_category} · {format(new Date(c.created_at), "dd/MM HH:mm")}
                           </div>
-                          {c.reason_detail && <div className="text-[11px] line-clamp-2">{c.reason_detail}</div>}
+                          {c.reason_detail && <div className="text-xs line-clamp-2">{c.reason_detail}</div>}
                           <div className="flex justify-end pt-1">
-                            <Button size="sm" variant="ghost" asChild className="h-6 text-[11px]">
+                            <Button size="sm" variant="ghost" asChild className="h-6 text-xs">
                               <Link to="/ajustes">Abrir <ExternalLink className="h-3 w-3 ml-1" /></Link>
                             </Button>
                           </div>
@@ -513,7 +513,7 @@ export default function DailySummary() {
                   </div>
                 </ScrollArea>
               )}
-              <div className="pt-2 text-[11px] text-muted-foreground">
+              <div className="pt-2 text-xs text-muted-foreground">
                 Criadas hoje: {dayCorrections.length} · Contestadas: {corrections.filter(c => c.status === "employee_contested").length}
               </div>
             </CardContent>
@@ -538,7 +538,7 @@ export default function DailySummary() {
                         <div key={r.id} className="rounded-md border border-border/60 p-2 text-xs space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="font-medium">{emp?.name || r.employee_id}</span>
-                            <Badge variant="outline" className="text-[10px]">v{r.consent_version}</Badge>
+                            <Badge variant="outline" className="text-xs">v{r.consent_version}</Badge>
                           </div>
                           <div className="text-muted-foreground">
                             Notificado em {format(new Date(r.created_at), "dd/MM HH:mm")}
@@ -576,10 +576,10 @@ export default function DailySummary() {
                         <div key={a.id} className="rounded-md border border-border/60 p-2 text-xs space-y-0.5">
                           <div className="flex items-center justify-between">
                             <span className="font-medium">{emp?.name || a.employee_id}</span>
-                            <Badge variant="outline" className="text-[10px] capitalize">{a.severity}</Badge>
+                            <Badge variant="outline" className="text-xs capitalize">{a.severity}</Badge>
                           </div>
                           <div className="text-muted-foreground line-clamp-2">{a.message}</div>
-                          <div className="text-[10px] text-muted-foreground">{format(new Date(a.triggered_at), "dd/MM HH:mm")}</div>
+                          <div className="text-xs text-muted-foreground">{format(new Date(a.triggered_at), "dd/MM HH:mm")}</div>
                         </div>
                       );
                     })}
@@ -609,7 +609,7 @@ function Tile({
     "border-border bg-muted/20";
   return (
     <div className={`rounded-lg border p-3 ${toneCls}`}>
-      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">{icon}{label}</div>
+      <div className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted-foreground">{icon}{label}</div>
       <div className="text-2xl font-display font-semibold mt-1">{value}</div>
     </div>
   );

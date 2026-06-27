@@ -217,7 +217,7 @@ export default function MyDay() {
                             <div className="text-sm font-medium">
                               {REASON_LABEL[c.reason_category] || c.reason_category}
                             </div>
-                            <Badge variant="outline" className="text-[10px]">Aberto por {c.requested_by_name}</Badge>
+                            <Badge variant="outline" className="text-xs">Aberto por {c.requested_by_name}</Badge>
                           </div>
                           <div className="text-xs text-muted-foreground grid grid-cols-1 sm:grid-cols-2 gap-1">
                             <div><span className="font-medium text-foreground">Original:</span> {fmtType(c.original_event_type)} em {fmtDate(c.original_occurred_at)}</div>
@@ -264,7 +264,7 @@ export default function MyDay() {
                     myAlerts.map(a => (
                       <div key={a.id} className="text-xs border border-border/60 rounded px-2 py-1.5 flex items-center justify-between gap-2">
                         <span>{a.message}</span>
-                        <Badge variant="outline" className="text-[10px]">{a.severity}</Badge>
+                        <Badge variant="outline" className="text-xs">{a.severity}</Badge>
                       </div>
                     ))
                   }
@@ -282,7 +282,7 @@ export default function MyDay() {
                         <div key={e.id} className="text-xs border border-border/60 rounded px-2 py-1.5 flex items-center justify-between gap-2">
                           <span className="font-mono">{format(new Date(e.occurred_at), "HH:mm:ss")}</span>
                           <span>{e.event_type === "entry" ? "ENTRADA" : "SAÍDA"} · {areaName(e.cold_area_id)}</span>
-                          <Badge variant="outline" className="text-[10px]">{e.source === "demo_simulation" ? "simulado" : e.source}</Badge>
+                          <Badge variant="outline" className="text-xs">{e.source === "demo_simulation" ? "simulado" : e.source}</Badge>
                         </div>
                       ))}
                     </div>
@@ -298,7 +298,7 @@ export default function MyDay() {
                       {myBreaks.map(b => (
                         <div key={b.id} className="text-xs border border-border/60 rounded px-2 py-1.5 flex items-center justify-between gap-2">
                           <span className="font-mono">{format(new Date(b.started_at), "HH:mm")} → {b.ended_at ? format(new Date(b.ended_at), "HH:mm") : "em curso"}</span>
-                          <Badge variant="outline" className="text-[10px]">{b.completed ? "completa" : b.interrupted ? "interrompida" : "ativa"}</Badge>
+                          <Badge variant="outline" className="text-xs">{b.completed ? "completa" : b.interrupted ? "interrompida" : "ativa"}</Badge>
                         </div>
                       ))}
                     </div>
@@ -380,7 +380,7 @@ function SummaryTile({ icon, label, value, tone }: { icon: React.ReactNode; labe
     "border-border bg-muted/20";
   return (
     <div className={`rounded-lg border p-3 ${toneCls}`}>
-      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">{icon}{label}</div>
+      <div className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted-foreground">{icon}{label}</div>
       <div className="text-2xl font-display font-semibold mt-1">{value}</div>
     </div>
   );

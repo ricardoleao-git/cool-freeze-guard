@@ -111,9 +111,9 @@ export default function Employees() {
                       <div>
                         <div className="font-medium flex items-center gap-2">
                           {e.name}
-                          {e.status === "inactive" && <Badge variant="outline" className="text-[9px] px-1">INATIVO</Badge>}
-                          {e.origem === "guardia" && <Badge variant="outline" className="text-[9px] px-1 border-primary/40 text-primary">GuardIA</Badge>}
-                          {canManagePin && pinSetMap[e.id] && <Badge variant="outline" className="text-[9px] px-1 border-status-ok/50 text-status-ok gap-1"><KeyRound className="h-2.5 w-2.5" /> PIN</Badge>}
+                          {e.status === "inactive" && <Badge variant="outline" className="text-xs px-1">INATIVO</Badge>}
+                          {e.origem === "guardia" && <Badge variant="outline" className="text-xs px-1 border-primary/40 text-primary">GuardIA</Badge>}
+                          {canManagePin && pinSetMap[e.id] && <Badge variant="outline" className="text-xs px-1 border-status-ok/50 text-status-ok gap-1"><KeyRound className="h-2.5 w-2.5" /> PIN</Badge>}
                         </div>
                         <div className="text-xs text-muted-foreground">#{e.registration_number} · {e.position || "—"}</div>
                       </div>
@@ -131,7 +131,7 @@ export default function Employees() {
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     <div>{e.accumulated_minutes.toFixed(0)} min</div>
-                    <div className="text-[10px] text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                       {employeeColdAreaAuth.filter(a => a.employee_id === e.id).length} áreas autorizadas
                     </div>
                   </TableCell>
