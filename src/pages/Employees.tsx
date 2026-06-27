@@ -79,6 +79,14 @@ export default function Employees() {
       />
 
       <div className="glass-card overflow-hidden">
+        {filtered.length === 0 && !q ? (
+          <EmptyState
+            icon={<Users className="h-5 w-5" />}
+            title="Nenhum colaborador cadastrado"
+            description="Adicione colaboradores manualmente ou sincronize via GuardIA para começar a monitorar a exposição."
+            action={<Button onClick={openNew}><Plus className="h-4 w-4 mr-1.5" /> Cadastrar colaborador</Button>}
+          />
+        ) : (
         <Table>
           <TableHeader>
             <TableRow>
@@ -90,10 +98,10 @@ export default function Employees() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 && (
+            {filtered.length === 0 && q && (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-10 text-muted-foreground text-sm">
-                  Nenhum colaborador encontrado. Clique em <b>Novo</b> para cadastrar.
+                  Nenhum colaborador encontrado para “{q}”.
                 </TableCell>
               </TableRow>
             )}
