@@ -621,6 +621,7 @@ export type Database = {
           id: string
           inside_since: string | null
           name: string
+          origem: string
           position: string
           registration_number: string
           status: string
@@ -639,6 +640,7 @@ export type Database = {
           id: string
           inside_since?: string | null
           name: string
+          origem?: string
           position?: string
           registration_number: string
           status?: string
@@ -657,6 +659,7 @@ export type Database = {
           id?: string
           inside_since?: string | null
           name?: string
+          origem?: string
           position?: string
           registration_number?: string
           status?: string
@@ -695,6 +698,59 @@ export type Database = {
           },
         ]
       }
+      guardia_events: {
+        Row: {
+          colaborador_id: string
+          colaborador_nome: string | null
+          created_at: string
+          dispositivo_id: string | null
+          event_timestamp: string
+          evento_id: string
+          id: string
+          local_id: string | null
+          local_nome: string | null
+          processed: boolean
+          tenant_id: string
+          tipo: string
+        }
+        Insert: {
+          colaborador_id: string
+          colaborador_nome?: string | null
+          created_at?: string
+          dispositivo_id?: string | null
+          event_timestamp: string
+          evento_id: string
+          id?: string
+          local_id?: string | null
+          local_nome?: string | null
+          processed?: boolean
+          tenant_id: string
+          tipo: string
+        }
+        Update: {
+          colaborador_id?: string
+          colaborador_nome?: string | null
+          created_at?: string
+          dispositivo_id?: string | null
+          event_timestamp?: string
+          evento_id?: string
+          id?: string
+          local_id?: string | null
+          local_nome?: string | null
+          processed?: boolean
+          tenant_id?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guardia_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       history_filter_presets: {
         Row: {
           created_at: string
@@ -727,6 +783,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      integration_config: {
+        Row: {
+          active: boolean
+          created_at: string
+          guardia_token: string | null
+          guardia_url: string | null
+          id: string
+          last_sync_at: string | null
+          last_sync_count: number
+          sync_interval: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          guardia_token?: string | null
+          guardia_url?: string | null
+          id?: string
+          last_sync_at?: string | null
+          last_sync_count?: number
+          sync_interval?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          guardia_token?: string | null
+          guardia_url?: string | null
+          id?: string
+          last_sync_at?: string | null
+          last_sync_count?: number
+          sync_interval?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invitations: {
         Row: {
