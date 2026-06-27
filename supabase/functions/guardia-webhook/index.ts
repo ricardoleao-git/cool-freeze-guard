@@ -57,6 +57,10 @@ Deno.serve(async (req) => {
     return json({ error: "invalid_tipo" }, 400);
   }
 
+  // Normaliza CPF do colaborador (chave do sistema).
+  const colaboradorCpf = normalizeCpf(payload.colaborador_id);
+  if (!colaboradorCpf) return json({ error: "invalid_colaborador_id" }, 400);
+
   const url = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(url, serviceKey);
