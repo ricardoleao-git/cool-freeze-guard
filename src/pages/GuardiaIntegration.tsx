@@ -90,7 +90,7 @@ export default function GuardiaIntegration() {
     (async () => {
       const { data } = await supabase
         .from("integration_config")
-        .select("guardia_url, guardia_token, active, sync_interval, last_sync_at, last_sync_count, janela_tolerancia_segundos, sessao_longa_alerta_minutos")
+        .select("guardia_url, guardia_token, auth_header_name, auth_scheme, api_base_path, events_endpoint, active, sync_interval, last_sync_at, last_sync_count, last_push_at, last_push_count, last_event_poll_at, janela_tolerancia_segundos, sessao_longa_alerta_minutos")
         .eq("tenant_id", tenantId)
         .maybeSingle();
       if (data) setCfg({ ...empty, ...data });
@@ -131,6 +131,10 @@ export default function GuardiaIntegration() {
       tenant_id: tenantId,
       guardia_url: cfg.guardia_url.trim(),
       guardia_token: cfg.guardia_token.trim(),
+      auth_header_name: cfg.auth_header_name.trim() || "X-GuardIA-Token",
+      auth_scheme: cfg.auth_scheme || "header",
+      api_base_path: cfg.api_base_path.trim() || "/guardiaapi",
+      events_endpoint: cfg.events_endpoint?.trim() || null,
       active: cfg.active,
       sync_interval: cfg.sync_interval,
       janela_tolerancia_segundos: Math.max(0, Math.floor(Number(cfg.janela_tolerancia_segundos) || 0)),
@@ -140,19 +144,28 @@ export default function GuardiaIntegration() {
     if (error) toast.error("Erro ao salvar"); else toast.success("Configuração salva");
   };
 
+  const authHeader = (): Record<string, string> => {
+    if ((cfg.auth_scheme || "header").toLowerCase() === "bearer") return { Authorization: `Bearer ${cfg.guardia_token}` };
+    return { [cfg.auth_header_name || "X-GuardIA-Token"]: cfg.guardia_token };
+  };
+
   const testConnection = async () => {
     if (!cfg.guardia_url || !cfg.guardia_token) { toast.error("Preencha URL e token"); return; }
     setTesting(true);
     try {
       const base = cfg.guardia_url.replace(/\/+$/, "");
+      const path = (cfg.api_base_path || "/guardiaapi").replace(/\/+$/, "");
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 10000);
-      const resp = await fetch(`${base}/api/v1/colaboradores?limit=1`, {
-        headers: { "X-GuardIA-Token": cfg.guardia_token, "Accept": "application/json" },
+      // Probe with a HEAD/GET on /person/__ping (404 is OK → server alive; 401/403 → auth wrong).
+      const resp = await fetch(`${base}${path}/person/__connectivity_probe__`, {
+        method: "GET",
+        headers: { ...authHeader(), Accept: "application/json" },
         signal: ctrl.signal,
       });
       clearTimeout(t);
-      if (resp.ok) toast.success(`Conexão OK (HTTP ${resp.status})`);
+      if (resp.status === 401 || resp.status === 403) toast.error(`Auth recusada (HTTP ${resp.status}) — verifique header/scheme`);
+      else if (resp.status >= 200 && resp.status < 500) toast.success(`Conexão OK (HTTP ${resp.status})`);
       else toast.error(`GuardIA respondeu HTTP ${resp.status}`);
     } catch (e) {
       toast.error(`Falha de conexão: ${(e as Error).message}`);
@@ -161,17 +174,32 @@ export default function GuardiaIntegration() {
     }
   };
 
-  const syncNow = async () => {
-    setSyncing(true);
+  const pushNow = async () => {
+    setPushing(true);
     const { data, error } = await supabase.functions.invoke("guardia-sync-employees", {
+      body: { tenant_id: tenantId, only_active: true },
+    });
+    setPushing(false);
+    if (error) { toast.error(error.message || "Erro ao enviar"); return; }
+    const r = data as { created?: number; updated?: number; deleted?: number; skipped?: number; errors?: unknown[]; atualizado_em?: string };
+    toast.success(`Enviados: ${r.created ?? 0} novos, ${r.updated ?? 0} atualizados${r.errors?.length ? ` · ${r.errors.length} erros` : ""}`);
+    setCfg(c => ({ ...c, last_push_at: r.atualizado_em ?? new Date().toISOString(), last_push_count: (r.created ?? 0) + (r.updated ?? 0) }));
+  };
+
+  const pollNow = async () => {
+    setPolling(true);
+    const { data, error } = await supabase.functions.invoke("guardia-poll-events", {
       body: { tenant_id: tenantId },
     });
-    setSyncing(false);
-    if (error) { toast.error(error.message || "Erro ao sincronizar"); return; }
-    const r = data as { imported?: number; updated?: number; skipped?: number; total?: number; atualizado_em?: string };
-    toast.success(`Sincronizado: ${r.imported ?? 0} importados, ${r.updated ?? 0} atualizados`);
-    setCfg(c => ({ ...c, last_sync_at: r.atualizado_em ?? new Date().toISOString(), last_sync_count: r.total ?? 0 }));
+    setPolling(false);
+    if (error) { toast.error(error.message || "Erro no polling"); return; }
+    const r = data as { polled?: boolean; fetched?: number; staged?: number; dispatched?: number; reason?: string };
+    if (r.reason === "no_events_endpoint") { toast.warning("Endpoint de eventos não configurado (OpenAPI 1.0 não documenta histórico)"); return; }
+    toast.success(`Polling: ${r.fetched ?? 0} eventos · ${r.dispatched ?? 0} processados`);
+    setCfg(c => ({ ...c, last_event_poll_at: new Date().toISOString() }));
+    loadEvents();
   };
+
 
   const copy = (s: string) => { navigator.clipboard.writeText(s); toast.success("Copiado"); };
 
