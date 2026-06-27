@@ -20,6 +20,26 @@ export default function AppLayout() {
   const { user, signOut, isDemo } = useAuth();
   const nav = useNavigate();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const desktopSearchRef = useRef<HTMLInputElement>(null);
+
+  // Global Ctrl/Cmd+K — focus desktop search if visible, otherwise open mobile sheet.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const isK = e.key === "k" || e.key === "K";
+      if (!isK || !(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault();
+      const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+      if (isDesktop) {
+        desktopSearchRef.current?.focus();
+        desktopSearchRef.current?.select();
+      } else {
+        setMobileSearchOpen(true);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const handleLogout = async () => { await signOut(); nav("/login", { replace: true }); };
   const open = alerts.filter(a => a.status === "open").length;
   return (
