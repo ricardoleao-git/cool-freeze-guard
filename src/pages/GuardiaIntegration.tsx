@@ -174,7 +174,9 @@ export default function GuardiaIntegration() {
         <TabsList>
           <TabsTrigger value="config">Configuração</TabsTrigger>
           <TabsTrigger value="devices">Câmaras / Leitores</TabsTrigger>
+          <TabsTrigger value="presence">Presença agora</TabsTrigger>
           <TabsTrigger value="log" onClick={loadEvents}>Log de Eventos</TabsTrigger>
+          <TabsTrigger value="integrity">Integridade (forense)</TabsTrigger>
         </TabsList>
 
         <TabsContent value="config" className="space-y-4">
