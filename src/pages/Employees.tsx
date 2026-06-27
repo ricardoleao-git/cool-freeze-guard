@@ -113,6 +113,7 @@ export default function Employees() {
                           {e.name}
                           {e.status === "inactive" && <Badge variant="outline" className="text-[9px] px-1">INATIVO</Badge>}
                           {e.origem === "guardia" && <Badge variant="outline" className="text-[9px] px-1 border-primary/40 text-primary">GuardIA</Badge>}
+                          {canManagePin && pinSetMap[e.id] && <Badge variant="outline" className="text-[9px] px-1 border-status-ok/50 text-status-ok gap-1"><KeyRound className="h-2.5 w-2.5" /> PIN</Badge>}
                         </div>
                         <div className="text-xs text-muted-foreground">#{e.registration_number} · {e.position || "—"}</div>
                       </div>
@@ -143,6 +144,9 @@ export default function Employees() {
                       <Button size="sm" variant="ghost" className="text-status-red" onClick={() => forceStatus(e.id, "blocked")} title="Bloquear"><ShieldAlert className="h-3.5 w-3.5" /></Button>
                       <div className="w-px h-5 bg-border mx-1" />
                       <Button size="sm" variant="ghost" onClick={() => setAuthFor(e)} title="Autorizar áreas frias"><ShieldCheck className="h-3.5 w-3.5" /></Button>
+                      {canManagePin && (
+                        <Button size="sm" variant="ghost" onClick={() => setPinFor(e)} title={pinSetMap[e.id] ? "Redefinir PIN" : "Definir PIN"}><KeyRound className="h-3.5 w-3.5" /></Button>
+                      )}
                       <Button size="sm" variant="ghost" onClick={() => openEdit(e)} title="Editar"><Pencil className="h-3.5 w-3.5" /></Button>
                       <Button size="sm" variant="ghost" className="text-status-red" onClick={() => setDeleting(e)} title="Excluir"><Trash2 className="h-3.5 w-3.5" /></Button>
                     </div>
@@ -156,6 +160,16 @@ export default function Employees() {
 
       <EmployeeFormDialog open={formOpen} onOpenChange={setFormOpen} employee={editing} />
       <EmployeeAreaAuthDialog open={!!authFor} onOpenChange={(o) => !o && setAuthFor(null)} employee={authFor} />
+      {pinFor && (
+        <SetEmployeePinDialog
+          open={!!pinFor}
+          onOpenChange={(o) => !o && setPinFor(null)}
+          tenantId={tenantId}
+          employeeId={pinFor.id}
+          employeeName={pinFor.name}
+          hasPin={pinSetMap[pinFor.id]}
+        />
+      )}
 
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
