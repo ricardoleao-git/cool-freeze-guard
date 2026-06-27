@@ -21,6 +21,11 @@ function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+// CPF é a chave do colaborador em todo o sistema. Remove pontos, traços e espaços.
+function normalizeCpf(v?: string | null): string {
+  return String(v ?? "").replace(/\D/g, "");
+}
+
 type Payload = {
   evento_id?: string;
   colaborador_id?: string;
@@ -51,6 +56,10 @@ Deno.serve(async (req) => {
   if (!["entrada", "saida"].includes(payload.tipo!)) {
     return json({ error: "invalid_tipo" }, 400);
   }
+
+  // Normaliza CPF do colaborador (chave do sistema).
+  const colaboradorCpf = normalizeCpf(payload.colaborador_id);
+  if (!colaboradorCpf) return json({ error: "invalid_colaborador_id" }, 400);
 
   const url = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -87,7 +96,7 @@ Deno.serve(async (req) => {
     .insert({
       tenant_id: tenantId,
       evento_id: payload.evento_id,
-      colaborador_id: payload.colaborador_id,
+      colaborador_id: colaboradorCpf,
       colaborador_nome: payload.colaborador_nome ?? null,
       local_id: payload.local_id,
       local_nome: payload.local_nome ?? null,
@@ -107,7 +116,7 @@ Deno.serve(async (req) => {
   const [empRes, areaRes, devRes] = await Promise.all([
     supabase.from("employees")
       .select("id, unit_id, current_status, current_area_id, accumulated_minutes")
-      .eq("tenant_id", tenantId).eq("id", payload.colaborador_id!).maybeSingle(),
+      .eq("tenant_id", tenantId).eq("id", colaboradorCpf).maybeSingle(),
     supabase.from("cold_areas")
       .select("id, unit_id")
       .eq("tenant_id", tenantId).eq("id", payload.local_id!).maybeSingle(),

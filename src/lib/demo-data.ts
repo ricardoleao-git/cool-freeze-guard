@@ -18,6 +18,7 @@ export interface Employee {
   accumulated_minutes: number; inside_since: number | null; // ts ms
   current_area_id: string | null;
   break_started_at: number | null;
+  origem?: "manual" | "guardia";
 }
 export interface Device {
   id: string; tenant_id: string; unit_id: string; cold_area_id: string;

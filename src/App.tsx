@@ -31,6 +31,7 @@ import LgpdPrivacy from "./pages/LgpdPrivacy";
 import TimeAdjustments from "./pages/TimeAdjustments";
 import MyDay from "./pages/MyDay";
 import DailySummary from "./pages/DailySummary";
+import GuardiaIntegration from "./pages/GuardiaIntegration";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,7 @@ const App = () => (
                 <Route path="ajustes" element={<TimeAdjustments />} />
                 <Route path="meu-dia" element={<MyDay />} />
                 <Route path="resumo-diario" element={<DailySummary />} />
+                <Route path="configuracoes/integracao-guardia" element={<GuardiaIntegration />} />
               </Route>
 
               <Route element={<ProtectedRoute><RoleGuard><AppLayout /></RoleGuard></ProtectedRoute>}>
@@ -93,6 +95,7 @@ const App = () => (
                 <Route path="/ajustes" element={<TimeAdjustments />} />
                 <Route path="/meu-dia" element={<MyDay />} />
                 <Route path="/resumo-diario" element={<DailySummary />} />
+                <Route path="/configuracoes/integracao-guardia" element={<GuardiaIntegration />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, MonitorPlay, Users, Snowflake, Cpu, Activity, Timer,
-  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning, UserCog, ClipboardList, FileLock2, ClipboardCheck, Bell, Stethoscope, FlaskConical,
+  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning, UserCog, ClipboardList, FileLock2, ClipboardCheck, Bell, Stethoscope, FlaskConical, ScanFace,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -40,6 +40,7 @@ const groups = [
     items: [
       { to: "/relatorios", title: "Relatórios", icon: FileBarChart2 },
       { to: "/integracoes", title: "Integrações / API", icon: PlugZap },
+      { to: "/configuracoes/integracao-guardia", title: "Integração GuardIA", icon: ScanFace },
       { to: "/usuarios", title: "Usuários & Permissões", icon: UserCog },
       { to: "/lgpd", title: "Privacidade & LGPD", icon: FileLock2 },
       { to: "/empresas", title: "Empresas (Multi-tenant)", icon: Building2 },
@@ -83,6 +84,7 @@ const demoGroups = [
     items: [
       { to: "/demo/relatorios", title: "Relatórios", icon: FileBarChart2 },
       { to: "/demo/integracoes", title: "Integrações / API", icon: PlugZap },
+      { to: "/demo/configuracoes/integracao-guardia", title: "Integração GuardIA", icon: ScanFace },
       { to: "/demo/usuarios", title: "Usuários & Permissões", icon: UserCog },
       { to: "/demo/lgpd", title: "Privacidade & LGPD", icon: FileLock2 },
       { to: "/demo/empresas", title: "Empresas (Multi-tenant)", icon: Building2 },

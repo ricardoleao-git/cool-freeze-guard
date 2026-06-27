@@ -109,35 +109,42 @@ Deno.serve(async (req) => {
   let imported = 0, updated = 0, skipped = 0;
   const errors: Array<{ id?: string; message: string }> = [];
 
+  // CPF é a chave do colaborador. Remove pontos, traços e espaços.
+  const normalizeCpf = (v?: string | null) => String(v ?? "").replace(/\D/g, "");
+
   for (const c of list) {
-    if (!c?.id || !c?.nome) { skipped++; continue; }
+    // cpf tem prioridade sobre id para definir a chave; ambos são normalizados.
+    const cpf = normalizeCpf(c?.cpf) || normalizeCpf(c?.id);
+    if (!cpf || !c?.nome) { skipped++; continue; }
+
     const { data: existing } = await admin
-      .from("employees").select("id").eq("tenant_id", tenantId).eq("id", c.id).maybeSingle();
+      .from("employees").select("id").eq("tenant_id", tenantId).eq("id", cpf).maybeSingle();
 
     if (existing) {
       const { error } = await admin.from("employees").update({
         name: c.nome,
+        registration_number: cpf,
         position: c.cargo ?? "",
         avatar: c.foto_url ?? "",
         status: c.ativo === false ? "inactive" : "active",
         origem: "guardia",
         updated_at: new Date().toISOString(),
-      }).eq("id", c.id).eq("tenant_id", tenantId);
-      if (error) errors.push({ id: c.id, message: error.message }); else updated++;
+      }).eq("id", cpf).eq("tenant_id", tenantId);
+      if (error) errors.push({ id: cpf, message: error.message }); else updated++;
     } else {
       const { error } = await admin.from("employees").insert({
-        id: c.id,
+        id: cpf,
         tenant_id: tenantId,
         unit_id: unit.id,
         department_id: dept.id,
         name: c.nome,
-        registration_number: c.cpf ?? c.id,
+        registration_number: cpf,
         position: c.cargo ?? "",
         avatar: c.foto_url ?? "",
         status: c.ativo === false ? "inactive" : "active",
         origem: "guardia",
       });
-      if (error) errors.push({ id: c.id, message: error.message }); else imported++;
+      if (error) errors.push({ id: cpf, message: error.message }); else imported++;
     }
   }
 
