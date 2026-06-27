@@ -149,5 +149,16 @@ Deno.serve(async (req) => {
     last_push_at: nowIso, last_push_count: created + updated,
   }).eq("tenant_id", tenantId);
 
+  try {
+    await admin.from("integration_audit_log").insert({
+      tenant_id: tenantId, source: "push",
+      severity: errors.length ? "warn" : "info",
+      code: errors.length ? "partial_failure" : "ok",
+      message: `Push: ${created} criados · ${updated} atualizados · ${deleted} removidos · ${errors.length} erros`,
+      details: errors.length ? { errors: errors.slice(0, 20) } : null,
+      fetched_count: (employees ?? []).length, processed_count: created + updated + deleted,
+    });
+  } catch { /* never block */ }
+
   return json({ pushed: true, created, updated, deleted, skipped, errors, atualizado_em: nowIso });
 });

@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import GuardiaDeviceMapTab from "@/components/guardia/GuardiaDeviceMapTab";
 import GuardiaPresenceTab from "@/components/guardia/GuardiaPresenceTab";
 import GuardiaIntegrityTab from "@/components/guardia/GuardiaIntegrityTab";
+import GuardiaStatusTab from "@/components/guardia/GuardiaStatusTab";
 
 const WEBHOOK_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/guardia-webhook`;
 
@@ -212,11 +213,18 @@ export default function GuardiaIntegration() {
         title="Integração GuardIA"
         description="Receba eventos de acesso e sincronize colaboradores diretamente do sistema de reconhecimento facial GuardIA."
         icon={<ScanFace className="h-5 w-5" />}
+        actions={
+          <Button onClick={pollNow} disabled={polling}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${polling ? "animate-spin" : ""}`} />
+            {polling ? "Sincronizando…" : "Sincronizar agora"}
+          </Button>
+        }
       />
 
       <Tabs defaultValue="config" className="space-y-4">
         <TabsList>
           <TabsTrigger value="config">Configuração</TabsTrigger>
+          <TabsTrigger value="status">Status</TabsTrigger>
           <TabsTrigger value="devices">Câmaras / Leitores</TabsTrigger>
           <TabsTrigger value="presence">Presença agora</TabsTrigger>
           <TabsTrigger value="log" onClick={loadEvents}>Log de Eventos</TabsTrigger>
@@ -439,6 +447,10 @@ export default function GuardiaIntegration() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="status" className="space-y-4">
+          <GuardiaStatusTab tenantId={tenantId} />
         </TabsContent>
 
         <TabsContent value="devices" className="space-y-4">
