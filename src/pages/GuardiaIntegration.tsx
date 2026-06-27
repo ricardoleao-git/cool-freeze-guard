@@ -345,6 +345,12 @@ export default function GuardiaIntegration() {
           <GuardiaDeviceMapTab tenantId={tenantId} />
         </TabsContent>
 
+        <TabsContent value="presence" className="space-y-4">
+          <GuardiaPresenceTab tenantId={tenantId} longSessionMinutes={cfg.sessao_longa_alerta_minutos} />
+        </TabsContent>
+
+
+
         <TabsContent value="log" className="space-y-4">
           <Card className="glass-card">
             <CardHeader className="flex flex-row items-center justify-between gap-3">
