@@ -260,7 +260,7 @@ async function pollTenant(
       tenant_id: tenantId, source: opts.source,
       severity: "warn", code: "normalize_or_dispatch_failed",
       message: `${normalizeErrors.length} evento(s) descartado(s) durante normalização/despacho`,
-      details: { errors: normalizeErrors.slice(0, 20), deduped, capped },
+      details: { errors: normalizeErrors.slice(0, 20), deduped, capped, dedup_samples: dedupSamples, dedup_reason_counts: dedupReasonCounts },
       cursor_used: since, fetched_count: list.length, processed_count: dispatched,
       duration_ms: Date.now() - started,
     });
@@ -268,7 +268,7 @@ async function pollTenant(
     await logAudit(admin, {
       tenant_id: tenantId, source: opts.source, severity: "info", code: "ok",
       message: `OK · ${list.length} recebidos · ${dispatched} processados · ${deduped} duplicados ignorados${isBackfill ? " (backfill)" : ""}`,
-      details: { deduped, capped },
+      details: { deduped, capped, dedup_samples: dedupSamples, dedup_reason_counts: dedupReasonCounts },
       cursor_used: since, fetched_count: list.length, processed_count: dispatched,
       duration_ms: Date.now() - started,
     });
