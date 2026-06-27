@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, MonitorPlay, Users, Snowflake, Cpu, Activity, Timer,
-  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning, UserCog, ClipboardList, FileLock2, ClipboardCheck, Bell, Stethoscope, FlaskConical, ScanFace,
+  AlertTriangle, FileBarChart2, PlugZap, Building2, Sparkles, BookOpenCheck, ShieldCheck, FileWarning, UserCog, ClipboardList, FileLock2, ClipboardCheck, Bell, Stethoscope, FlaskConical, ScanFace, Receipt,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -25,6 +25,7 @@ const groups = [
       { to: "/ajustes", title: "Ajustes & Inconsistências", icon: ClipboardCheck },
       { to: "/resumo-diario", title: "Resumo Diário (RH/SST)", icon: Stethoscope },
       { to: "/meu-dia", title: "Meu Dia (Colaborador)", icon: Bell },
+      { to: "/extrato", title: "Extrato de Exposição", icon: Receipt },
     ],
   },
   {
@@ -69,6 +70,7 @@ const demoGroups = [
       { to: "/demo/ajustes", title: "Ajustes & Inconsistências", icon: ClipboardCheck },
       { to: "/demo/resumo-diario", title: "Resumo Diário (RH/SST)", icon: Stethoscope },
       { to: "/demo/meu-dia", title: "Meu Dia (Colaborador)", icon: Bell },
+      { to: "/demo/extrato", title: "Extrato de Exposição", icon: Receipt },
     ],
   },
   {
