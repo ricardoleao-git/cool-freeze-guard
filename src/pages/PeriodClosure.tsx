@@ -213,16 +213,19 @@ export default function PeriodClosurePage() {
       }
       if ((resp as any)?.already) {
         toast.info(`Etapa ${STAGE_LABEL[stage]} já estava assinada`);
+        announce(`Etapa ${STAGE_LABEL[stage]} já estava assinada.`);
       } else {
         toast.success(`Assinado como ${STAGE_LABEL[stage]}`, {
           description: `Selo ${shortHash((resp as any)?.record_hash)}`,
         });
+        announce(`Fechamento de período assinado com sucesso na etapa ${STAGE_LABEL[stage]}.`);
       }
       setSigning(null);
       setAgree(false);
       await load();
     } catch (e: any) {
       toast.error("Falha ao assinar", { description: e?.message ?? "Tente novamente" });
+      announce(`Falha ao assinar etapa ${STAGE_LABEL[stage]}: ${e?.message ?? "tente novamente"}.`, "assertive");
     } finally {
       setSubmitting(false);
     }
