@@ -304,3 +304,22 @@
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+
+/* ───── Reduced motion ─────
+   Honor the user's OS-level preference. We keep essential focus/scroll feedback
+   but flatten animations, transitions, and pulsing skeletons/sheets/buttons. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-pulse,
+  .pulse-ring {
+    animation: none !important;
+  }
+}
+
