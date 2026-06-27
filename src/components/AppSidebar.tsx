@@ -16,7 +16,7 @@ const groups = [
     label: "Operação",
     items: [
       { to: "/", title: "Dashboard", icon: LayoutDashboard },
-      { to: "/painel", title: "Painel Operacional", icon: MonitorPlay },
+      { to: "/painel-operacional", title: "Painel Operacional", icon: MonitorPlay },
       { to: "/alertas", title: "Alertas & Ocorrências", icon: AlertTriangle },
       { to: "/ocorrencias", title: "Ocorrências (RH/SST)", icon: FileWarning },
       { to: "/historico", title: "Histórico RH/SST", icon: ClipboardList },
@@ -44,6 +44,7 @@ const groups = [
       { to: "/fechamento", title: "Fechamento de Período", icon: Stamp },
       { to: "/integracoes", title: "Integrações / API", icon: PlugZap },
       { to: "/configuracoes/integracao-guardia", title: "Integração GuardIA", icon: ScanFace },
+      { to: "/configuracoes/painel-externo", title: "Painel Externo (Quiosque)", icon: MonitorPlay },
       { to: "/usuarios", title: "Usuários & Permissões", icon: UserCog },
       { to: "/lgpd", title: "Privacidade & LGPD", icon: FileLock2 },
       { to: "/empresas", title: "Empresas (Multi-tenant)", icon: Building2 },

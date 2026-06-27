@@ -35,6 +35,8 @@ import GuardiaIntegration from "./pages/GuardiaIntegration";
 import Statement from "./pages/Statement";
 import Inconsistencies from "./pages/Inconsistencies";
 import PeriodClosure from "./pages/PeriodClosure";
+import Kiosk from "./pages/Kiosk";
+import KioskTokens from "./pages/KioskTokens";
 
 const queryClient = new QueryClient();
 
@@ -48,15 +50,18 @@ const App = () => (
             <Sonner />
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/painel" element={<Kiosk />} />
               <Route path="/painel-demo" element={<PublicPanel />} />
               <Route path="/painel-tv" element={<PublicPanel />} />
               <Route path="/sem-permissao" element={<ProtectedRoute><NoPermission /></ProtectedRoute>} />
+
 
               {/* Modo de demonstração público: navegação completa, sem login,
                   escopado ao tenant 'demo-tenant'. */}
               <Route path="/demo" element={<DemoShell />}>
                 <Route index element={<Dashboard />} />
                 <Route path="experimento" element={<DemoMode />} />
+                <Route path="painel-operacional" element={<OperationalPanel />} />
                 <Route path="painel" element={<OperationalPanel />} />
                 <Route path="colaboradores" element={<Employees />} />
                 <Route path="ambientes" element={<ColdAreas />} />
@@ -83,7 +88,7 @@ const App = () => (
 
               <Route element={<ProtectedRoute><RoleGuard><AppLayout /></RoleGuard></ProtectedRoute>}>
                 <Route path="/" element={<Dashboard />} />
-                <Route path="/painel" element={<OperationalPanel />} />
+                <Route path="/painel-operacional" element={<OperationalPanel />} />
                 <Route path="/colaboradores" element={<Employees />} />
                 <Route path="/ambientes" element={<ColdAreas />} />
                 <Route path="/dispositivos" element={<Devices />} />
@@ -105,6 +110,7 @@ const App = () => (
                 <Route path="/extrato" element={<Statement />} />
                 <Route path="/inconsistencias" element={<Inconsistencies />} />
                 <Route path="/fechamento" element={<PeriodClosure />} />
+                <Route path="/configuracoes/painel-externo" element={<KioskTokens />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

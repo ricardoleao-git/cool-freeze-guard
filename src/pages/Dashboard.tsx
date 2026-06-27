@@ -67,7 +67,7 @@ export default function Dashboard() {
         icon={<Activity className="h-5 w-5" />}
         actions={
           <>
-            <Button asChild variant="outline"><Link to="/painel">Abrir Painel Operacional</Link></Button>
+            <Button asChild variant="outline"><Link to="/painel-operacional">Abrir Painel Operacional</Link></Button>
             <Button asChild><Link to="/demo">Modo Experimentação</Link></Button>
           </>
         }
@@ -128,7 +128,7 @@ export default function Dashboard() {
       <div className="mt-6">
         <div className="flex items-end justify-between mb-3">
           <h2 className="font-display text-lg font-semibold">Colaboradores em observação</h2>
-          <Button asChild variant="ghost" size="sm"><Link to="/painel">Ver painel completo →</Link></Button>
+          <Button asChild variant="ghost" size="sm"><Link to="/painel-operacional">Ver painel completo →</Link></Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {watchList.map(e => <EmployeeStatusCard key={e.id} employee={e} />)}
