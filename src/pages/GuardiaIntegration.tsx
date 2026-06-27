@@ -130,10 +130,9 @@ export default function GuardiaIntegration() {
   const save = async () => {
     if (!tenantId) return;
     setSaving(true);
-    const { error } = await supabase.from("integration_config").upsert({
+    const payload: Record<string, unknown> = {
       tenant_id: tenantId,
       guardia_url: cfg.guardia_url.trim(),
-      guardia_token: cfg.guardia_token.trim(),
       auth_header_name: cfg.auth_header_name.trim() || "X-GuardIA-Token",
       auth_scheme: cfg.auth_scheme || "header",
       api_base_path: cfg.api_base_path.trim() || "/guardiaapi",
@@ -142,9 +141,13 @@ export default function GuardiaIntegration() {
       sync_interval: cfg.sync_interval,
       janela_tolerancia_segundos: Math.max(0, Math.floor(Number(cfg.janela_tolerancia_segundos) || 0)),
       sessao_longa_alerta_minutos: Math.max(1, Math.floor(Number(cfg.sessao_longa_alerta_minutos) || 1)),
-    }, { onConflict: "tenant_id" });
+    };
+    // Only write the token when the admin actually typed a new value;
+    // the DB never returns it back, so leaving the field blank preserves the saved one.
+    if (cfg.guardia_token.trim()) payload.guardia_token = cfg.guardia_token.trim();
+    const { error } = await supabase.from("integration_config").upsert(payload, { onConflict: "tenant_id" });
     setSaving(false);
-    if (error) toast.error("Erro ao salvar"); else toast.success("Configuração salva");
+    if (error) toast.error("Erro ao salvar"); else { toast.success("Configuração salva"); setCfg(c => ({ ...c, guardia_token: "" })); }
   };
 
 
