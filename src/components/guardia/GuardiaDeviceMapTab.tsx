@@ -20,12 +20,17 @@ type DeviceMap = {
   guardia_local_id: string | null;
   label: string | null;
   active: boolean;
+  funcao: "entrada" | "externo";
+  janela_tolerancia_segundos: number | null;
 };
 type UnmappedDevice = { dispositivo_id: string; local_nome: string | null; last_seen: string; count: number };
 
 interface Props { tenantId: string }
 
-const emptyForm = { id: "", guardia_device_id: "", cold_area_id: "", guardia_local_id: "", label: "", active: true };
+const emptyForm = {
+  id: "", guardia_device_id: "", cold_area_id: "", guardia_local_id: "", label: "", active: true,
+  funcao: "entrada" as "entrada" | "externo", janela_tolerancia_segundos: "" as string,
+};
 
 export default function GuardiaDeviceMapTab({ tenantId }: Props) {
   const [maps, setMaps] = useState<DeviceMap[]>([]);
@@ -40,7 +45,7 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
     setLoading(true);
     const [m, a, e] = await Promise.all([
       supabase.from("guardia_device_map")
-        .select("id, guardia_device_id, cold_area_id, guardia_local_id, label, active")
+        .select("id, guardia_device_id, cold_area_id, guardia_local_id, label, active, funcao, janela_tolerancia_segundos")
         .eq("tenant_id", tenantId).order("created_at", { ascending: false }),
       supabase.from("cold_areas")
         .select("id, name").eq("tenant_id", tenantId).order("name"),
@@ -87,6 +92,8 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
       guardia_local_id: row.guardia_local_id ?? "",
       label: row.label ?? "",
       active: row.active,
+      funcao: row.funcao ?? "entrada",
+      janela_tolerancia_segundos: row.janela_tolerancia_segundos == null ? "" : String(row.janela_tolerancia_segundos),
     });
     setDialogOpen(true);
   };
@@ -96,6 +103,13 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
       toast.error("Informe o ID do leitor e selecione a câmara.");
       return;
     }
+    const janelaRaw = form.janela_tolerancia_segundos.trim();
+    let janela: number | null = null;
+    if (janelaRaw !== "") {
+      const n = Number(janelaRaw);
+      if (!Number.isFinite(n) || n < 0) { toast.error("Janela de tolerância inválida."); return; }
+      janela = Math.floor(n);
+    }
     setSaving(true);
     const payload = {
       tenant_id: tenantId,
@@ -104,6 +118,8 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
       guardia_local_id: form.guardia_local_id.trim() || null,
       label: form.label.trim() || null,
       active: form.active,
+      funcao: form.funcao,
+      janela_tolerancia_segundos: janela,
     };
     const { error } = form.id
       ? await supabase.from("guardia_device_map").update(payload).eq("id", form.id)
