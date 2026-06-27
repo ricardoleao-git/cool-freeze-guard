@@ -72,6 +72,7 @@ const DemoContext = createContext<Ctx | null>(null);
 
 const ATTACHMENT_BUCKET = "occurrence-attachments";
 const AVATAR_BUCKET = "employee-avatars";
+const EMPLOYEE_PUBLIC_COLUMNS = "id, tenant_id, unit_id, department_id, name, registration_number, position, avatar, status, current_status, accumulated_minutes, inside_since, current_area_id, break_started_at, origem";
 
 // ---------- mapping helpers (DB row <-> client) ----------
 const toMs = (s?: string | null) => (s ? new Date(s).getTime() : null);
@@ -225,7 +226,7 @@ export const DemoProvider: React.FC<{ children: React.ReactNode }> = ({ children
         supabase.from("units").select("*").order("name"),
         supabase.from("departments").select("*").order("name"),
         supabase.from("cold_areas").select("*").order("name"),
-        supabase.from("employees").select("*").order("name"),
+        supabase.from("employees").select(EMPLOYEE_PUBLIC_COLUMNS).order("name"),
         supabase.from("devices").select("*").order("name"),
         supabase.from("access_events").select("*").order("occurred_at", { ascending: false }).limit(500),
         supabase.from("alerts").select("*").order("triggered_at", { ascending: false }).limit(300),
