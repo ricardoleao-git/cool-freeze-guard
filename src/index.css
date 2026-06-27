@@ -54,6 +54,18 @@
     --status-break: 222 82% 65%;
     --status-outside: 220 12% 60%;
 
+    /* Soft tinted alert surfaces (dark) */
+    --status-ok-soft: 158 60% 18%;
+    --status-ok-fg: 158 80% 78%;
+    --status-yellow-soft: 42 70% 16%;
+    --status-yellow-fg: 45 100% 75%;
+    --status-orange-soft: 22 70% 18%;
+    --status-orange-fg: 24 100% 78%;
+    --status-red-soft: 354 60% 20%;
+    --status-red-fg: 0 95% 82%;
+    --status-break-soft: 224 60% 22%;
+    --status-break-fg: 222 95% 82%;
+
     /* Gradients & glows */
     --gradient-hero: radial-gradient(120% 80% at 100% 0%, hsl(222 82% 65% / 0.18), transparent 60%), linear-gradient(160deg, hsl(228 60% 22%) 0%, hsl(224 67% 11%) 100%);
     --gradient-frost: linear-gradient(180deg, hsl(222 82% 65% / 0.18), hsl(222 82% 65% / 0));
@@ -115,12 +127,26 @@
     --input: 218 40% 90%;
     --ring: 224 92% 56%;
 
-    --status-ok: 158 72% 40%;
-    --status-yellow: 42 100% 50%;
-    --status-orange: 22 100% 54%;
-    --status-red: 354 84% 56%;
+    /* Alerts — higher contrast for light mode legibility */
+    --status-ok: 152 70% 36%;
+    --status-yellow: 38 95% 44%;
+    --status-orange: 18 92% 48%;
+    --status-red: 354 82% 50%;
     --status-break: 224 92% 56%;
     --status-outside: 220 14% 50%;
+
+    /* Soft tinted surfaces for alert cards/badges */
+    --status-ok-soft: 152 75% 92%;
+    --status-ok-fg: 152 72% 22%;
+    --status-yellow-soft: 44 100% 92%;
+    --status-yellow-fg: 30 90% 28%;
+    --status-orange-soft: 22 100% 93%;
+    --status-orange-fg: 18 88% 30%;
+    --status-red-soft: 354 100% 95%;
+    --status-red-fg: 354 80% 36%;
+    --status-break-soft: 224 100% 95%;
+    --status-break-fg: 224 80% 30%;
+
 
     /* Richer gradients with cobalt + jade glow */
     --gradient-hero:
@@ -204,7 +230,38 @@
     background: hsl(var(--primary) / 0.18);
     filter: blur(80px); pointer-events: none;
   }
+
+
+
+  /* ─── Semantic alert blocks (work in light + dark) ─── */
+  .alert-ok      { background: hsl(var(--status-ok-soft));     color: hsl(var(--status-ok-fg));     border: 1px solid hsl(var(--status-ok) / 0.35); }
+  .alert-yellow  { background: hsl(var(--status-yellow-soft)); color: hsl(var(--status-yellow-fg)); border: 1px solid hsl(var(--status-yellow) / 0.45); }
+  .alert-orange  { background: hsl(var(--status-orange-soft)); color: hsl(var(--status-orange-fg)); border: 1px solid hsl(var(--status-orange) / 0.5); }
+  .alert-red     { background: hsl(var(--status-red-soft));    color: hsl(var(--status-red-fg));    border: 1px solid hsl(var(--status-red) / 0.5); }
+  .alert-break   { background: hsl(var(--status-break-soft));  color: hsl(var(--status-break-fg));  border: 1px solid hsl(var(--status-break) / 0.45); }
+
+  /* Solid status pills */
+  .pill-ok      { background: hsl(var(--status-ok));     color: hsl(0 0% 100%); }
+  .pill-yellow  { background: hsl(var(--status-yellow)); color: hsl(30 90% 12%); }
+  .pill-orange  { background: hsl(var(--status-orange)); color: hsl(0 0% 100%); }
+  .pill-red     { background: hsl(var(--status-red));    color: hsl(0 0% 100%); }
+
+  /* Modern surface for inputs/cards in light mode (auto-themed) */
+  .surface-input {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 1px 0 hsl(var(--foreground) / 0.02), 0 1px 2px hsl(var(--foreground) / 0.04);
+    transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+  }
+  .surface-input:hover { border-color: hsl(var(--primary) / 0.45); }
+  .surface-input:focus-within,
+  .surface-input:focus {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.15);
+    outline: none;
+  }
 }
+
 
 @layer utilities {
   .bg-grid {
