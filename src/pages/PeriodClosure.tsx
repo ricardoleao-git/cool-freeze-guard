@@ -139,6 +139,7 @@ export default function PeriodClosurePage() {
   const [signing, setSigning] = useState<Stage | null>(null);
   const [agree, setAgree] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const announce = useAnnouncer();
 
   const refDateStr = useMemo(() => format(refDate, "yyyy-MM-dd"), [refDate]);
 
