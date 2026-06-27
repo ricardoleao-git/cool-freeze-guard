@@ -180,6 +180,7 @@ export default function PeriodClosurePage() {
     if (!data || !tenantId) return;
     if (!agree) { toast.error("Confirme a leitura para assinar"); return; }
     setSubmitting(true);
+    announce(`Assinando etapa ${STAGE_LABEL[stage]}…`);
     try {
       const { data: resp, error } = await supabase.functions.invoke("closure-sign", {
         body: {
