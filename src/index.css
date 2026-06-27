@@ -115,12 +115,26 @@
     --input: 218 40% 90%;
     --ring: 224 92% 56%;
 
-    --status-ok: 158 72% 40%;
-    --status-yellow: 42 100% 50%;
-    --status-orange: 22 100% 54%;
-    --status-red: 354 84% 56%;
+    /* Alerts — higher contrast for light mode legibility */
+    --status-ok: 152 70% 36%;
+    --status-yellow: 38 95% 44%;
+    --status-orange: 18 92% 48%;
+    --status-red: 354 82% 50%;
     --status-break: 224 92% 56%;
     --status-outside: 220 14% 50%;
+
+    /* Soft tinted surfaces for alert cards/badges */
+    --status-ok-soft: 152 75% 92%;
+    --status-ok-fg: 152 72% 22%;
+    --status-yellow-soft: 44 100% 92%;
+    --status-yellow-fg: 30 90% 28%;
+    --status-orange-soft: 22 100% 93%;
+    --status-orange-fg: 18 88% 30%;
+    --status-red-soft: 354 100% 95%;
+    --status-red-fg: 354 80% 36%;
+    --status-break-soft: 224 100% 95%;
+    --status-break-fg: 224 80% 30%;
+
 
     /* Richer gradients with cobalt + jade glow */
     --gradient-hero:
