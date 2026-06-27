@@ -241,6 +241,74 @@ export type Database = {
           },
         ]
       }
+      closure_signatures: {
+        Row: {
+          clickwrap_text: string
+          clickwrap_text_hash: string
+          closure_id: string
+          content_hash: string
+          created_at: string
+          id: string
+          ip_origin: unknown
+          previous_hash: string | null
+          record_hash: string | null
+          signature_method: string
+          signed_at: string
+          signed_by_name: string
+          signed_by_role: string | null
+          signed_by_user_id: string | null
+          stage: string
+          tenant_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          clickwrap_text: string
+          clickwrap_text_hash: string
+          closure_id: string
+          content_hash: string
+          created_at?: string
+          id?: string
+          ip_origin?: unknown
+          previous_hash?: string | null
+          record_hash?: string | null
+          signature_method?: string
+          signed_at?: string
+          signed_by_name: string
+          signed_by_role?: string | null
+          signed_by_user_id?: string | null
+          stage: string
+          tenant_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          clickwrap_text?: string
+          clickwrap_text_hash?: string
+          closure_id?: string
+          content_hash?: string
+          created_at?: string
+          id?: string
+          ip_origin?: unknown
+          previous_hash?: string | null
+          record_hash?: string | null
+          signature_method?: string
+          signed_at?: string
+          signed_by_name?: string
+          signed_by_role?: string | null
+          signed_by_user_id?: string | null
+          stage?: string
+          tenant_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "closure_signatures_closure_id_fkey"
+            columns: ["closure_id"]
+            isOneToOne: false
+            referencedRelation: "period_closures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cold_areas: {
         Row: {
           average_temperature: number
@@ -1280,6 +1348,53 @@ export type Database = {
           },
           {
             foreignKeyName: "occurrences_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      period_closures: {
+        Row: {
+          consolidated: Json | null
+          consolidated_hash: string | null
+          created_at: string
+          id: string
+          period_type: string
+          reference_end: string
+          reference_start: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          consolidated?: Json | null
+          consolidated_hash?: string | null
+          created_at?: string
+          id?: string
+          period_type: string
+          reference_end: string
+          reference_start: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          consolidated?: Json | null
+          consolidated_hash?: string | null
+          created_at?: string
+          id?: string
+          period_type?: string
+          reference_end?: string
+          reference_start?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "period_closures_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
