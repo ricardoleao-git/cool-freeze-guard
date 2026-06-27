@@ -357,7 +357,7 @@ export default function KioskTokens() {
               <Button
                 onClick={() => {
                   setCreateOpen(false);
-                  setCreatedToken(null);
+                  setCreatedToken(null); setShowQR(false);
                 }}
               >
                 Concluído
