@@ -22,10 +22,17 @@ const WEBHOOK_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/guardia-w
 type Config = {
   guardia_url: string;
   guardia_token: string;
+  auth_header_name: string;
+  auth_scheme: string;
+  api_base_path: string;
+  events_endpoint: string | null;
   active: boolean;
   sync_interval: string;
   last_sync_at: string | null;
   last_sync_count: number | null;
+  last_push_at: string | null;
+  last_push_count: number | null;
+  last_event_poll_at: string | null;
   janela_tolerancia_segundos: number;
   sessao_longa_alerta_minutos: number;
 };
@@ -46,10 +53,17 @@ type GuardiaEvent = {
 const empty: Config = {
   guardia_url: "",
   guardia_token: "",
+  auth_header_name: "X-GuardIA-Token",
+  auth_scheme: "header",
+  api_base_path: "/guardiaapi",
+  events_endpoint: "",
   active: false,
   sync_interval: "1h",
   last_sync_at: null,
   last_sync_count: null,
+  last_push_at: null,
+  last_push_count: null,
+  last_event_poll_at: null,
   janela_tolerancia_segundos: 180,
   sessao_longa_alerta_minutos: 240,
 };
