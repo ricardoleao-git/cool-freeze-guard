@@ -21,7 +21,7 @@ import {
 import {
   ClipboardList, Download, FileText, Filter, ImageIcon, Paperclip, Search, X, Eye,
   ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
-  BookmarkPlus, Star, Trash2, Save,
+  BookmarkPlus, Star, Trash2, Save, Loader2,
 } from "lucide-react";
 import type { Occurrence, OccurrencePriority, OccurrenceCategory, OccurrenceAttachment } from "@/lib/demo-data";
 import { AttachmentPreviewDialog } from "@/components/AttachmentPreviewDialog";
