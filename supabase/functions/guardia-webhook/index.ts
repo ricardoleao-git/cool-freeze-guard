@@ -21,6 +21,11 @@ function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+// CPF é a chave do colaborador em todo o sistema. Remove pontos, traços e espaços.
+function normalizeCpf(v?: string | null): string {
+  return String(v ?? "").replace(/\D/g, "");
+}
+
 type Payload = {
   evento_id?: string;
   colaborador_id?: string;
