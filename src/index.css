@@ -188,6 +188,8 @@
     @apply bg-background text-foreground;
     font-family: 'DM Sans', system-ui, sans-serif;
     font-feature-settings: 'ss01', 'cv11';
+    font-size: 15px;
+    line-height: 1.5;
     background-image: var(--backdrop-1), var(--backdrop-2);
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
@@ -197,6 +199,8 @@
     font-family: 'Space Grotesk', 'DM Sans', sans-serif;
     letter-spacing: -0.02em;
   }
+  /* Secondary readable text (hints, descriptions, secondary cells). */
+  .text-hint { font-size: 13px; line-height: 1.45; }
   .tabular { font-variant-numeric: tabular-nums; }
 
   /* Global keyboard focus safety net — every interactive element gets a
@@ -291,6 +295,15 @@
     background: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
+  /* Light-on-dark gradient for use over .bg-gradient-hero panels (theme-agnostic). */
+  .text-gradient-on-hero {
+    background: linear-gradient(90deg, #ffffff 0%, #cfe1ff 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  /* Forces light, WCAG-AA text on the dark hero gradient regardless of theme. */
+  .hero-on-dark { color: #ffffff; }
+  .hero-on-dark .hero-muted { color: rgba(255,255,255,0.82); }
+  .hero-on-dark .hero-eyebrow { color: rgba(207,225,255,0.9); }
   .ring-focus { @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background; }
 }
 
