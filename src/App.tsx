@@ -78,6 +78,7 @@ const App = () => (
                 <Route path="configuracoes/integracao-guardia" element={<GuardiaIntegration />} />
                 <Route path="extrato" element={<Statement />} />
                 <Route path="inconsistencias" element={<Inconsistencies />} />
+                <Route path="fechamento" element={<PeriodClosure />} />
               </Route>
 
               <Route element={<ProtectedRoute><RoleGuard><AppLayout /></RoleGuard></ProtectedRoute>}>
