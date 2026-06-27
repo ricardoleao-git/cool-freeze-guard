@@ -4,6 +4,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { TenantSwitcher } from "@/components/TenantSwitcher";
 import { SoundToggle } from "@/components/SoundToggle";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Bell, Search, LogOut, User as UserIcon, Sparkles, LogIn } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
