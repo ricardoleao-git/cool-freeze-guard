@@ -34,6 +34,7 @@ import DailySummary from "./pages/DailySummary";
 import GuardiaIntegration from "./pages/GuardiaIntegration";
 import Statement from "./pages/Statement";
 import Inconsistencies from "./pages/Inconsistencies";
+import PeriodClosure from "./pages/PeriodClosure";
 
 const queryClient = new QueryClient();
 
