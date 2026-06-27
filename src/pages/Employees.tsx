@@ -164,6 +164,7 @@ export default function Employees() {
             })}
           </TableBody>
         </Table>
+        )}
       </div>
 
       <EmployeeFormDialog open={formOpen} onOpenChange={setFormOpen} employee={editing} />
