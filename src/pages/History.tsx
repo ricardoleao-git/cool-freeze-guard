@@ -154,9 +154,13 @@ export default function History() {
     dateFrom, dateTo, hasAttach, sort,
   }), [search, employeeId, unitId, priority, category, status, dateFrom, dateTo, hasAttach, sort]);
 
+  // Presets require a real authenticated UUID. Demo/anonymous users skip persistence.
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const canPersistPresets = !!user && UUID_RE.test(user.id);
+
   // Load presets on mount / user change
   useEffect(() => {
-    if (!user) { setPresets([]); setPresetsLoaded(true); return; }
+    if (!canPersistPresets) { setPresets([]); setPresetsLoaded(true); return; }
     let cancelled = false;
     (async () => {
       const { data, error } = await supabase
@@ -193,7 +197,7 @@ export default function History() {
   };
 
   const handleSavePreset = async () => {
-    if (!user) return;
+    if (!canPersistPresets) { toast.error("Faça login para salvar presets"); return; }
     const name = newPresetName.trim();
     if (!name) return toast.error("Informe um nome para o preset");
     const payload = {
@@ -490,7 +494,7 @@ export default function History() {
               </CardTitle>
               <CardDescription>Combine critérios para investigar incidentes específicos.</CardDescription>
             </div>
-            {user && presetsLoaded && (
+            {canPersistPresets && presetsLoaded && (
               <div className="flex flex-wrap items-center gap-2">
                 <Select value={presetId} onValueChange={handleSelectPreset}>
                   <SelectTrigger className="h-9 w-[220px]">
