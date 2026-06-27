@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
         .from("thermal_breaks")
         .select("id", { count: "exact", head: true })
         .eq("tenant_id", tenantId)
-        .eq("status", "completed")
+        .eq("completed", true)
         .gte("started_at", startIso),
       supabase
         .from("access_events")
