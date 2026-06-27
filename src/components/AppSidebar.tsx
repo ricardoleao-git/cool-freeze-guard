@@ -84,6 +84,7 @@ const demoGroups = [
     items: [
       { to: "/demo/relatorios", title: "Relatórios", icon: FileBarChart2 },
       { to: "/demo/integracoes", title: "Integrações / API", icon: PlugZap },
+      { to: "/demo/configuracoes/integracao-guardia", title: "Integração GuardIA", icon: ScanFace },
       { to: "/demo/usuarios", title: "Usuários & Permissões", icon: UserCog },
       { to: "/demo/lgpd", title: "Privacidade & LGPD", icon: FileLock2 },
       { to: "/demo/empresas", title: "Empresas (Multi-tenant)", icon: Building2 },
