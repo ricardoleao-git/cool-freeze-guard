@@ -27,6 +27,10 @@ export default function DemoMode() {
   const [emp, setEmp] = useState<string>("");
   const [autoRegen, setAutoRegenState] = useState<boolean>(() => getAutoRegenerate());
   const [regenerating, setRegenerating] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [seedPct, setSeedPct] = useState(0);
+  const [seedLabel, setSeedLabel] = useState("");
+  const [seedLog, setSeedLog] = useState<SeedPhaseReport[]>([]);
   useEffect(() => { if (!emp && employees[0]) setEmp(employees[0].id); }, [employees, emp]);
 
   const handleRegenerate = async () => {
@@ -39,6 +43,22 @@ export default function DemoMode() {
       console.error(e);
       toast.error("Falha ao regenerar dados de demonstração.");
       setRegenerating(false);
+    }
+  };
+
+  const handleSeedHistory = async () => {
+    setSeeding(true); setSeedPct(0); setSeedLabel("Iniciando…"); setSeedLog([]);
+    try {
+      await generateDemoHistory((pct, label, last) => {
+        setSeedPct(pct); setSeedLabel(label);
+        if (last) setSeedLog(prev => [...prev, last]);
+      }, { year: 2026, density: "heavy" });
+      toast.success("Histórico de 3 meses gerado no demo-tenant.");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(`Falha ao gerar histórico: ${e.message}`);
+    } finally {
+      setSeeding(false);
     }
   };
 
