@@ -20,12 +20,17 @@ type DeviceMap = {
   guardia_local_id: string | null;
   label: string | null;
   active: boolean;
+  funcao: "entrada" | "externo";
+  janela_tolerancia_segundos: number | null;
 };
 type UnmappedDevice = { dispositivo_id: string; local_nome: string | null; last_seen: string; count: number };
 
 interface Props { tenantId: string }
 
-const emptyForm = { id: "", guardia_device_id: "", cold_area_id: "", guardia_local_id: "", label: "", active: true };
+const emptyForm = {
+  id: "", guardia_device_id: "", cold_area_id: "", guardia_local_id: "", label: "", active: true,
+  funcao: "entrada" as "entrada" | "externo", janela_tolerancia_segundos: "" as string,
+};
 
 export default function GuardiaDeviceMapTab({ tenantId }: Props) {
   const [maps, setMaps] = useState<DeviceMap[]>([]);
@@ -40,7 +45,7 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
     setLoading(true);
     const [m, a, e] = await Promise.all([
       supabase.from("guardia_device_map")
-        .select("id, guardia_device_id, cold_area_id, guardia_local_id, label, active")
+        .select("id, guardia_device_id, cold_area_id, guardia_local_id, label, active, funcao, janela_tolerancia_segundos")
         .eq("tenant_id", tenantId).order("created_at", { ascending: false }),
       supabase.from("cold_areas")
         .select("id, name").eq("tenant_id", tenantId).order("name"),
@@ -87,6 +92,8 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
       guardia_local_id: row.guardia_local_id ?? "",
       label: row.label ?? "",
       active: row.active,
+      funcao: row.funcao ?? "entrada",
+      janela_tolerancia_segundos: row.janela_tolerancia_segundos == null ? "" : String(row.janela_tolerancia_segundos),
     });
     setDialogOpen(true);
   };
@@ -96,6 +103,13 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
       toast.error("Informe o ID do leitor e selecione a câmara.");
       return;
     }
+    const janelaRaw = form.janela_tolerancia_segundos.trim();
+    let janela: number | null = null;
+    if (janelaRaw !== "") {
+      const n = Number(janelaRaw);
+      if (!Number.isFinite(n) || n < 0) { toast.error("Janela de tolerância inválida."); return; }
+      janela = Math.floor(n);
+    }
     setSaving(true);
     const payload = {
       tenant_id: tenantId,
@@ -104,6 +118,8 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
       guardia_local_id: form.guardia_local_id.trim() || null,
       label: form.label.trim() || null,
       active: form.active,
+      funcao: form.funcao,
+      janela_tolerancia_segundos: janela,
     };
     const { error } = form.id
       ? await supabase.from("guardia_device_map").update(payload).eq("id", form.id)
@@ -163,8 +179,33 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
                     </Select>
                   </div>
                   <div>
+                    <Label className="text-xs">Função do leitor</Label>
+                    <Select value={form.funcao} onValueChange={(v: "entrada" | "externo") => setForm(f => ({ ...f, funcao: v }))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="entrada">Entrada (dentro da câmara)</SelectItem>
+                        <SelectItem value="externo">Externo (fora da câmara)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Define o estado do colaborador a cada leitura. A função do mapeamento prevalece sobre o campo "tipo" enviado pelo dispositivo.
+                    </p>
+                  </div>
+                  <div>
                     <Label className="text-xs">Local GuardIA (opcional)</Label>
                     <Input value={form.guardia_local_id} onChange={e => setForm(f => ({ ...f, guardia_local_id: e.target.value }))} placeholder="local_id de referência" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Janela de tolerância (segundos)</Label>
+                    <Input
+                      type="number" min={0}
+                      value={form.janela_tolerancia_segundos}
+                      onChange={e => setForm(f => ({ ...f, janela_tolerancia_segundos: e.target.value }))}
+                      placeholder="usar padrão global"
+                    />
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Opcional. Substitui a janela global apenas para este leitor.
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch checked={form.active} onCheckedChange={v => setForm(f => ({ ...f, active: v }))} />
@@ -185,6 +226,7 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Leitor</TableHead>
+                  <TableHead>Função</TableHead>
                   <TableHead>Câmara mapeada</TableHead>
                   <TableHead>Local GuardIA</TableHead>
                   <TableHead>Ativo</TableHead>
@@ -193,10 +235,10 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
               </TableHeader>
               <TableBody>
                 {loading && (
-                  <TableRow><TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-6">Carregando…</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-6">Carregando…</TableCell></TableRow>
                 )}
                 {!loading && maps.length === 0 && (
-                  <TableRow><TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-6">
+                  <TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-6">
                     Nenhum leitor mapeado ainda.
                   </TableCell></TableRow>
                 )}
@@ -205,6 +247,16 @@ export default function GuardiaDeviceMapTab({ tenantId }: Props) {
                     <TableCell>
                       <div className="font-medium text-sm">{row.label || <span className="text-muted-foreground italic">sem apelido</span>}</div>
                       <div className="text-[11px] text-muted-foreground font-mono">{row.guardia_device_id}</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={row.funcao === "externo"
+                        ? "border-amber-500/40 text-amber-500"
+                        : "border-primary/40 text-primary"}>
+                        {row.funcao === "externo" ? "Externo" : "Entrada"}
+                      </Badge>
+                      {row.janela_tolerancia_segundos != null && (
+                        <div className="text-[10px] text-muted-foreground mt-1">tolerância: {row.janela_tolerancia_segundos}s</div>
+                      )}
                     </TableCell>
                     <TableCell className="text-sm">
                       <Badge variant="outline" className="gap-1 border-primary/40 text-primary"><MapPin className="h-3 w-3" />{areaName(row.cold_area_id)}</Badge>
