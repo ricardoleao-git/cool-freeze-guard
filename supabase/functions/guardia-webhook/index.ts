@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
     .insert({
       tenant_id: tenantId,
       evento_id: payload.evento_id,
-      colaborador_id: payload.colaborador_id,
+      colaborador_id: colaboradorCpf,
       colaborador_nome: payload.colaborador_nome ?? null,
       local_id: payload.local_id,
       local_nome: payload.local_nome ?? null,
