@@ -91,10 +91,12 @@ export default function GuardiaIntegration() {
     (async () => {
       const { data } = await supabase
         .from("integration_config")
-        .select("guardia_url, guardia_token, auth_header_name, auth_scheme, api_base_path, events_endpoint, active, sync_interval, last_sync_at, last_sync_count, last_push_at, last_push_count, last_event_poll_at, janela_tolerancia_segundos, sessao_longa_alerta_minutos")
+        .select("guardia_url, auth_header_name, auth_scheme, api_base_path, events_endpoint, active, sync_interval, last_sync_at, last_sync_count, last_push_at, last_push_count, last_event_poll_at, janela_tolerancia_segundos, sessao_longa_alerta_minutos")
         .eq("tenant_id", tenantId)
         .maybeSingle();
-      if (data) setCfg({ ...empty, ...data });
+      // guardia_token is write-only via RLS: never returned to the client.
+      // Keep field blank; submitting blank preserves the existing token.
+      if (data) setCfg({ ...empty, ...data, guardia_token: "" });
       setLoading(false);
     })();
   }, [tenantId]);
@@ -128,10 +130,9 @@ export default function GuardiaIntegration() {
   const save = async () => {
     if (!tenantId) return;
     setSaving(true);
-    const { error } = await supabase.from("integration_config").upsert({
+    const basePayload = {
       tenant_id: tenantId,
       guardia_url: cfg.guardia_url.trim(),
-      guardia_token: cfg.guardia_token.trim(),
       auth_header_name: cfg.auth_header_name.trim() || "X-GuardIA-Token",
       auth_scheme: cfg.auth_scheme || "header",
       api_base_path: cfg.api_base_path.trim() || "/guardiaapi",
@@ -140,27 +141,36 @@ export default function GuardiaIntegration() {
       sync_interval: cfg.sync_interval,
       janela_tolerancia_segundos: Math.max(0, Math.floor(Number(cfg.janela_tolerancia_segundos) || 0)),
       sessao_longa_alerta_minutos: Math.max(1, Math.floor(Number(cfg.sessao_longa_alerta_minutos) || 1)),
-    }, { onConflict: "tenant_id" });
+    };
+    // Only write the token when the admin actually typed a new value;
+    // the DB never returns it back, so leaving the field blank preserves the saved one.
+    const payload = cfg.guardia_token.trim()
+      ? { ...basePayload, guardia_token: cfg.guardia_token.trim() }
+      : basePayload;
+    const { error } = await supabase.from("integration_config").upsert(payload, { onConflict: "tenant_id" });
     setSaving(false);
-    if (error) toast.error("Erro ao salvar"); else toast.success("Configuração salva");
+    if (error) toast.error("Erro ao salvar"); else { toast.success("Configuração salva"); setCfg(c => ({ ...c, guardia_token: "" })); }
   };
 
 
   const testConnection = async () => {
     if (!tenantId) return;
-    if (!cfg.guardia_url || !cfg.guardia_token) { toast.error("Preencha URL e token"); return; }
+    if (!cfg.guardia_url) { toast.error("Preencha URL"); return; }
     setTesting(true);
     try {
       // Persist current config first so the server uses the latest values.
-      await supabase.from("integration_config").upsert({
+      const baseTestPayload = {
         tenant_id: tenantId,
         guardia_url: cfg.guardia_url.trim(),
-        guardia_token: cfg.guardia_token.trim(),
         auth_header_name: cfg.auth_header_name.trim() || "X-GuardIA-Token",
         auth_scheme: cfg.auth_scheme || "header",
         api_base_path: cfg.api_base_path.trim() || "/guardiaapi",
         events_endpoint: cfg.events_endpoint?.trim() || null,
-      }, { onConflict: "tenant_id" });
+      };
+      const testPayload = cfg.guardia_token.trim()
+        ? { ...baseTestPayload, guardia_token: cfg.guardia_token.trim() }
+        : baseTestPayload;
+      await supabase.from("integration_config").upsert(testPayload, { onConflict: "tenant_id" });
 
       const { data, error } = await supabase.functions.invoke("guardia-poll-events", {
         body: { tenant_id: tenantId, test_only: true },
@@ -260,8 +270,9 @@ export default function GuardiaIntegration() {
                       type={showToken ? "text" : "password"}
                       value={cfg.guardia_token}
                       onChange={e => setCfg(c => ({ ...c, guardia_token: e.target.value }))}
-                      placeholder="Token fornecido pelo GuardIA"
+                      placeholder="••• salvo • preencha para substituir"
                       className="pr-10"
+                      autoComplete="new-password"
                     />
                     <Button type="button" size="icon" variant="ghost" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
                       onClick={() => setShowToken(s => !s)}>
