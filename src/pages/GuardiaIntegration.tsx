@@ -145,10 +145,6 @@ export default function GuardiaIntegration() {
     if (error) toast.error("Erro ao salvar"); else toast.success("Configuração salva");
   };
 
-  const authHeader = (): Record<string, string> => {
-    if ((cfg.auth_scheme || "header").toLowerCase() === "bearer") return { Authorization: `Bearer ${cfg.guardia_token}` };
-    return { [cfg.auth_header_name || "X-GuardIA-Token"]: cfg.guardia_token };
-  };
 
   const testConnection = async () => {
     if (!tenantId) return;
