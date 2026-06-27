@@ -3,7 +3,7 @@
 // reject stale snapshots, upserts the closure, and inserts an append-only
 // signature. DB trigger seals the chained record_hash.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { consolidatePeriod, type PeriodType } from "../closure-consolidate/index.ts";
+import { consolidatePeriod, type PeriodType } from "../_shared/closure.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
