@@ -1029,11 +1029,19 @@ export type Database = {
       integration_config: {
         Row: {
           active: boolean
+          api_base_path: string
+          auth_header_name: string
+          auth_scheme: string
           created_at: string
+          events_endpoint: string | null
           guardia_token: string | null
           guardia_url: string | null
           id: string
           janela_tolerancia_segundos: number
+          last_event_cursor: string | null
+          last_event_poll_at: string | null
+          last_push_at: string | null
+          last_push_count: number | null
           last_sync_at: string | null
           last_sync_count: number
           sessao_longa_alerta_minutos: number
@@ -1043,11 +1051,19 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          api_base_path?: string
+          auth_header_name?: string
+          auth_scheme?: string
           created_at?: string
+          events_endpoint?: string | null
           guardia_token?: string | null
           guardia_url?: string | null
           id?: string
           janela_tolerancia_segundos?: number
+          last_event_cursor?: string | null
+          last_event_poll_at?: string | null
+          last_push_at?: string | null
+          last_push_count?: number | null
           last_sync_at?: string | null
           last_sync_count?: number
           sessao_longa_alerta_minutos?: number
@@ -1057,11 +1073,19 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          api_base_path?: string
+          auth_header_name?: string
+          auth_scheme?: string
           created_at?: string
+          events_endpoint?: string | null
           guardia_token?: string | null
           guardia_url?: string | null
           id?: string
           janela_tolerancia_segundos?: number
+          last_event_cursor?: string | null
+          last_event_poll_at?: string | null
+          last_push_at?: string | null
+          last_push_count?: number | null
           last_sync_at?: string | null
           last_sync_count?: number
           sessao_longa_alerta_minutos?: number
