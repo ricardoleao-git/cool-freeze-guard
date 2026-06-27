@@ -17,6 +17,7 @@ import GuardiaDeviceMapTab from "@/components/guardia/GuardiaDeviceMapTab";
 import GuardiaPresenceTab from "@/components/guardia/GuardiaPresenceTab";
 import GuardiaIntegrityTab from "@/components/guardia/GuardiaIntegrityTab";
 import GuardiaStatusTab from "@/components/guardia/GuardiaStatusTab";
+import { useAnnouncer } from "@/lib/announcer";
 
 const WEBHOOK_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/guardia-webhook`;
 
