@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
   const [empRes, areaRes, devRes] = await Promise.all([
     supabase.from("employees")
       .select("id, unit_id, current_status, current_area_id, accumulated_minutes")
-      .eq("tenant_id", tenantId).eq("id", payload.colaborador_id!).maybeSingle(),
+      .eq("tenant_id", tenantId).eq("id", colaboradorCpf).maybeSingle(),
     supabase.from("cold_areas")
       .select("id, unit_id")
       .eq("tenant_id", tenantId).eq("id", payload.local_id!).maybeSingle(),
