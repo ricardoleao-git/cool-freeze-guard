@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,9 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
-  Activity, AlertTriangle, CheckCircle2, Download, Filter, History,
-  RefreshCw, Rewind, Save, Settings2, ListFilter,
+  Activity, AlertTriangle, Bell, CheckCircle2, Download, Filter, History,
+  RefreshCw, Rewind, Save, Settings2, ListFilter, FileDown, FileText, Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,10 +26,12 @@ type StatusRow = {
   stale_error_threshold_minutes: number | null;
 };
 
+type DedupSample = { evento_id: string; remoteid: string; dispositivo_id: string; reason: string };
+
 type AuditDetails = {
   deduped?: number;
   capped?: number;
-  dedup_samples?: Array<{ evento_id: string; remoteid: string; dispositivo_id: string; reason: string }>;
+  dedup_samples?: DedupSample[];
   dedup_reason_counts?: Record<string, number>;
   errors?: Array<{ raw: unknown; reason: string }>;
   [k: string]: unknown;
@@ -48,13 +51,26 @@ type AuditRow = {
   created_at: string;
 };
 
+type BackfillPhase = {
+  ts: string;
+  phase: string;
+  pct: number;
+  attempt?: number;
+  ok?: boolean;
+  note?: string;
+};
+
 const sevColor = (s: string) =>
   s === "error" ? "destructive" : s === "warn" ? "secondary" : "outline";
 const fmt = (d: string | null) => d ? new Date(d).toLocaleString("pt-BR") : "—";
 
-// Backfill limits
 const BACKFILL_MIN_DATE = new Date("2020-01-01T00:00:00Z");
 const BACKFILL_MAX_WINDOW_DAYS = 31;
+const EXPORT_PAGE_SIZE = 1000;
+const EXPORT_HARD_CAP = 50000;
+
+const lsEmailKey = (t: string) => `guardia:stale-email:${t}`;
+const lsLastAlertKey = (t: string) => `guardia:stale-last-alert:${t}`;
 
 export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
   const [status, setStatus] = useState<StatusRow | null>(null);
@@ -65,20 +81,27 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
   const [backfillProgress, setBackfillProgress] = useState<{
     pct: number; phase: string; fetched?: number; dispatched?: number; deduped?: number;
   } | null>(null);
+  const [backfillPhases, setBackfillPhases] = useState<BackfillPhase[]>([]);
+  const [backfillModalOpen, setBackfillModalOpen] = useState(false);
+  const [backfillResultRow, setBackfillResultRow] = useState<AuditRow | null>(null);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
-  // Threshold editor
   const [thresholdDraft, setThresholdDraft] = useState<number>(15);
   const [savingThreshold, setSavingThreshold] = useState(false);
 
-  // Error filters
   const [errSeverity, setErrSeverity] = useState<"all" | "error" | "warn" | "info">("error");
   const [errFrom, setErrFrom] = useState("");
   const [errTo, setErrTo] = useState("");
+  const [exportingAll, setExportingAll] = useState(false);
+  const [exportProgress, setExportProgress] = useState<{ loaded: number; pct: number } | null>(null);
 
-  // Last polling summary (with dedup samples)
   const [lastSummary, setLastSummary] = useState<AuditRow | null>(null);
+
+  // Email alert (UI-only, stored in localStorage per tenant)
+  const [alertEmail, setAlertEmail] = useState("");
+  const [emailSending, setEmailSending] = useState(false);
+  const lastAlertRef = useRef<number>(0);
 
   const load = useCallback(async () => {
     if (!tenantId) return;
@@ -103,6 +126,40 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
 
   useEffect(() => { load(); }, [load]);
 
+  // Load saved email
+  useEffect(() => {
+    if (!tenantId) return;
+    setAlertEmail(localStorage.getItem(lsEmailKey(tenantId)) ?? "");
+    lastAlertRef.current = parseInt(localStorage.getItem(lsLastAlertKey(tenantId)) ?? "0", 10);
+  }, [tenantId]);
+
+  // Stale-error notification trigger (toast + browser notification) — fires at most every 30 min
+  useEffect(() => {
+    if (!status?.last_event_error || !status.last_event_error_at) return;
+    const threshold = status.stale_error_threshold_minutes ?? 15;
+    const ageMin = Math.floor((Date.now() - new Date(status.last_event_error_at).getTime()) / 60000);
+    if (ageMin < threshold) return;
+    const now = Date.now();
+    if (now - lastAlertRef.current < 30 * 60 * 1000) return;
+    lastAlertRef.current = now;
+    if (tenantId) localStorage.setItem(lsLastAlertKey(tenantId), String(now));
+    toast.error("GuardIA: falha persistente", {
+      description: `Sem sucesso há ${ageMin} min (limite ${threshold}). ${status.last_event_error}`,
+      duration: 12000,
+      action: { label: "Ver erros", onClick: () => {
+        document.getElementById("last-errors")?.scrollIntoView({ behavior: "smooth" });
+      } },
+    });
+    // Browser notification (best-effort)
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "granted") {
+        try { new Notification("GuardIA · falha persistente", { body: `${ageMin} min sem sucesso` }); } catch { /* ignore */ }
+      } else if (Notification.permission === "default") {
+        Notification.requestPermission().catch(() => { /* ignore */ });
+      }
+    }
+  }, [status, tenantId]);
+
   const syncNow = async () => {
     setPolling(true);
     const { data, error } = await supabase.functions.invoke("guardia-poll-events", {
@@ -118,8 +175,7 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
 
   const saveThreshold = async () => {
     if (thresholdDraft < 1 || thresholdDraft > 1440) {
-      toast.error("Valor deve estar entre 1 e 1440 minutos");
-      return;
+      toast.error("Valor deve estar entre 1 e 1440 minutos"); return;
     }
     setSavingThreshold(true);
     const { error } = await supabase.from("integration_config")
@@ -131,7 +187,32 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
     await load();
   };
 
-  // --- Backfill with validation + progress ---
+  const saveEmail = () => {
+    const v = alertEmail.trim();
+    if (v && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) { toast.error("E-mail inválido"); return; }
+    localStorage.setItem(lsEmailKey(tenantId), v);
+    toast.success(v ? `Alertas serão enviados para ${v}` : "E-mail removido");
+  };
+
+  const sendTestEmail = async () => {
+    const v = alertEmail.trim();
+    if (!v) { toast.error("Configure um e-mail primeiro"); return; }
+    setEmailSending(true);
+    // Best-effort: call optional edge function if present. Falls back gracefully.
+    const { data, error } = await supabase.functions.invoke("guardia-stale-alert", {
+      body: { tenant_id: tenantId, email: v, test: true },
+    });
+    setEmailSending(false);
+    if (error) {
+      toast.warning("E-mail não enviado (provider não configurado). Notificações in-app continuam ativas.");
+      return;
+    }
+    const r = data as { sent?: boolean; reason?: string };
+    if (r?.sent) toast.success("E-mail de teste enviado");
+    else toast.warning(`E-mail não enviado: ${r?.reason ?? "provider indisponível"}`);
+  };
+
+  // --- Backfill ---
   const validateBackfill = (): { ok: boolean; reason?: string; fromIso?: string; toIso?: string } => {
     if (!from && !to) return { ok: false, reason: "Informe pelo menos uma data inicial ou final" };
     const f = from ? new Date(from) : null;
@@ -148,46 +229,80 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
     return { ok: true, fromIso: f?.toISOString(), toIso: t?.toISOString() };
   };
 
+  const pushPhase = (phase: BackfillPhase) =>
+    setBackfillPhases(prev => [...prev, { ...phase, ts: new Date().toISOString() }]);
+
   const backfill = async () => {
     const v = validateBackfill();
     if (!v.ok) { toast.error(v.reason!); return; }
     setBackfilling(true);
+    setBackfillPhases([]);
+    setBackfillResultRow(null);
     setBackfillProgress({ pct: 5, phase: "Validando janela…" });
+    pushPhase({ ts: "", phase: "Validando janela", pct: 5, ok: true, note: `${v.fromIso ?? "—"} → ${v.toIso ?? "agora"}` });
 
-    // Fake stepped progress while the function runs (server is single-shot)
-    const steps = [
-      { pct: 20, phase: "Conectando à GuardIA…" },
-      { pct: 45, phase: "Buscando eventos…" },
-      { pct: 70, phase: "Deduplicando…" },
-      { pct: 88, phase: "Despachando para webhook…" },
+    const steps: BackfillPhase[] = [
+      { ts: "", phase: "Conectando à GuardIA", pct: 20 },
+      { ts: "", phase: "Buscando eventos (com backoff)", pct: 45 },
+      { ts: "", phase: "Deduplicando", pct: 70 },
+      { ts: "", phase: "Despachando para webhook", pct: 88 },
     ];
     let i = 0;
     const tick = setInterval(() => {
-      if (i < steps.length) { setBackfillProgress(steps[i]); i++; }
+      if (i < steps.length) {
+        setBackfillProgress({ pct: steps[i].pct, phase: steps[i].phase });
+        pushPhase(steps[i]);
+        i++;
+      }
     }, 700);
 
     const body: Record<string, string> = { tenant_id: tenantId };
     if (v.fromIso) body.from = v.fromIso;
     if (v.toIso) body.to = v.toIso;
-    const { data, error } = await supabase.functions.invoke("guardia-poll-events", { body });
+
+    let attempt = 0;
+    let resp: { data: unknown; error: { message: string } | null } = { data: null, error: null };
+    // local retry for transport errors (server already retries fetch internally)
+    while (attempt < 2) {
+      attempt++;
+      resp = await supabase.functions.invoke("guardia-poll-events", { body });
+      if (!resp.error) break;
+      pushPhase({ ts: "", phase: "Falha de transporte", pct: 88, attempt, ok: false, note: resp.error.message });
+      await new Promise(r => setTimeout(r, 800 * attempt));
+    }
     clearInterval(tick);
 
-    if (error) {
-      setBackfillProgress({ pct: 100, phase: `Erro: ${error.message}` });
-      toast.error(error.message || "Erro no backfill");
+    if (resp.error) {
+      const msg = (resp.error as { message: string }).message;
+      setBackfillProgress({ pct: 100, phase: `Erro: ${msg}` });
+      pushPhase({ ts: "", phase: "Concluído com erro", pct: 100, ok: false, note: msg });
+      toast.error(msg || "Erro no backfill");
       setBackfilling(false);
-      setTimeout(() => setBackfillProgress(null), 4000);
       await load();
+      // Link to most recent backfill audit row if it appears
+      setTimeout(() => setBackfillProgress(null), 4000);
       return;
     }
-    const r = data as { fetched?: number; dispatched?: number; deduped?: number };
+    const r = resp.data as { fetched?: number; dispatched?: number; deduped?: number };
     setBackfillProgress({
       pct: 100, phase: "Concluído",
       fetched: r.fetched ?? 0, dispatched: r.dispatched ?? 0, deduped: r.deduped ?? 0,
     });
-    toast.success(`Backfill: ${r.fetched ?? 0} recebidos · ${r.dispatched ?? 0} processados · ${r.deduped ?? 0} duplicados`);
+    pushPhase({
+      ts: "", phase: "Concluído", pct: 100, ok: true,
+      note: `${r.fetched ?? 0} recebidos · ${r.dispatched ?? 0} processados · ${r.deduped ?? 0} duplicados`,
+    });
+    toast.success(`Backfill: ${r.fetched ?? 0} recebidos · ${r.dispatched ?? 0} processados · ${r.deduped ?? 0} duplicados`, {
+      action: { label: "Ver logs", onClick: () => setBackfillModalOpen(true) },
+    });
     setBackfilling(false);
     await load();
+    // After reload, find the freshest backfill audit row for linking
+    const { data: ar } = await supabase.from("integration_audit_log")
+      .select("id, source, severity, code, message, fetched_count, processed_count, duration_ms, cursor_used, details, created_at")
+      .eq("tenant_id", tenantId).eq("source", "backfill")
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (ar) setBackfillResultRow(ar as AuditRow);
     setTimeout(() => setBackfillProgress(null), 6000);
   };
 
@@ -218,24 +333,111 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
         { header: "Mensagem", key: "message" },
       ],
       filteredErrors.map(r => ({
-        created_at: fmt(r.created_at),
-        source: r.source,
-        severity: r.severity,
-        code: r.code ?? "",
-        cursor_used: r.cursor_used ?? "",
-        fetched_count: r.fetched_count ?? "",
-        processed_count: r.processed_count ?? "",
-        duration_ms: r.duration_ms ?? "",
-        message: r.message ?? "",
+        created_at: fmt(r.created_at), source: r.source, severity: r.severity,
+        code: r.code ?? "", cursor_used: r.cursor_used ?? "",
+        fetched_count: r.fetched_count ?? "", processed_count: r.processed_count ?? "",
+        duration_ms: r.duration_ms ?? "", message: r.message ?? "",
       })),
     );
     toast.success(`Exportado: ${filteredErrors.length} registros`);
   };
 
+  // Export ALL audit rows (server-paged), with optional severity filter
+  const exportAllErrorsCsv = async () => {
+    setExportingAll(true);
+    setExportProgress({ loaded: 0, pct: 0 });
+    const all: AuditRow[] = [];
+    try {
+      let offset = 0;
+      while (offset < EXPORT_HARD_CAP) {
+        let q = supabase.from("integration_audit_log")
+          .select("id, source, severity, code, message, fetched_count, processed_count, duration_ms, cursor_used, details, created_at", { count: "exact" })
+          .eq("tenant_id", tenantId)
+          .order("created_at", { ascending: false })
+          .range(offset, offset + EXPORT_PAGE_SIZE - 1);
+        if (errSeverity !== "all") q = q.eq("severity", errSeverity);
+        if (errFrom) q = q.gte("created_at", new Date(errFrom).toISOString());
+        if (errTo) q = q.lte("created_at", new Date(errTo).toISOString());
+        const { data, error, count } = await q;
+        if (error) throw error;
+        const rows = (data ?? []) as AuditRow[];
+        all.push(...rows);
+        const total = count ?? all.length;
+        setExportProgress({
+          loaded: all.length,
+          pct: total > 0 ? Math.min(100, Math.round((all.length / Math.min(total, EXPORT_HARD_CAP)) * 100)) : 100,
+        });
+        if (rows.length < EXPORT_PAGE_SIZE) break;
+        offset += EXPORT_PAGE_SIZE;
+      }
+      if (all.length === 0) { toast.error("Nada para exportar"); return; }
+      downloadCsv(
+        `guardia-audit-completo-${new Date().toISOString().slice(0, 10)}`,
+        [
+          { header: "Quando", key: "created_at" },
+          { header: "Origem", key: "source" },
+          { header: "Severidade", key: "severity" },
+          { header: "Código", key: "code" },
+          { header: "Cursor", key: "cursor_used" },
+          { header: "Recebidos", key: "fetched_count" },
+          { header: "Processados", key: "processed_count" },
+          { header: "Duração (ms)", key: "duration_ms" },
+          { header: "Mensagem", key: "message" },
+          { header: "Detalhes", key: "details" },
+        ],
+        all.map(r => ({
+          created_at: fmt(r.created_at), source: r.source, severity: r.severity,
+          code: r.code ?? "", cursor_used: r.cursor_used ?? "",
+          fetched_count: r.fetched_count ?? "", processed_count: r.processed_count ?? "",
+          duration_ms: r.duration_ms ?? "", message: r.message ?? "",
+          details: r.details ? JSON.stringify(r.details) : "",
+        })),
+      );
+      toast.success(`Exportado completo: ${all.length} registros`);
+    } catch (e) {
+      toast.error(`Falha ao exportar: ${(e as Error).message}`);
+    } finally {
+      setExportingAll(false);
+      setTimeout(() => setExportProgress(null), 3000);
+    }
+  };
+
+  // Export dedup samples + reason counts from the latest run
+  const exportDedupCsv = () => {
+    const d = lastSummary?.details;
+    const samples = d?.dedup_samples ?? [];
+    const counts = d?.dedup_reason_counts ?? {};
+    if (samples.length === 0 && Object.keys(counts).length === 0) {
+      toast.error("Sem dados de dedup na última execução"); return;
+    }
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    if (samples.length) {
+      downloadCsv(`guardia-dedup-samples-${stamp}`,
+        [
+          { header: "evento_id", key: "evento_id" },
+          { header: "remoteid (CPF)", key: "remoteid" },
+          { header: "dispositivo_id", key: "dispositivo_id" },
+          { header: "motivo", key: "reason" },
+        ],
+        samples.map(s => ({ ...s }) as unknown as Record<string, unknown>),
+      );
+    }
+    if (Object.keys(counts).length) {
+      downloadCsv(`guardia-dedup-reasons-${stamp}`,
+        [{ header: "motivo", key: "reason" }, { header: "contagem", key: "count" }],
+        Object.entries(counts).map(([reason, count]) => ({ reason, count })),
+      );
+    }
+    toast.success("CSV de dedup exportado");
+  };
+
   if (loading) return <div className="text-sm text-muted-foreground">Carregando…</div>;
 
-  // Effective threshold (live from draft if user is editing)
   const effectiveThreshold = status?.stale_error_threshold_minutes ?? 15;
+  const ageMin = status?.last_event_error_at
+    ? Math.floor((Date.now() - new Date(status.last_event_error_at).getTime()) / 60000)
+    : null;
+  const isStale = ageMin !== null && ageMin >= effectiveThreshold;
 
   return (
     <div className="space-y-4">
@@ -243,6 +445,11 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="font-display flex items-center gap-2">
             <Activity className="h-4 w-4 text-primary" /> Status da integração
+            {isStale && (
+              <Badge variant="destructive" className="ml-2 animate-pulse">
+                <Bell className="h-3 w-3 mr-1" /> Alerta persistente
+              </Badge>
+            )}
           </CardTitle>
           <div className="flex gap-2">
             <Button size="sm" variant="ghost" onClick={load}><RefreshCw className="h-4 w-4" /></Button>
@@ -270,10 +477,6 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
             <div className="font-mono text-xs break-all">{status?.events_endpoint || <span className="text-amber-500">não configurado</span>}</div>
           </div>
           {status?.last_event_error && (() => {
-            const ageMin = status.last_event_error_at
-              ? Math.floor((Date.now() - new Date(status.last_event_error_at).getTime()) / 60000)
-              : null;
-            const isStale = ageMin !== null && ageMin >= effectiveThreshold;
             const recentErrCount = audit.filter(a =>
               a.severity === "error" &&
               (Date.now() - new Date(a.created_at).getTime()) < 60 * 60 * 1000
@@ -309,40 +512,70 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
         </CardContent>
       </Card>
 
-      {/* Threshold config */}
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle className="font-display flex items-center gap-2 text-base">
-            <Settings2 className="h-4 w-4 text-primary" /> Limite de alerta de falha persistente
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-xs text-muted-foreground">
-            Define após quantos minutos com erro ativo o painel passa a destacar a falha como "persistente". Valor atual: <b>{effectiveThreshold} min</b>.
-          </p>
-          <div className="flex items-end gap-2">
-            <div className="flex-1 max-w-[200px]">
-              <Label className="text-xs">Minutos (1 – 1440)</Label>
-              <Input
-                type="number" min={1} max={1440}
-                value={thresholdDraft}
-                onChange={e => setThresholdDraft(parseInt(e.target.value || "0", 10))}
-              />
+      {/* Threshold + Email config */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="glass-card">
+          <CardHeader>
+            <CardTitle className="font-display flex items-center gap-2 text-base">
+              <Settings2 className="h-4 w-4 text-primary" /> Limite de alerta persistente
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Minutos com erro ativo antes de destacar como "persistente". Atual: <b>{effectiveThreshold} min</b>.
+            </p>
+            <div className="flex items-end gap-2">
+              <div className="flex-1 max-w-[160px]">
+                <Label className="text-xs">Minutos (1–1440)</Label>
+                <Input type="number" min={1} max={1440} value={thresholdDraft}
+                  onChange={e => setThresholdDraft(parseInt(e.target.value || "0", 10))} />
+              </div>
+              <Button onClick={saveThreshold} disabled={savingThreshold || thresholdDraft === effectiveThreshold}>
+                <Save className="h-4 w-4 mr-1" />{savingThreshold ? "Salvando…" : "Salvar"}
+              </Button>
             </div>
-            <Button onClick={saveThreshold} disabled={savingThreshold || thresholdDraft === effectiveThreshold}>
-              <Save className="h-4 w-4 mr-1" />
-              {savingThreshold ? "Salvando…" : "Salvar"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Backfill with validation + progress */}
+        <Card className="glass-card">
+          <CardHeader>
+            <CardTitle className="font-display flex items-center gap-2 text-base">
+              <Mail className="h-4 w-4 text-primary" /> Alerta por e-mail (opcional)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              E-mail para receber alertas quando a falha persistente passar do limite. Toast in-app é sempre disparado.
+            </p>
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <Label className="text-xs">E-mail</Label>
+                <Input type="email" placeholder="sst@empresa.com" value={alertEmail}
+                  onChange={e => setAlertEmail(e.target.value)} />
+              </div>
+              <Button onClick={saveEmail} variant="outline"><Save className="h-4 w-4 mr-1" />Salvar</Button>
+              <Button onClick={sendTestEmail} disabled={emailSending || !alertEmail.trim()}>
+                {emailSending ? "Enviando…" : "Testar"}
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Envio requer provider configurado (Resend). Sem provider, somente notificações in-app funcionam.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Backfill */}
       <Card className="glass-card">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="font-display flex items-center gap-2">
             <Rewind className="h-4 w-4 text-primary" /> Reprocessar (backfill)
           </CardTitle>
+          {backfillPhases.length > 0 && (
+            <Button size="sm" variant="outline" onClick={() => setBackfillModalOpen(true)}>
+              <FileText className="h-4 w-4 mr-1" /> Logs detalhados
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-xs text-muted-foreground">
@@ -382,13 +615,16 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
         </CardContent>
       </Card>
 
-      {/* Last polling summary with dedup samples */}
+      {/* Last polling summary with dedup samples + CSV export */}
       {lastSummary && lastSummary.details && (
         <Card className="glass-card">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="font-display flex items-center gap-2 text-base">
               <ListFilter className="h-4 w-4 text-primary" /> Resumo da última execução ({lastSummary.source})
             </CardTitle>
+            <Button size="sm" variant="outline" onClick={exportDedupCsv}>
+              <FileDown className="h-4 w-4 mr-1" /> Exportar dedup (CSV)
+            </Button>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex gap-2 flex-wrap text-xs">
@@ -447,7 +683,7 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
         </Card>
       )}
 
-      {/* Errors list with filters + CSV export */}
+      {/* Errors list with filters + CSV export (filtered + completo paginado) */}
       <Card id="last-errors" className="glass-card scroll-mt-20">
         <CardHeader>
           <CardTitle className="font-display flex items-center gap-2 text-base">
@@ -455,7 +691,7 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
             <div>
               <Label className="text-xs">Severidade</Label>
               <Select value={errSeverity} onValueChange={(v) => setErrSeverity(v as typeof errSeverity)}>
@@ -478,10 +714,25 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
             </div>
             <div className="flex items-end">
               <Button variant="outline" className="w-full" onClick={exportErrorsCsv} disabled={filteredErrors.length === 0}>
-                <Download className="h-4 w-4 mr-1" /> Exportar CSV ({filteredErrors.length})
+                <Download className="h-4 w-4 mr-1" /> CSV filtrado ({filteredErrors.length})
+              </Button>
+            </div>
+            <div className="flex items-end">
+              <Button variant="outline" className="w-full" onClick={exportAllErrorsCsv} disabled={exportingAll}>
+                <FileDown className="h-4 w-4 mr-1" />
+                {exportingAll ? `Exportando… ${exportProgress?.pct ?? 0}%` : "CSV completo (paginado)"}
               </Button>
             </div>
           </div>
+
+          {exportProgress && exportingAll && (
+            <div className="space-y-1">
+              <Progress value={exportProgress.pct} className="h-1.5" />
+              <p className="text-[10px] text-muted-foreground">
+                {exportProgress.loaded.toLocaleString("pt-BR")} registros carregados (paginação {EXPORT_PAGE_SIZE}/req, teto {EXPORT_HARD_CAP.toLocaleString("pt-BR")})
+              </p>
+            </div>
+          )}
 
           <div className="overflow-x-auto">
             <Table>
@@ -517,7 +768,7 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
             </Table>
             {filteredErrors.length > 100 && (
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                Mostrando 100 de {filteredErrors.length} — refine os filtros ou exporte o CSV completo.
+                Mostrando 100 de {filteredErrors.length} em memória — use "CSV completo" para exportar todos do banco.
               </p>
             )}
           </div>
@@ -531,6 +782,64 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
           </CardTitle>
         </CardHeader>
       </Card>
+
+      {/* Backfill phases modal */}
+      <Dialog open={backfillModalOpen} onOpenChange={setBackfillModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" /> Logs detalhados do backfill
+            </DialogTitle>
+            <DialogDescription>
+              Fases, tentativas e resultados. {backfillResultRow && (
+                <a
+                  href="#last-errors"
+                  className="text-primary hover:underline ml-1"
+                  onClick={() => {
+                    setBackfillModalOpen(false);
+                    setTimeout(() => document.getElementById("last-errors")?.scrollIntoView({ behavior: "smooth" }), 100);
+                  }}
+                >
+                  Ver execução no integration_audit_log →
+                </a>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+            {backfillPhases.length === 0 && (
+              <p className="text-sm text-muted-foreground">Nenhuma fase registrada ainda.</p>
+            )}
+            <ol className="relative border-l border-border pl-4 space-y-2">
+              {backfillPhases.map((p, i) => (
+                <li key={i} className="text-xs">
+                  <span className={`absolute -left-[5px] h-2 w-2 rounded-full ${p.ok === false ? "bg-destructive" : p.pct === 100 ? "bg-emerald-500" : "bg-primary"}`} />
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-[10px] text-muted-foreground">{new Date(p.ts).toLocaleTimeString("pt-BR")}</span>
+                    <Badge variant={p.ok === false ? "destructive" : "outline"} className="text-[10px]">{p.pct}%</Badge>
+                    <span className="font-medium">{p.phase}</span>
+                    {p.attempt && <Badge variant="secondary" className="text-[10px]">tentativa {p.attempt}</Badge>}
+                  </div>
+                  {p.note && <div className="text-[11px] text-muted-foreground mt-0.5 ml-1">{p.note}</div>}
+                </li>
+              ))}
+            </ol>
+            {backfillResultRow && (
+              <div className="rounded-lg border border-border bg-background/40 p-3 text-xs space-y-1">
+                <div className="font-semibold">Registro no audit_log</div>
+                <div className="font-mono text-[10px] break-all">id: {backfillResultRow.id}</div>
+                <div>código: <Badge variant="outline" className="text-[10px]">{backfillResultRow.code ?? "—"}</Badge></div>
+                <div>recebidos: {backfillResultRow.fetched_count ?? 0} · processados: {backfillResultRow.processed_count ?? 0} · duração: {backfillResultRow.duration_ms ?? 0} ms</div>
+                {backfillResultRow.details?.errors && backfillResultRow.details.errors.length > 0 && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-destructive">{backfillResultRow.details.errors.length} erro(s) no servidor</summary>
+                    <pre className="mt-1 text-[10px] whitespace-pre-wrap">{JSON.stringify(backfillResultRow.details.errors, null, 2)}</pre>
+                  </details>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
