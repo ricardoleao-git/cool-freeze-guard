@@ -56,7 +56,7 @@ function shiftDate(ref: string, days: number): string {
 }
 
 export default function Statement() {
-  const { profile } = useAuth();
+  const { profile, isDemo } = useAuth();
   const tenantId = profile?.tenant_id ?? "";
   const [employees, setEmployees] = useState<EmpRow[]>([]);
   const [employeeId, setEmployeeId] = useState<string>("");
@@ -81,11 +81,23 @@ export default function Statement() {
     if (!tenantId || !employeeId) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("employee-statement", {
-        body: { tenant_id: tenantId, employee_id: employeeId, period, reference_date: refDate },
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      };
+      if (!isDemo) {
+        const { data: sess } = await supabase.auth.getSession();
+        const token = sess?.session?.access_token;
+        if (!token) throw new Error("Sessão expirada. Entre novamente.");
+        headers.Authorization = `Bearer ${token}`;
+      }
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/employee-statement`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ tenant_id: tenantId, employee_id: employeeId, period, reference_date: refDate }),
       });
-      if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
+      const data = await resp.json().catch(() => null);
+      if (!resp.ok || (data as any)?.error) throw new Error((data as any)?.error ?? `Erro ${resp.status}`);
       setStatement(data as Statement);
     } catch (e: any) {
       toast.error("Falha ao carregar extrato: " + (e?.message || "tente novamente"));
