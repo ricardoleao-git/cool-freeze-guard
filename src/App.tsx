@@ -72,6 +72,7 @@ const App = () => (
                 <Route path="ajustes" element={<TimeAdjustments />} />
                 <Route path="meu-dia" element={<MyDay />} />
                 <Route path="resumo-diario" element={<DailySummary />} />
+                <Route path="configuracoes/integracao-guardia" element={<GuardiaIntegration />} />
               </Route>
 
               <Route element={<ProtectedRoute><RoleGuard><AppLayout /></RoleGuard></ProtectedRoute>}>
