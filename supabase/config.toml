@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.guardia-webhook]
 verify_jwt = false
+
+[functions.kiosk-panel]
+verify_jwt = false
