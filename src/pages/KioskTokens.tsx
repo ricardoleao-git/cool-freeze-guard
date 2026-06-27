@@ -63,6 +63,7 @@ export default function KioskTokens() {
   const [createdToken, setCreatedToken] = useState<string | null>(null);
 
   const [revokeId, setRevokeId] = useState<string | null>(null);
+  const [showQR, setShowQR] = useState(false);
 
   async function refresh() {
     if (!tenantId) return;
