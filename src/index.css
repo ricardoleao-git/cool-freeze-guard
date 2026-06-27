@@ -198,6 +198,23 @@
     letter-spacing: -0.02em;
   }
   .tabular { font-variant-numeric: tabular-nums; }
+
+  /* Global keyboard focus safety net — every interactive element gets a
+     visible ring even when a component forgets its own focus styles. */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  [role="link"]:focus-visible,
+  [role="menuitem"]:focus-visible,
+  [role="tab"]:focus-visible,
+  summary:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
+    border-radius: 0.5rem;
+  }
 }
 
 @layer components {
