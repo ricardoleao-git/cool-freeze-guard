@@ -703,9 +703,11 @@ export type Database = {
           active: boolean
           cold_area_id: string
           created_at: string
+          funcao: string
           guardia_device_id: string
           guardia_local_id: string | null
           id: string
+          janela_tolerancia_segundos: number | null
           label: string | null
           tenant_id: string
           updated_at: string
@@ -714,9 +716,11 @@ export type Database = {
           active?: boolean
           cold_area_id: string
           created_at?: string
+          funcao?: string
           guardia_device_id: string
           guardia_local_id?: string | null
           id?: string
+          janela_tolerancia_segundos?: number | null
           label?: string | null
           tenant_id: string
           updated_at?: string
@@ -725,9 +729,11 @@ export type Database = {
           active?: boolean
           cold_area_id?: string
           created_at?: string
+          funcao?: string
           guardia_device_id?: string
           guardia_local_id?: string | null
           id?: string
+          janela_tolerancia_segundos?: number | null
           label?: string | null
           tenant_id?: string
           updated_at?: string
@@ -760,6 +766,7 @@ export type Database = {
           id: string
           local_id: string | null
           local_nome: string | null
+          process_note: string | null
           processed: boolean
           tenant_id: string
           tipo: string
@@ -774,6 +781,7 @@ export type Database = {
           id?: string
           local_id?: string | null
           local_nome?: string | null
+          process_note?: string | null
           processed?: boolean
           tenant_id: string
           tipo: string
@@ -788,6 +796,7 @@ export type Database = {
           id?: string
           local_id?: string | null
           local_nome?: string | null
+          process_note?: string | null
           processed?: boolean
           tenant_id?: string
           tipo?: string
@@ -842,8 +851,10 @@ export type Database = {
           guardia_token: string | null
           guardia_url: string | null
           id: string
+          janela_tolerancia_segundos: number
           last_sync_at: string | null
           last_sync_count: number
+          sessao_longa_alerta_minutos: number
           sync_interval: string
           tenant_id: string
           updated_at: string
@@ -854,8 +865,10 @@ export type Database = {
           guardia_token?: string | null
           guardia_url?: string | null
           id?: string
+          janela_tolerancia_segundos?: number
           last_sync_at?: string | null
           last_sync_count?: number
+          sessao_longa_alerta_minutos?: number
           sync_interval?: string
           tenant_id: string
           updated_at?: string
@@ -866,8 +879,10 @@ export type Database = {
           guardia_token?: string | null
           guardia_url?: string | null
           id?: string
+          janela_tolerancia_segundos?: number
           last_sync_at?: string | null
           last_sync_count?: number
+          sessao_longa_alerta_minutos?: number
           sync_interval?: string
           tenant_id?: string
           updated_at?: string
