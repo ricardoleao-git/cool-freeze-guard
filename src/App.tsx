@@ -88,7 +88,7 @@ const App = () => (
 
               <Route element={<ProtectedRoute><RoleGuard><AppLayout /></RoleGuard></ProtectedRoute>}>
                 <Route path="/" element={<Dashboard />} />
-                <Route path="/painel" element={<OperationalPanel />} />
+                <Route path="/painel-operacional" element={<OperationalPanel />} />
                 <Route path="/colaboradores" element={<Employees />} />
                 <Route path="/ambientes" element={<ColdAreas />} />
                 <Route path="/dispositivos" element={<Devices />} />
