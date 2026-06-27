@@ -4,6 +4,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { TenantSwitcher } from "@/components/TenantSwitcher";
 import { SoundToggle } from "@/components/SoundToggle";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Bell, Search, LogOut, User as UserIcon, Sparkles, LogIn } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,9 +42,11 @@ export default function AppLayout() {
               </div>
             </div>
             <div className="ml-auto flex items-center gap-2">
+              <ThemeToggle />
               <SoundToggle />
               <NotificationsBell />
               <Button asChild variant="ghost" size="sm" className="relative">
+
                 <Link to={isDemo ? "/demo/alertas" : "/alertas"}>
                   <Bell className="h-4 w-4" />
                   {open > 0 && (
