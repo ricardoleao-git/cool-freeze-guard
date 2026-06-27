@@ -139,7 +139,6 @@ export default function GuardiaIntegration() {
       events_endpoint: cfg.events_endpoint?.trim() || null,
       active: cfg.active,
       sync_interval: cfg.sync_interval,
-      janele_tolerancia_segundos: undefined as never,
       janela_tolerancia_segundos: Math.max(0, Math.floor(Number(cfg.janela_tolerancia_segundos) || 0)),
       sessao_longa_alerta_minutos: Math.max(1, Math.floor(Number(cfg.sessao_longa_alerta_minutos) || 1)),
     };
