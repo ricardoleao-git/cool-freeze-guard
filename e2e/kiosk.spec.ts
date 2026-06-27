@@ -110,4 +110,71 @@ test.describe("/painel kiosk público", () => {
     await expect(invalid).toContainText(/Token inválido ou revogado/i);
     await expect(page.getByTestId("kiosk-panel")).toHaveCount(0);
   });
+
+  test("falhas de rede: mantém o último snapshot e mostra 'reconectando', recupera ao voltar", async ({ page }) => {
+    let mode: "ok" | "offline" | "timeout" | "5xx" = "ok";
+
+    await page.route(FN_PATTERN, async (route) => {
+      if (mode === "ok") return mockValid(route);
+      if (mode === "offline") return route.abort("internetdisconnected");
+      if (mode === "timeout") {
+        // Hang long enough that the next backoff window elapses before resolving.
+        await new Promise((r) => setTimeout(r, 8_000));
+        return route.abort("timedout");
+      }
+      // 5xx
+      return route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "upstream" }),
+      });
+    });
+
+    await page.goto("/painel?token=valid-token-1234567890");
+
+    // First successful poll → panel + 4 cards visible.
+    await expect(page.getByTestId("kiosk-panel")).toBeVisible();
+    await expect(page.getByTestId("kiosk-person")).toHaveCount(4);
+    const age = page.getByTestId("kiosk-age");
+    await expect(age).toContainText(/atualizado há \d+s/);
+
+    // Flip to offline and trigger consecutive failures by reloading polling cycle.
+    mode = "offline";
+    // Wait long enough for at least one poll attempt to fail (POLL_MS=20s,
+    // first retry uses 5s backoff). We poll the DOM instead of using bare sleep.
+    await expect
+      .poll(
+        async () => (await age.textContent()) ?? "",
+        { timeout: 30_000, intervals: [500] },
+      )
+      .toMatch(/reconectando/i);
+
+    // Critical: the previous snapshot (panel + 4 cards + tiles) is still on screen.
+    await expect(page.getByTestId("kiosk-panel")).toBeVisible();
+    await expect(page.getByTestId("kiosk-person")).toHaveCount(4);
+    await expect(page.getByTestId("tile-red")).toContainText("1");
+    await expect(page.getByTestId("kiosk-invalid")).toHaveCount(0);
+
+    // Simulate 5xx for a couple of attempts — UI must keep the snapshot.
+    mode = "5xx";
+    await page.waitForTimeout(2_000);
+    await expect(page.getByTestId("kiosk-person")).toHaveCount(4);
+    await expect(age).toContainText(/reconectando/i);
+
+    // Recover the network → next successful poll must clear the reconnecting state.
+    mode = "ok";
+    await expect
+      .poll(
+        async () => (await age.textContent()) ?? "",
+        { timeout: 70_000, intervals: [1_000] },
+      )
+      .not.toMatch(/reconectando/i);
+
+    // After recovery the age label resets to a small number of seconds.
+    const txt = (await age.textContent()) ?? "";
+    const match = txt.match(/atualizado há (\d+)s/);
+    expect(match).not.toBeNull();
+    expect(Number(match![1])).toBeLessThan(10);
+  });
 });
+
