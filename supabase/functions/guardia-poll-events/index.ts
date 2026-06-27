@@ -233,7 +233,7 @@ Deno.serve(async (req) => {
 
   const url = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const cronKey = Deno.env.get("PURGE_RETENTION_SECRET") || "";
+  const cronKey = Deno.env.get("GUARDIA_CRON_KEY") || Deno.env.get("PURGE_RETENTION_SECRET") || "";
   const admin = createClient(url, serviceKey);
 
   let body: { tenant_id?: string; max?: number; all_active?: boolean; from?: string; to?: string } = {};
