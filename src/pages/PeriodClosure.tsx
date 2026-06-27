@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useAnnouncer } from "@/lib/announcer";
 
 type PeriodType = "week" | "month";
 type Stage = "supervisor" | "rh" | "legal";
