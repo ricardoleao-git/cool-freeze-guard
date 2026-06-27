@@ -253,6 +253,50 @@ export default function GuardiaIntegration() {
                   </div>
                 </div>
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <Label className="text-xs">Esquema de autenticação</Label>
+                  <Select value={cfg.auth_scheme} onValueChange={v => setCfg(c => ({ ...c, auth_scheme: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="header">Header customizado</SelectItem>
+                      <SelectItem value="bearer">Authorization: Bearer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Nome do header (quando customizado)</Label>
+                  <Input
+                    value={cfg.auth_header_name}
+                    onChange={e => setCfg(c => ({ ...c, auth_header_name: e.target.value }))}
+                    placeholder="X-GuardIA-Token"
+                    disabled={cfg.auth_scheme === "bearer"}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Base path da API</Label>
+                  <Input
+                    value={cfg.api_base_path}
+                    onChange={e => setCfg(c => ({ ...c, api_base_path: e.target.value }))}
+                    placeholder="/guardiaapi"
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">OpenAPI 1.0.0 usa <code>/guardiaapi</code>.</p>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-xs">Endpoint de eventos (opcional — extensão proprietária)</Label>
+                <Input
+                  value={cfg.events_endpoint ?? ""}
+                  onChange={e => setCfg(c => ({ ...c, events_endpoint: e.target.value }))}
+                  placeholder="/events ou /access-history (vazio = polling desabilitado)"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  O OpenAPI 1.0.0 não documenta histórico de eventos. Preencha apenas se a sua instância expõe um endpoint customizado.
+                </p>
+              </div>
+
               <div className="flex items-center gap-3">
                 <Switch checked={cfg.active} onCheckedChange={v => setCfg(c => ({ ...c, active: v }))} />
                 <Label className="text-sm">Integração ativa (eventos recebidos serão processados)</Label>
