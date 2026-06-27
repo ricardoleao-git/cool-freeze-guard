@@ -19,7 +19,7 @@ export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
 // Mapa rota -> papéis permitidos. Super Admin sempre passa.
 export const ROUTE_ACCESS: Record<string, AppRole[]> = {
   "/": ["administrador", "gestor", "rh_sst", "visualizador"],
-  "/painel": ["administrador", "gestor", "rh_sst", "visualizador"],
+  "/painel-operacional": ["administrador", "gestor", "rh_sst", "visualizador"],
   "/alertas": ["administrador", "gestor", "rh_sst", "visualizador"],
   "/ocorrencias": ["administrador", "gestor", "rh_sst"],
   "/historico": ["administrador", "gestor", "rh_sst"],
