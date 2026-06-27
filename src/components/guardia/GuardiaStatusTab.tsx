@@ -196,7 +196,7 @@ export default function GuardiaStatusTab({ tenantId }: { tenantId: string }) {
       </Card>
 
       {lastErrors.length > 0 && (
-        <Card className="glass-card border-destructive/30">
+        <Card id="last-errors" className="glass-card border-destructive/30 scroll-mt-20">
           <CardHeader><CardTitle className="font-display text-base">Últimos erros</CardTitle></CardHeader>
           <CardContent>
             <ul className="text-sm space-y-2">
