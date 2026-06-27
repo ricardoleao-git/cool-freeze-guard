@@ -61,6 +61,7 @@ const App = () => (
               <Route path="/demo" element={<DemoShell />}>
                 <Route index element={<Dashboard />} />
                 <Route path="experimento" element={<DemoMode />} />
+                <Route path="painel-operacional" element={<OperationalPanel />} />
                 <Route path="painel" element={<OperationalPanel />} />
                 <Route path="colaboradores" element={<Employees />} />
                 <Route path="ambientes" element={<ColdAreas />} />
