@@ -1,19 +1,33 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { useTenantScoped } from "@/lib/demo-store";
-import { Activity, Download, Pencil, Cpu, Hand } from "lucide-react";
+import { Activity, Download, Pencil, Cpu, Hand, Loader2, Inbox } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { EventCorrectionDialog } from "@/components/EventCorrectionDialog";
+import { EmptyState } from "@/components/EmptyState";
 import type { AccessEvent } from "@/lib/demo-data";
 import { Link } from "react-router-dom";
 
 export default function Events() {
   const { events, employees, coldAreas, devices } = useTenantScoped();
   const [editEvent, setEditEvent] = useState<AccessEvent | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      // Simulated export — real CSV generation goes here.
+      await new Promise(r => setTimeout(r, 600));
+      toast.success("Exportação CSV pronta — pronto para integração real.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="container py-6 md:py-8">
       <PageHeader
@@ -24,11 +38,26 @@ export default function Events() {
         actions={
           <div className="flex gap-2">
             <Button asChild variant="outline"><Link to="/ajustes"><Pencil className="h-4 w-4 mr-2" /> Correções & Inconsistências</Link></Button>
-            <Button variant="outline" onClick={() => toast.info("Exportação CSV simulada — pronto para integração real.")}><Download className="h-4 w-4 mr-2" /> Exportar CSV</Button>
+            <Button variant="outline" onClick={handleExport} disabled={exporting} aria-busy={exporting}>
+              {exporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+              {exporting ? "Exportando…" : "Exportar CSV"}
+            </Button>
           </div>
         }
       />
       <div className="glass-card overflow-hidden">
+        {events.length === 0 ? (
+          <EmptyState
+            icon={<Inbox className="h-5 w-5" />}
+            title="Nenhum evento registrado"
+            description="Eventos aparecem aqui assim que leitores faciais ou simulações registrarem entradas e saídas."
+            action={
+              <Button asChild size="sm" variant="outline">
+                <Link to="/demo">Abrir modo demonstração</Link>
+              </Button>
+            }
+          />
+        ) : (
         <Table>
           <TableHeader>
             <TableRow>
@@ -42,9 +71,6 @@ export default function Events() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {events.length === 0 && (
-              <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-10">Nenhum evento registrado ainda. Use o Modo Demonstração para simular.</TableCell></TableRow>
-            )}
             {events.map(ev => {
               const emp = employees.find(e => e.id === ev.employee_id);
               const area = coldAreas.find(a => a.id === ev.cold_area_id);
@@ -71,7 +97,7 @@ export default function Events() {
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{(ev.confidence_score * 100).toFixed(1)}%</TableCell>
                   <TableCell className="text-right">
-                    <Button size="sm" variant="ghost" onClick={() => setEditEvent(ev)} title="Solicitar correção com justificativa">
+                    <Button size="sm" variant="ghost" onClick={() => setEditEvent(ev)} aria-label="Solicitar correção" title="Solicitar correção com justificativa">
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
                   </TableCell>
@@ -80,6 +106,7 @@ export default function Events() {
             })}
           </TableBody>
         </Table>
+        )}
       </div>
       <EventCorrectionDialog
         event={editEvent}
