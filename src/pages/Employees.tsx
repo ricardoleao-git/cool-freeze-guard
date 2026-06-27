@@ -93,6 +93,7 @@ export default function Employees() {
                         <div className="font-medium flex items-center gap-2">
                           {e.name}
                           {e.status === "inactive" && <Badge variant="outline" className="text-[9px] px-1">INATIVO</Badge>}
+                          {e.origem === "guardia" && <Badge variant="outline" className="text-[9px] px-1 border-primary/40 text-primary">GuardIA</Badge>}
                         </div>
                         <div className="text-xs text-muted-foreground">#{e.registration_number} · {e.position || "—"}</div>
                       </div>
