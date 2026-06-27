@@ -91,10 +91,12 @@ export default function GuardiaIntegration() {
     (async () => {
       const { data } = await supabase
         .from("integration_config")
-        .select("guardia_url, guardia_token, auth_header_name, auth_scheme, api_base_path, events_endpoint, active, sync_interval, last_sync_at, last_sync_count, last_push_at, last_push_count, last_event_poll_at, janela_tolerancia_segundos, sessao_longa_alerta_minutos")
+        .select("guardia_url, auth_header_name, auth_scheme, api_base_path, events_endpoint, active, sync_interval, last_sync_at, last_sync_count, last_push_at, last_push_count, last_event_poll_at, janela_tolerancia_segundos, sessao_longa_alerta_minutos")
         .eq("tenant_id", tenantId)
         .maybeSingle();
-      if (data) setCfg({ ...empty, ...data });
+      // guardia_token is write-only via RLS: never returned to the client.
+      // Keep field blank; submitting blank preserves the existing token.
+      if (data) setCfg({ ...empty, ...data, guardia_token: "" });
       setLoading(false);
     })();
   }, [tenantId]);
