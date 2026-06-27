@@ -34,6 +34,7 @@ import DailySummary from "./pages/DailySummary";
 import GuardiaIntegration from "./pages/GuardiaIntegration";
 import Statement from "./pages/Statement";
 import Inconsistencies from "./pages/Inconsistencies";
+import PeriodClosure from "./pages/PeriodClosure";
 
 const queryClient = new QueryClient();
 
@@ -77,6 +78,7 @@ const App = () => (
                 <Route path="configuracoes/integracao-guardia" element={<GuardiaIntegration />} />
                 <Route path="extrato" element={<Statement />} />
                 <Route path="inconsistencias" element={<Inconsistencies />} />
+                <Route path="fechamento" element={<PeriodClosure />} />
               </Route>
 
               <Route element={<ProtectedRoute><RoleGuard><AppLayout /></RoleGuard></ProtectedRoute>}>
@@ -102,6 +104,7 @@ const App = () => (
                 <Route path="/configuracoes/integracao-guardia" element={<GuardiaIntegration />} />
                 <Route path="/extrato" element={<Statement />} />
                 <Route path="/inconsistencias" element={<Inconsistencies />} />
+                <Route path="/fechamento" element={<PeriodClosure />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
