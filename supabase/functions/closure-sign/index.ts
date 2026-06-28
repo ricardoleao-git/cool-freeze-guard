@@ -130,21 +130,25 @@ Deno.serve(async (req) => {
   }
 
   // Resolve signer identity.
-  const { data: prof } = await supabase
-    .from("profiles")
-    .select("full_name, email")
-    .eq("user_id", userRes.user.id).maybeSingle();
-  const signed_by_name = (prof?.full_name && prof.full_name.trim().length > 0)
-    ? prof.full_name
-    : (prof?.email ?? userRes.user.email ?? "Usuário");
+  let signed_by_name = "Visitante (Demo)";
+  let signed_by_role: string | null = isDemo ? "demo" : null;
+  if (!isDemo && userId) {
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("user_id", userId).maybeSingle();
+    signed_by_name = (prof?.full_name && prof.full_name.trim().length > 0)
+      ? prof.full_name
+      : (prof?.email ?? userEmail ?? "Usuário");
 
-  const { data: roleRow } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userRes.user.id)
-    .or(`tenant_id.eq.${tenant_id},tenant_id.is.null`)
-    .limit(1).maybeSingle();
-  const signed_by_role = (roleRow as any)?.role ?? null;
+    const { data: roleRow } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .or(`tenant_id.eq.${tenant_id},tenant_id.is.null`)
+      .limit(1).maybeSingle();
+    signed_by_role = (roleRow as any)?.role ?? null;
+  }
 
   const clickwrap_text_hash = await sha256Hex(clickwrap_text);
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
@@ -155,8 +159,13 @@ Deno.serve(async (req) => {
     .from("closure_signatures")
     .insert({
       tenant_id, closure_id: closureId, stage,
-      signed_by_user_id: userRes.user.id, signed_by_name, signed_by_role,
+      signed_by_user_id: userId, signed_by_name, signed_by_role,
       clickwrap_text, clickwrap_text_hash,
+      content_hash: consolidated_hash, signature_method: sigMethod,
+      ip_origin: ip, user_agent: ua,
+    })
+    .select("record_hash, signed_at, previous_hash")
+    .single();
       content_hash: consolidated_hash, signature_method: sigMethod,
       ip_origin: ip, user_agent: ua,
     })
