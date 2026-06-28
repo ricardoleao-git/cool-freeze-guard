@@ -128,8 +128,30 @@ function fmtMin(min: number) {
 }
 
 export default function PeriodClosurePage() {
-  const { profile, roles } = useAuth();
+  const { profile, roles, session, isDemo } = useAuth();
   const tenantId = profile?.tenant_id ?? null;
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+  const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
+  async function callFn(name: string, body: any): Promise<{ data: any; error: any }> {
+    try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_KEY,
+      };
+      const token = session?.access_token;
+      if (!isDemo && token) headers.Authorization = `Bearer ${token}`;
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
+        method: "POST", headers, body: JSON.stringify(body),
+      });
+      const json = await r.json().catch(() => ({}));
+      if (!r.ok) return { data: null, error: { message: json?.error ?? `HTTP ${r.status}`, context: { status: r.status, error: json?.error } } };
+      return { data: json, error: null };
+    } catch (e: any) {
+      return { data: null, error: { message: e?.message ?? "network_error" } };
+    }
+  }
+
   const canSign = roles.some(r => ["super_admin", "administrador", "gestor"].includes(r));
 
   const [periodType, setPeriodType] = useState<PeriodType>("week");
@@ -148,8 +170,8 @@ export default function PeriodClosurePage() {
     if (!tenantId) return;
     setLoading(true);
     try {
-      const { data: resp, error } = await supabase.functions.invoke("closure-consolidate", {
-        body: { tenant_id: tenantId, period_type: periodType, reference_date: refDateStr },
+      const { data: resp, error } = await callFn("closure-consolidate", {
+        tenant_id: tenantId, period_type: periodType, reference_date: refDateStr,
       });
       if (error) throw error;
       setData(resp as ConsolidateResponse);
@@ -182,16 +204,14 @@ export default function PeriodClosurePage() {
     setSubmitting(true);
     announce(`Assinando etapa ${STAGE_LABEL[stage]}…`);
     try {
-      const { data: resp, error } = await supabase.functions.invoke("closure-sign", {
-        body: {
-          tenant_id: tenantId,
-          period_type: periodType,
-          reference_date: refDateStr,
-          stage,
-          clickwrap_text: STAGE_CLICKWRAP[stage],
-          content_hash: data.consolidated_hash,
-          signature_method: "clickwrap",
-        },
+      const { data: resp, error } = await callFn("closure-sign", {
+        tenant_id: tenantId,
+        period_type: periodType,
+        reference_date: refDateStr,
+        stage,
+        clickwrap_text: STAGE_CLICKWRAP[stage],
+        content_hash: data.consolidated_hash,
+        signature_method: "clickwrap",
       });
       if (error) {
         // supabase-js wraps non-2xx — try to read inner JSON
