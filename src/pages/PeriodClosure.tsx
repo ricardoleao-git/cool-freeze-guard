@@ -170,8 +170,8 @@ export default function PeriodClosurePage() {
     if (!tenantId) return;
     setLoading(true);
     try {
-      const { data: resp, error } = await supabase.functions.invoke("closure-consolidate", {
-        body: { tenant_id: tenantId, period_type: periodType, reference_date: refDateStr },
+      const { data: resp, error } = await callFn("closure-consolidate", {
+        tenant_id: tenantId, period_type: periodType, reference_date: refDateStr,
       });
       if (error) throw error;
       setData(resp as ConsolidateResponse);
