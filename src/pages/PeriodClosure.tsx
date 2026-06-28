@@ -204,16 +204,14 @@ export default function PeriodClosurePage() {
     setSubmitting(true);
     announce(`Assinando etapa ${STAGE_LABEL[stage]}…`);
     try {
-      const { data: resp, error } = await supabase.functions.invoke("closure-sign", {
-        body: {
-          tenant_id: tenantId,
-          period_type: periodType,
-          reference_date: refDateStr,
-          stage,
-          clickwrap_text: STAGE_CLICKWRAP[stage],
-          content_hash: data.consolidated_hash,
-          signature_method: "clickwrap",
-        },
+      const { data: resp, error } = await callFn("closure-sign", {
+        tenant_id: tenantId,
+        period_type: periodType,
+        reference_date: refDateStr,
+        stage,
+        clickwrap_text: STAGE_CLICKWRAP[stage],
+        content_hash: data.consolidated_hash,
+        signature_method: "clickwrap",
       });
       if (error) {
         // supabase-js wraps non-2xx — try to read inner JSON
