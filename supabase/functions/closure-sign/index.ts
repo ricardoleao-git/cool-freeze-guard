@@ -166,11 +166,6 @@ Deno.serve(async (req) => {
     })
     .select("record_hash, signed_at, previous_hash")
     .single();
-      content_hash: consolidated_hash, signature_method: sigMethod,
-      ip_origin: ip, user_agent: ua,
-    })
-    .select("record_hash, signed_at, previous_hash")
-    .single();
 
   if (sigErr) {
     if ((sigErr as any).code === "23505") {
