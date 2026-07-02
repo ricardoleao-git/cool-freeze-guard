@@ -158,6 +158,7 @@ export default function PeriodClosurePage() {
   const [refDate, setRefDate] = useState<Date>(new Date());
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ConsolidateResponse | null>(null);
+  const [loadError, setLoadError] = useState<{ status?: number; message: string } | null>(null);
   const [empNames, setEmpNames] = useState<Record<string, string>>({});
   const [signing, setSigning] = useState<Stage | null>(null);
   const [agree, setAgree] = useState(false);
