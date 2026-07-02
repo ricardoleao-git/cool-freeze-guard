@@ -217,10 +217,10 @@ export default function OperationalPanel() {
             <Button variant={audio ? "default" : "outline"} size="sm" onClick={() => setAudio(a => !a)} title="Alarme sonoro persistente" className="h-8 w-8 md:h-9 md:w-auto md:px-3 p-0 md:p-2">
               {audio ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
             </Button>
-            <Button variant={autoRotate ? "default" : "outline"} size="sm" onClick={() => setAutoRotate(r => !r)} title="Auto-rotacionar visões" className="h-8 w-8 md:h-9 md:w-auto md:px-3 p-0 md:p-2">
+            <Button variant={autoRotate ? "default" : "outline"} size="sm" onClick={() => setAutoRotate(r => !r)} title="Auto-rotacionar visões" aria-label={autoRotate ? "Pausar auto-rotação" : "Iniciar auto-rotação"} className="h-8 w-8 md:h-9 md:w-auto md:px-3 p-0 md:p-2">
               {autoRotate ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </Button>
-            <Button variant="outline" size="sm" onClick={toggleFullscreen} className="h-8 w-8 md:h-9 md:w-auto md:px-3 p-0 md:p-2">
+            <Button variant="outline" size="sm" onClick={toggleFullscreen} aria-label="Alternar tela cheia" title="Alternar tela cheia" className="h-8 w-8 md:h-9 md:w-auto md:px-3 p-0 md:p-2">
               <Minimize2 className="h-4 w-4" />
             </Button>
           </div>
