@@ -27,16 +27,21 @@ Deno.serve(async (req) => {
   const url = Deno.env.get("SUPABASE_URL")!;
   const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
   const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const isDemo = tenant_id === "demo-tenant";
+  const supabase = createClient(url, service);
+  const isDemoRequest = tenant_id === DEMO_TENANT_ID;
 
-  if (!isDemo) {
+  if (isDemoRequest) {
+    if (!isDemoBypassAllowed(tenant_id)) {
+      return json({ error: "demo_bypass_disabled" }, 403);
+    }
+    await logDemoBypass(supabase, { tenantId: tenant_id, functionName: "closure-consolidate", req, details: { period_type, reference_date } });
+  } else {
     const auth = req.headers.get("Authorization") ?? "";
     if (!auth.startsWith("Bearer ")) return json({ error: "unauthorized" }, 401);
     const userClient = createClient(url, anon, { global: { headers: { Authorization: auth } } });
     const { data: userRes, error: userErr } = await userClient.auth.getUser();
     if (userErr || !userRes?.user) return json({ error: "unauthorized" }, 401);
-    const supabaseCheck = createClient(url, service);
-    const { data: canRead } = await supabaseCheck.rpc("can_read_tenant", { _user_id: userRes.user.id, _tenant_id: tenant_id });
+    const { data: canRead } = await supabase.rpc("can_read_tenant", { _user_id: userRes.user.id, _tenant_id: tenant_id });
     if (!canRead) return json({ error: "forbidden" }, 403);
   }
 
