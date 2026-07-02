@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/PageHeader";
+import PageHead from "@/components/PageHead";
 import { BookOpenCheck, ShieldCheck, Snowflake, Timer, AlertTriangle, FileBarChart2, Wifi } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
