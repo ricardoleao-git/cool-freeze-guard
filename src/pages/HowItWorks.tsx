@@ -15,6 +15,10 @@ const steps = [
 export default function HowItWorks() {
   return (
     <div className="container py-6 md:py-10">
+      <PageHead
+        title="Como funciona o FrioSafe — Controle de Exposição ao Frio"
+        description="Entenda o fluxo do FrioSafe: leitura facial, acúmulo de ciclo, alertas progressivos, bloqueio preventivo e pausa térmica auditável."
+      />
       <PageHeader
         eyebrow="Como funciona"
         title="Controle ocupacional de exposição ao frio"
