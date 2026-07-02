@@ -562,6 +562,36 @@ export type Database = {
           },
         ]
       }
+      demo_bypass_audit_log: {
+        Row: {
+          created_at: string
+          details: Json | null
+          function_name: string
+          id: string
+          ip_origin: unknown
+          tenant_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          function_name: string
+          id?: string
+          ip_origin?: unknown
+          tenant_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          function_name?: string
+          id?: string
+          ip_origin?: unknown
+          tenant_id?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       departments: {
         Row: {
           created_at: string

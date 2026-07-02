@@ -4,6 +4,7 @@
 // signature. DB trigger seals the chained record_hash.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { consolidatePeriod, type PeriodType } from "../_shared/closure.ts";
+import { isDemoBypassAllowed, logDemoBypass, DEMO_TENANT_ID } from "../_shared/demo-bypass.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,12 +48,18 @@ Deno.serve(async (req) => {
   const url = Deno.env.get("SUPABASE_URL")!;
   const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
   const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const isDemo = tenant_id === "demo-tenant";
+  const isDemo = tenant_id === DEMO_TENANT_ID;
+  const supabase = createClient(url, service);
 
   let userId: string | null = null;
   let userEmail: string | null = null;
 
-  if (!isDemo) {
+  if (isDemo) {
+    if (!isDemoBypassAllowed(tenant_id)) {
+      return json({ error: "demo_bypass_disabled" }, 403);
+    }
+    await logDemoBypass(supabase, { tenantId: tenant_id, functionName: "closure-sign", req, details: { period_type, reference_date, stage } });
+  } else {
     const auth = req.headers.get("Authorization") ?? "";
     if (!auth.startsWith("Bearer ")) return json({ error: "unauthorized" }, 401);
     const userClient = createClient(url, anon, { global: { headers: { Authorization: auth } } });
@@ -60,11 +67,7 @@ Deno.serve(async (req) => {
     if (userErr || !userRes?.user) return json({ error: "unauthorized" }, 401);
     userId = userRes.user.id;
     userEmail = userRes.user.email ?? null;
-  }
 
-  const supabase = createClient(url, service);
-
-  if (!isDemo) {
     const { data: canManage } = await supabase.rpc("can_manage_tenant", {
       _user_id: userId, _tenant_id: tenant_id,
     });

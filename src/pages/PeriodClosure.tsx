@@ -158,6 +158,7 @@ export default function PeriodClosurePage() {
   const [refDate, setRefDate] = useState<Date>(new Date());
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ConsolidateResponse | null>(null);
+  const [loadError, setLoadError] = useState<{ status?: number; message: string } | null>(null);
   const [empNames, setEmpNames] = useState<Record<string, string>>({});
   const [signing, setSigning] = useState<Stage | null>(null);
   const [agree, setAgree] = useState(false);
@@ -169,6 +170,7 @@ export default function PeriodClosurePage() {
   const load = useCallback(async () => {
     if (!tenantId) return;
     setLoading(true);
+    setLoadError(null);
     try {
       const { data: resp, error } = await callFn("closure-consolidate", {
         tenant_id: tenantId, period_type: periodType, reference_date: refDateStr,
@@ -186,6 +188,9 @@ export default function PeriodClosurePage() {
       }
     } catch (e: any) {
       console.error(e);
+      const status = e?.context?.status as number | undefined;
+      const code = e?.context?.error as string | undefined;
+      setLoadError({ status, message: code ?? e?.message ?? "unknown_error" });
       toast.error("Falha ao consolidar o período", { description: e?.message ?? "Erro inesperado" });
     } finally {
       setLoading(false);
@@ -316,6 +321,31 @@ export default function PeriodClosurePage() {
             </span> a <span className="font-medium text-foreground">
               {format(parseISO(c.reference_end), "dd MMM yyyy", { locale: ptBR })}
             </span>
+          </div>
+        )}
+
+        {loadError && (
+          <div className="rounded-xl border border-status-red/40 bg-status-red/10 p-4 space-y-2">
+            <div className="flex items-center gap-2 font-display font-semibold text-status-red">
+              <AlertTriangle className="h-5 w-5" /> Não foi possível carregar o fechamento
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {loadError.status === 401 || loadError.message === "unauthorized"
+                ? "Sua sessão expirou ou você não tem permissão para este tenant. Faça login novamente para continuar."
+                : loadError.status === 403 || loadError.message === "forbidden" || loadError.message === "demo_bypass_disabled"
+                ? "Acesso negado a este período. Confirme com um administrador se seu perfil tem permissão sobre este tenant."
+                : "Ocorreu um erro ao chamar o serviço de fechamento. Tente novamente em instantes ou clique em Atualizar."}
+            </p>
+            <div className="flex gap-2 pt-1">
+              <Button size="sm" variant="outline" onClick={load} disabled={loading}>
+                <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} /> Tentar novamente
+              </Button>
+              {(loadError.status === 401 || loadError.message === "unauthorized") && !isDemo && (
+                <Button size="sm" variant="default" onClick={() => { window.location.href = "/login"; }}>
+                  Fazer login
+                </Button>
+              )}
+            </div>
           </div>
         )}
 
