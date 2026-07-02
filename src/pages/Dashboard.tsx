@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { PageHeader, StatCard } from "@/components/PageHeader";
+import PageHead from "@/components/PageHead";
 import { useTenantScoped } from "@/lib/demo-store";
 import { Activity, AlertTriangle, Cpu, Snowflake, Timer, Users, ShieldAlert, Wifi } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, AreaChart, Area, Legend } from "recharts";
