@@ -170,6 +170,7 @@ export default function PeriodClosurePage() {
   const load = useCallback(async () => {
     if (!tenantId) return;
     setLoading(true);
+    setLoadError(null);
     try {
       const { data: resp, error } = await callFn("closure-consolidate", {
         tenant_id: tenantId, period_type: periodType, reference_date: refDateStr,
@@ -187,6 +188,9 @@ export default function PeriodClosurePage() {
       }
     } catch (e: any) {
       console.error(e);
+      const status = e?.context?.status as number | undefined;
+      const code = e?.context?.error as string | undefined;
+      setLoadError({ status, message: code ?? e?.message ?? "unknown_error" });
       toast.error("Falha ao consolidar o período", { description: e?.message ?? "Erro inesperado" });
     } finally {
       setLoading(false);
