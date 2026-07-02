@@ -152,6 +152,10 @@ export default function MyDay() {
 
   return (
     <div className="p-4 md:p-6 space-y-5">
+      <PageHead
+        title="Meu Dia — FrioSafe"
+        description="Painel pessoal do colaborador: pendências, notificações, pausas térmicas e correções de horário."
+      />
       <PageHeader
         title="Meu Dia"
         description="Visão pessoal do colaborador: pendências, notificações e respostas a correções de horário."
