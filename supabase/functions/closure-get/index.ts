@@ -4,6 +4,7 @@
 // call closure-consolidate).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { rangeFor, type PeriodType } from "../_shared/closure.ts";
+import { isDemoBypassAllowed, logDemoBypass, DEMO_TENANT_ID } from "../_shared/demo-bypass.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
