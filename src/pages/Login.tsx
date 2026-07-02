@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 import { useAuth } from "@/lib/auth";
+import PageHead from "@/components/PageHead";
 
 export default function Login() {
   const [email, setEmail] = useState("");
