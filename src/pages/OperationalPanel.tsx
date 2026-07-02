@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { EmployeeStatus, STATUS_LABEL } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
+import PageHead from "@/components/PageHead";
 
 const GROUPS: Array<{ key: EmployeeStatus[]; title: string; accent: string; tile: string; icon: JSX.Element }> = [
   { key: ["blocked"], title: "Bloqueados — Pausa Obrigatória", accent: "border-status-red/60 bg-status-red/10", tile: "from-status-red/30 to-status-red/5 border-status-red/60", icon: <ShieldAlert className="h-4 w-4 text-status-red" /> },
@@ -134,6 +135,10 @@ export default function OperationalPanel() {
     const grouped = GROUPS.map(g => ({ ...g, employees: list.filter(e => g.key.includes(e.current_status)) }));
     return (
       <div className="container py-6 md:py-8">
+        <PageHead
+          title="Painel Operacional — FrioSafe"
+          description="Monitoramento em tempo real de colaboradores em áreas frias, bloqueios preventivos e pausas térmicas."
+        />
         <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
           <div>
             <div className="text-xs uppercase tracking-[0.2em] text-primary/90 font-semibold mb-1">Painel Operacional · Tempo Real</div>
@@ -217,10 +222,10 @@ export default function OperationalPanel() {
             <Button variant={audio ? "default" : "outline"} size="sm" onClick={() => setAudio(a => !a)} title="Alarme sonoro persistente" className="h-8 w-8 md:h-9 md:w-auto md:px-3 p-0 md:p-2">
               {audio ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
             </Button>
-            <Button variant={autoRotate ? "default" : "outline"} size="sm" onClick={() => setAutoRotate(r => !r)} title="Auto-rotacionar visões" className="h-8 w-8 md:h-9 md:w-auto md:px-3 p-0 md:p-2">
+            <Button variant={autoRotate ? "default" : "outline"} size="sm" onClick={() => setAutoRotate(r => !r)} title="Auto-rotacionar visões" aria-label={autoRotate ? "Pausar auto-rotação" : "Iniciar auto-rotação"} className="h-8 w-8 md:h-9 md:w-auto md:px-3 p-0 md:p-2">
               {autoRotate ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </Button>
-            <Button variant="outline" size="sm" onClick={toggleFullscreen} className="h-8 w-8 md:h-9 md:w-auto md:px-3 p-0 md:p-2">
+            <Button variant="outline" size="sm" onClick={toggleFullscreen} aria-label="Alternar tela cheia" title="Alternar tela cheia" className="h-8 w-8 md:h-9 md:w-auto md:px-3 p-0 md:p-2">
               <Minimize2 className="h-4 w-4" />
             </Button>
           </div>

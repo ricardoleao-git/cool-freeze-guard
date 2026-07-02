@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 import { useAuth } from "@/lib/auth";
+import PageHead from "@/components/PageHead";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -47,6 +48,10 @@ export default function Login() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
+      <PageHead
+        title="Entrar — FrioSafe"
+        description="Acesse o FrioSafe para gerenciar exposição ao frio, pausa térmica e conformidade da sua operação."
+      />
       <div className="relative hidden lg:flex flex-col justify-between p-12 bg-gradient-hero overflow-hidden hero-on-dark">
         <div className="absolute inset-0 bg-grid opacity-30" />
         <div className="relative">

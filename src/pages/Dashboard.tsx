@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { PageHeader, StatCard } from "@/components/PageHeader";
+import PageHead from "@/components/PageHead";
 import { useTenantScoped } from "@/lib/demo-store";
 import { Activity, AlertTriangle, Cpu, Snowflake, Timer, Users, ShieldAlert, Wifi } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, AreaChart, Area, Legend } from "recharts";
@@ -72,8 +73,12 @@ export default function Dashboard() {
           </>
         }
       />
+      <PageHead
+        title="Dashboard — FrioSafe"
+        description="Visão geral em tempo real da exposição ao frio, pausas térmicas e estado dos dispositivos da sua operação."
+      />
 
-
+      <h2 className="sr-only">Indicadores gerais</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Dentro de áreas frias" value={counts.inside} hint="ativos agora" icon={<Snowflake className="h-4 w-4" />} accent="primary" />
         <StatCard label="Atenção (amarelo)" value={counts.yellow} hint="≥ 80 min de exposição" icon={<AlertTriangle className="h-4 w-4" />} accent="yellow" />
@@ -88,6 +93,7 @@ export default function Dashboard() {
         <StatCard label="Alertas abertos" value={alerts.filter(a => a.status === "open").length} icon={<AlertTriangle className="h-4 w-4" />} accent="orange" />
       </div>
 
+      <h2 className="sr-only">Gráficos analíticos</h2>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
         <Card className="lg:col-span-2 glass-card">
           <CardHeader><CardTitle className="font-display">Eventos por hora</CardTitle></CardHeader>
