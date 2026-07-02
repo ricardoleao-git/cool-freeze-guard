@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     if (!canRead) return json({ error: "forbidden" }, 403);
   }
 
-  const supabase = createClient(url, service);
+
 
   try {
     const { consolidated, consolidated_hash, startDate } = await consolidatePeriod(supabase, tenant_id, period_type, reference_date);
