@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { EmployeeStatus, STATUS_LABEL } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
+import PageHead from "@/components/PageHead";
 
 const GROUPS: Array<{ key: EmployeeStatus[]; title: string; accent: string; tile: string; icon: JSX.Element }> = [
   { key: ["blocked"], title: "Bloqueados — Pausa Obrigatória", accent: "border-status-red/60 bg-status-red/10", tile: "from-status-red/30 to-status-red/5 border-status-red/60", icon: <ShieldAlert className="h-4 w-4 text-status-red" /> },
