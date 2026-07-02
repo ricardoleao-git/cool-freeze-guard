@@ -324,6 +324,31 @@ export default function PeriodClosurePage() {
           </div>
         )}
 
+        {loadError && (
+          <div className="rounded-xl border border-status-red/40 bg-status-red/10 p-4 space-y-2">
+            <div className="flex items-center gap-2 font-display font-semibold text-status-red">
+              <AlertTriangle className="h-5 w-5" /> Não foi possível carregar o fechamento
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {loadError.status === 401 || loadError.message === "unauthorized"
+                ? "Sua sessão expirou ou você não tem permissão para este tenant. Faça login novamente para continuar."
+                : loadError.status === 403 || loadError.message === "forbidden" || loadError.message === "demo_bypass_disabled"
+                ? "Acesso negado a este período. Confirme com um administrador se seu perfil tem permissão sobre este tenant."
+                : "Ocorreu um erro ao chamar o serviço de fechamento. Tente novamente em instantes ou clique em Atualizar."}
+            </p>
+            <div className="flex gap-2 pt-1">
+              <Button size="sm" variant="outline" onClick={load} disabled={loading}>
+                <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} /> Tentar novamente
+              </Button>
+              {(loadError.status === 401 || loadError.message === "unauthorized") && !isDemo && (
+                <Button size="sm" variant="default" onClick={() => { window.location.href = "/login"; }}>
+                  Fazer login
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
         {loading && !c ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-24" />)}
