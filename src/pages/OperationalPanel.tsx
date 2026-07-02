@@ -135,6 +135,10 @@ export default function OperationalPanel() {
     const grouped = GROUPS.map(g => ({ ...g, employees: list.filter(e => g.key.includes(e.current_status)) }));
     return (
       <div className="container py-6 md:py-8">
+        <PageHead
+          title="Painel Operacional — FrioSafe"
+          description="Monitoramento em tempo real de colaboradores em áreas frias, bloqueios preventivos e pausas térmicas."
+        />
         <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
           <div>
             <div className="text-xs uppercase tracking-[0.2em] text-primary/90 font-semibold mb-1">Painel Operacional · Tempo Real</div>
