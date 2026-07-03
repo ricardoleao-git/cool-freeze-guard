@@ -392,12 +392,56 @@ export default function Simulator() {
               <div>
                 <strong className="text-foreground">Como validar:</strong> abra o{" "}
                 <Link to="/painel-operacional" className="underline">Painel Operacional</Link>{" "}
-                em outra aba (ou TV via <code>/loginpainel</code>) e dispare uma entrada aqui — o card
-                do colaborador muda de estado em tempo real e os alertas aparecem no sino.
-                <br />
-                O painel externo (TV) atualiza automaticamente a cada 60 segundos.
+                em outra aba (ou TV via <code>/loginpainel</code>) e dispare uma entrada aqui — o painel reage
+                em tempo real via Realtime (com fallback de polling a cada 60 s).
               </div>
             </div>
+
+            {/* Fila de eventos: persistida em localStorage e reprocessada a cada 5s. */}
+            <div className="rounded-md border bg-muted/10 p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Clock className="h-4 w-4 text-primary" />
+                  Fila de eventos
+                  <Badge variant={queue.length === 0 ? "secondary" : "default"}>
+                    {queue.length} pendente{queue.length === 1 ? "" : "s"}
+                  </Badge>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="ghost" onClick={retryNow} disabled={queue.length === 0}>
+                    <RefreshCw className="h-3.5 w-3.5 mr-1" /> Reprocessar
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={clearFailed} disabled={queue.length === 0}>
+                    Limpar
+                  </Button>
+                </div>
+              </div>
+              {queue.length === 0 ? (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Check className="h-3.5 w-3.5 text-status-green" />
+                  Todos os eventos foram entregues.
+                </div>
+              ) : (
+                <ul className="space-y-1 max-h-40 overflow-auto text-xs">
+                  {queue.slice(0, 20).map((q) => (
+                    <li key={q.id} className="flex items-center justify-between gap-2 border-b border-border/40 py-1 last:border-b-0">
+                      <span className="truncate">
+                        <span className="font-medium text-foreground">{ACTION_LABEL[q.kind]}</span>{" "}
+                        <span className="text-muted-foreground">· {q.empName}</span>
+                      </span>
+                      <span className={cn("shrink-0 text-xs", q.attempts > 0 ? "text-status-orange" : "text-muted-foreground")}>
+                        {q.attempts > 0 ? `${q.attempts} tentativa${q.attempts === 1 ? "" : "s"}` : "aguardando"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="text-[11px] text-muted-foreground mt-2">
+                Se a rede/backend cair, os eventos ficam salvos localmente e são reenviados automaticamente
+                ao restabelecer a conexão (retry a cada {QUEUE_RETRY_MS / 1000}s).
+              </p>
+            </div>
+
           </CardContent>
         </Card>
 
