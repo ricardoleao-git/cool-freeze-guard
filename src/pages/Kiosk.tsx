@@ -144,15 +144,16 @@ function Tile({
   return (
     <div
       data-testid={testId}
-      className={`rounded-2xl border-2 px-5 py-4 ${map[tone]} ${
+      className={`rounded-xl sm:rounded-2xl border-2 px-3 py-3 sm:px-5 sm:py-4 ${map[tone]} ${
         pulse ? "animate-pulse" : ""
       }`}
     >
-      <div className="text-xs uppercase tracking-widest opacity-80">{label}</div>
-      <div className="mt-1 text-5xl font-bold tabular-nums">{count}</div>
+      <div className="text-[10px] sm:text-xs uppercase tracking-widest opacity-80 truncate">{label}</div>
+      <div className="mt-0.5 sm:mt-1 text-3xl sm:text-4xl md:text-5xl font-bold tabular-nums">{count}</div>
     </div>
   );
 }
+
 
 function PersonCard({
   person,
