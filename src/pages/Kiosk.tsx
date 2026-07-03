@@ -439,28 +439,28 @@ export default function Kiosk() {
       data-testid="kiosk-panel"
       className="min-h-screen bg-zinc-950 text-zinc-100 px-5 py-4 flex flex-col gap-4"
     >
-      <header className="flex items-center justify-between gap-6 pb-4 border-b border-zinc-800">
-        <div className="flex items-center gap-3">
-          <Snowflake className="h-10 w-10 text-sky-400" />
-          <div className="flex flex-col leading-tight">
-            <span className="text-3xl font-bold tracking-tight text-zinc-50">FrioSafe</span>
-            <span className="text-xs uppercase tracking-widest text-zinc-500 mt-0.5">
+      <header className="flex items-center justify-between gap-3 sm:gap-6 pb-3 sm:pb-4 border-b border-zinc-800">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <Snowflake className="h-8 w-8 sm:h-10 sm:w-10 text-sky-400 shrink-0" />
+          <div className="flex flex-col leading-tight min-w-0">
+            <span className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-zinc-50">FrioSafe</span>
+            <span className="text-[10px] sm:text-xs uppercase tracking-widest text-zinc-500 mt-0.5 truncate">
               {data.tenant_nome ?? "—"}
             </span>
           </div>
         </div>
 
-        <div className="text-right">
-          <div className="text-4xl font-bold tabular-nums leading-none text-zinc-100">{clockTxt}</div>
-          <div className="text-xs text-zinc-300 mt-1.5 capitalize">{dateTxt}</div>
+        <div className="text-right shrink-0">
+          <div className="text-2xl sm:text-3xl md:text-4xl font-bold tabular-nums leading-none text-zinc-100">{clockTxt}</div>
+          <div className="text-[10px] sm:text-xs text-zinc-300 mt-1 sm:mt-1.5 capitalize">{dateTxt}</div>
         </div>
       </header>
 
       <section>
-        <h2 className="text-sm uppercase tracking-widest text-zinc-400 mb-2">
+        <h2 className="text-xs sm:text-sm uppercase tracking-widest text-zinc-400 mb-2">
           Status dos colaboradores
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
           <Tile testId="tile-inside" label="Dentro" count={liveSummary.ok} tone="green" />
           <Tile testId="tile-attention" label="Atenção" count={attention} tone="yellow" />
           <Tile
@@ -473,6 +473,7 @@ export default function Kiosk() {
           <Tile testId="tile-break" label="Em pausa" count={onBreak} tone="blue" />
         </div>
       </section>
+
 
       <section className="flex-1">
         {enrichedInside.length === 0 ? (
