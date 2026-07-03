@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Snowflake, AlertCircle, ShieldCheck, Sparkles, WifiOff } from "lucide-react";
+import { Snowflake, AlertCircle, ShieldCheck, WifiOff } from "lucide-react";
 import { ageSeconds, computeOffsetMs } from "@/lib/kiosk-age";
 import { supabase } from "@/integrations/supabase/client";
 
