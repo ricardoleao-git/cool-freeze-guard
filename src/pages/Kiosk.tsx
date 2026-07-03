@@ -437,7 +437,7 @@ export default function Kiosk() {
   return (
     <div
       data-testid="kiosk-panel"
-      className="min-h-screen bg-zinc-950 text-zinc-100 px-5 py-4 flex flex-col gap-4"
+      className="min-h-screen bg-zinc-950 text-zinc-100 px-3 py-3 sm:px-5 sm:py-4 flex flex-col gap-3 sm:gap-4"
     >
       <header className="flex items-center justify-between gap-3 sm:gap-6 pb-3 sm:pb-4 border-b border-zinc-800">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
