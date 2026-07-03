@@ -218,7 +218,7 @@ function PersonCard({
 
 export default function Kiosk() {
   const [params] = useSearchParams();
-  const initialToken = params.get("token")?.trim() || "";
+  const initialToken = (params.get("token") || params.get("boot") || "").trim();
   const [token, setToken] = useState(initialToken);
   const [data, setData] = useState<Payload | null>(null);
   const [invalid, setInvalid] = useState(false);

@@ -23,6 +23,31 @@ function randomToken(): string {
   return b64;
 }
 
+function randomPairingCode(): string {
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return String(buf[0] % 1_000_000).padStart(6, "0");
+}
+
+const PAIRING_TTL_MS = 15 * 60 * 1000;
+
+async function generateUniquePairingCode(
+  admin: ReturnType<typeof createClient>,
+  tenantId: string,
+): Promise<string> {
+  for (let i = 0; i < 8; i++) {
+    const code = randomPairingCode();
+    const { data } = await admin
+      .from("kiosk_tokens")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("pairing_code", code)
+      .maybeSingle();
+    if (!data) return code;
+  }
+  throw new Error("could_not_allocate_code");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return fail(405, "method_not_allowed");
@@ -68,14 +93,54 @@ Deno.serve(async (req) => {
           ? body.payload.label.trim().slice(0, 120)
           : null;
       const token = randomToken();
+      const pairingCode = await generateUniquePairingCode(admin, tenantId);
+      const pairingExpiresAt = new Date(Date.now() + PAIRING_TTL_MS).toISOString();
       const { data, error } = await admin
         .from("kiosk_tokens")
-        .insert({ tenant_id: tenantId, token, label, created_by_user_id: userId })
+        .insert({
+          tenant_id: tenantId,
+          token,
+          label,
+          created_by_user_id: userId,
+          pairing_code: pairingCode,
+          pairing_expires_at: pairingExpiresAt,
+        })
         .select("id, label, active, created_at")
         .single();
       if (error) return fail(500, "create_failed", error.message);
       return new Response(
-        JSON.stringify({ ok: true, id: data.id, token, label: data.label, created_at: data.created_at }),
+        JSON.stringify({
+          ok: true,
+          id: data.id,
+          token,
+          pairing_code: pairingCode,
+          pairing_expires_at: pairingExpiresAt,
+          label: data.label,
+          created_at: data.created_at,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    if (action === "regenerate_code") {
+      const tokenId = body?.payload?.token_id;
+      if (!tokenId) return fail(400, "missing_token_id");
+      const pairingCode = await generateUniquePairingCode(admin, tenantId);
+      const pairingExpiresAt = new Date(Date.now() + PAIRING_TTL_MS).toISOString();
+      const { error } = await admin
+        .from("kiosk_tokens")
+        .update({
+          pairing_code: pairingCode,
+          pairing_expires_at: pairingExpiresAt,
+          paired_at: null,
+          paired_ip: null,
+          paired_user_agent: null,
+        })
+        .eq("id", tokenId)
+        .eq("tenant_id", tenantId);
+      if (error) return fail(500, "regenerate_failed", error.message);
+      return new Response(
+        JSON.stringify({ ok: true, pairing_code: pairingCode, pairing_expires_at: pairingExpiresAt }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -97,7 +162,9 @@ Deno.serve(async (req) => {
     if (action === "list") {
       const { data, error } = await admin
         .from("kiosk_tokens")
-        .select("id, label, active, last_used_at, created_at, revoked_at, created_by_user_id, token")
+        .select(
+          "id, label, active, last_used_at, created_at, revoked_at, created_by_user_id, token, pairing_code, pairing_expires_at, paired_at, paired_ip, paired_user_agent",
+        )
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
       if (error) return fail(500, "list_failed", error.message);
@@ -125,6 +192,11 @@ Deno.serve(async (req) => {
         revoked_at: r.revoked_at,
         created_by: r.created_by_user_id ? nameMap.get(r.created_by_user_id) ?? null : null,
         token_hint: r.token ? `…${String(r.token).slice(-6)}` : null,
+        pairing_code: r.pairing_code,
+        pairing_expires_at: r.pairing_expires_at,
+        paired_at: r.paired_at,
+        paired_ip: r.paired_ip,
+        paired_user_agent: r.paired_user_agent,
       }));
       return new Response(JSON.stringify({ ok: true, items }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
