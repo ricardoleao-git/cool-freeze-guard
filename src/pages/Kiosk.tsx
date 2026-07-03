@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Snowflake, AlertCircle, ShieldCheck, WifiOff } from "lucide-react";
-import { ageSeconds, computeOffsetMs } from "@/lib/kiosk-age";
+import { computeOffsetMs } from "@/lib/kiosk-age";
 import { supabase } from "@/integrations/supabase/client";
 
 const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kiosk-panel`;
@@ -429,7 +429,7 @@ export default function Kiosk() {
     day: "2-digit",
     month: "long",
   });
-  const ageSec = ageSeconds(lastServerTimeRef.current, now, offsetRef.current);
+  
 
   const onBreak = data.on_break ?? 0;
   // "Alerta" (vermelho) = ultrapassou o tempo (limite atingido) => risk red
@@ -506,16 +506,28 @@ export default function Kiosk() {
         )}
       </section>
 
-      <div
-        data-testid="kiosk-age"
-        className={`text-[11px] flex items-center justify-end gap-2 ${
-          consecutiveFailures > 0 ? "text-amber-400" : "text-zinc-600"
-        }`}
-      >
-        {consecutiveFailures > 0 && <WifiOff className="h-3.5 w-3.5" />}
-        atualizado há {ageSec}s
-        {consecutiveFailures > 0 && ` · reconectando (tentativa ${consecutiveFailures})`}
-      </div>
+      {consecutiveFailures > 0 && lastServerTimeRef.current && (
+        <div
+          data-testid="kiosk-offline"
+          className="flex items-center justify-center gap-2 rounded-lg border border-amber-600/50 bg-amber-900/25 px-3 py-2 text-xs sm:text-sm text-amber-200"
+        >
+          <WifiOff className="h-4 w-4 shrink-0" />
+          <span>
+            Painel offline · última sincronização em{" "}
+            <span className="tabular-nums font-semibold">
+              {new Date(lastServerTimeRef.current).toLocaleDateString("pt-BR")}
+            </span>{" "}
+            às{" "}
+            <span className="tabular-nums font-semibold">
+              {new Date(lastServerTimeRef.current).toLocaleTimeString("pt-BR", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          </span>
+        </div>
+      )}
+
     </div>
   );
 }
