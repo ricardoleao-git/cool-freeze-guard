@@ -38,6 +38,7 @@ import Inconsistencies from "./pages/Inconsistencies";
 import PeriodClosure from "./pages/PeriodClosure";
 import Kiosk from "./pages/Kiosk";
 import KioskTokens from "./pages/KioskTokens";
+import Simulator from "./pages/Simulator";
 import KioskLogin from "./pages/KioskLogin";
 
 const queryClient = new QueryClient();
@@ -116,6 +117,7 @@ const App = () => (
                 <Route path="/inconsistencias" element={<Inconsistencies />} />
                 <Route path="/fechamento" element={<PeriodClosure />} />
                 <Route path="/configuracoes/painel-externo" element={<KioskTokens />} />
+                <Route path="/simulador" element={<Simulator />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
