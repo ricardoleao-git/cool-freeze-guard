@@ -212,11 +212,20 @@ export default function Simulator() {
                 <LogOut className="h-4 w-4 mr-2" /> Saída
               </Button>
               <Button
-                variant="outline"
-                className={cn(lastAction === "advance" && btnActive)}
-                onClick={() => run("advance", () => advanceMinutes(10), "Avançado +10 min")}
+                variant="outline" disabled={!emp || !isInside}
+                className={cn(lastAction === "plus10" && btnActive)}
+                onClick={() => run("plus10", () => shiftInsideMinutes(10), "+10 min aplicados")}
+                title={isInside ? "Adiciona 10 min ao tempo dentro" : "Registre uma entrada primeiro"}
               >
-                <FastForward className="h-4 w-4 mr-2" /> +10 min
+                <Plus className="h-4 w-4 mr-2" /> 10 min
+              </Button>
+              <Button
+                variant="outline" disabled={!emp || !isInside}
+                className={cn(lastAction === "minus10" && btnActive)}
+                onClick={() => run("minus10", () => shiftInsideMinutes(-10), "-10 min aplicados")}
+                title={isInside ? "Remove 10 min do tempo dentro" : "Registre uma entrada primeiro"}
+              >
+                <Minus className="h-4 w-4 mr-2" /> 10 min
               </Button>
               <Button
                 variant="outline" disabled={!emp}
