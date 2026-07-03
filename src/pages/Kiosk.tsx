@@ -30,6 +30,7 @@ type Payload = {
   areas: Area[];
   inside: Inside[];
   summary: { total: number; ok: number; yellow: number; orange: number; red: number };
+  on_break?: number;
   daily_pride: { thermal_breaks_today: number; external_readings_today: number };
 };
 
