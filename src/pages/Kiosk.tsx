@@ -24,6 +24,7 @@ type Inside = {
   inside_since: string | null;
 };
 type Payload = {
+  tenant_id: string | null;
   tenant_nome: string | null;
   server_time: string;
   areas: Area[];
