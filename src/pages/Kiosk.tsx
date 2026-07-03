@@ -5,7 +5,7 @@ import { ageSeconds, computeOffsetMs } from "@/lib/kiosk-age";
 
 const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kiosk-panel`;
 const ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
-const POLL_MS = 20_000;
+const POLL_MS = 60_000;
 const BACKOFF_STEPS_MS = [5_000, 10_000, 20_000, 40_000, 60_000];
 
 type Area = {
