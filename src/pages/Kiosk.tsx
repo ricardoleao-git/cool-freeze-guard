@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Snowflake, AlertCircle, ShieldCheck, Sparkles, WifiOff } from "lucide-react";
+import { Snowflake, AlertCircle, ShieldCheck, WifiOff } from "lucide-react";
 import { ageSeconds, computeOffsetMs } from "@/lib/kiosk-age";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -30,6 +30,7 @@ type Payload = {
   areas: Area[];
   inside: Inside[];
   summary: { total: number; ok: number; yellow: number; orange: number; red: number };
+  on_break?: number;
   daily_pride: { thermal_breaks_today: number; external_readings_today: number };
 };
 
@@ -130,25 +131,25 @@ function Tile({
 }: {
   label: string;
   count: number;
-  tone: "green" | "yellow" | "orange" | "red";
+  tone: "green" | "yellow" | "red" | "blue";
   pulse?: boolean;
   testId?: string;
 }) {
   const map = {
-    green: "bg-emerald-600/20 border-emerald-500/60 text-emerald-300",
-    yellow: "bg-amber-500/20 border-amber-500/60 text-amber-200",
-    orange: "bg-orange-600/25 border-orange-500/70 text-orange-200",
-    red: "bg-rose-700/25 border-rose-500/80 text-rose-200",
+    green: "bg-emerald-600/15 border-emerald-500/50 text-emerald-300",
+    yellow: "bg-amber-500/15 border-amber-500/50 text-amber-200",
+    red: "bg-rose-700/20 border-rose-500/70 text-rose-200",
+    blue: "bg-sky-600/15 border-sky-500/50 text-sky-200",
   } as const;
   return (
     <div
       data-testid={testId}
-      className={`rounded-2xl border-2 px-6 py-5 ${map[tone]} ${
+      className={`rounded-2xl border-2 px-5 py-4 ${map[tone]} ${
         pulse ? "animate-pulse" : ""
       }`}
     >
       <div className="text-xs uppercase tracking-widest opacity-80">{label}</div>
-      <div className="mt-1 text-6xl font-bold tabular-nums">{count}</div>
+      <div className="mt-1 text-5xl font-bold tabular-nums">{count}</div>
     </div>
   );
 }
@@ -166,12 +167,12 @@ function PersonCard({
 }) {
   const tone =
     risk === "red"
-      ? "border-rose-500 bg-rose-900/30 animate-pulse"
+      ? "border-rose-500 bg-rose-900/25 animate-pulse"
       : risk === "orange"
-      ? "border-orange-500 bg-orange-900/25"
+      ? "border-orange-500 bg-orange-900/20"
       : risk === "yellow"
-      ? "border-amber-400 bg-amber-900/20"
-      : "border-emerald-500/60 bg-emerald-900/15";
+      ? "border-amber-400 bg-amber-900/15"
+      : "border-emerald-500/60 bg-emerald-900/10";
   const timeTone =
     risk === "red"
       ? "text-rose-200"
@@ -180,39 +181,48 @@ function PersonCard({
       : risk === "yellow"
       ? "text-amber-200"
       : "text-emerald-200";
+  const enteredAt = person.inside_since
+    ? new Date(person.inside_since).toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "—";
+  const areaName = person.area_nome ?? area?.name ?? "—";
   return (
     <div
       data-testid="kiosk-person"
       data-risk={risk}
       data-name={person.primeiro_nome}
-      className={`rounded-2xl border-2 p-5 flex items-center gap-5 ${tone}`}
+      className={`rounded-2xl border-2 p-4 flex flex-col gap-3 ${tone}`}
     >
-      {person.avatar ? (
-        <img
-          src={person.avatar}
-          alt=""
-          className="h-24 w-24 rounded-full object-cover border-2 border-zinc-700"
-        />
-      ) : (
-        <div className="h-24 w-24 rounded-full bg-zinc-800 border-2 border-zinc-700 grid place-items-center text-3xl font-semibold text-zinc-300">
-          {initials(person.primeiro_nome)}
+      <div className="flex items-center gap-4">
+        {person.avatar ? (
+          <img
+            src={person.avatar}
+            alt=""
+            className="h-16 w-16 rounded-full object-cover border-2 border-zinc-700"
+          />
+        ) : (
+          <div className="h-16 w-16 rounded-full bg-zinc-800 border-2 border-zinc-700 grid place-items-center text-xl font-semibold text-zinc-300">
+            {initials(person.primeiro_nome)}
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="text-2xl font-bold text-zinc-50 truncate leading-tight">
+            {person.primeiro_nome}
+          </div>
+          <div className="text-sm text-zinc-400 mt-0.5">
+            entrou às <span className="tabular-nums text-zinc-300">{enteredAt}</span>
+          </div>
         </div>
-      )}
-      <div className="flex-1 min-w-0">
-        <div className="text-3xl font-bold text-zinc-50 truncate">
-          {person.primeiro_nome}
-        </div>
-        <div className="text-lg text-zinc-400 truncate">
-          {person.area_nome ?? area?.name ?? "—"}
+        <div className={`text-right ${timeTone}`}>
+          <div className="text-3xl font-bold tabular-nums leading-none">
+            {fmt(minutes)}
+          </div>
         </div>
       </div>
-      <div className={`text-right ${timeTone}`}>
-        <div className="text-5xl font-bold tabular-nums leading-none">
-          {fmt(minutes)}
-        </div>
-        <div className="text-xs uppercase tracking-widest mt-1 opacity-80">
-          tempo dentro
-        </div>
+      <div className="pt-2 border-t border-zinc-700/60 text-xs uppercase tracking-widest text-zinc-400 truncate">
+        {areaName}
       </div>
     </div>
   );
@@ -429,40 +439,48 @@ export default function Kiosk() {
   });
   const ageSec = ageSeconds(lastServerTimeRef.current, now, offsetRef.current);
 
+  const onBreak = data.on_break ?? 0;
+  // "Alerta" (vermelho) = ultrapassou o tempo (limite atingido) => risk red
+  // "Atenção" (amarelo) = yellow + orange
+  const attention = liveSummary.yellow + liveSummary.orange;
+
   return (
     <div
       data-testid="kiosk-panel"
-      className="min-h-screen bg-zinc-950 text-zinc-100 p-8 flex flex-col gap-6"
+      className="min-h-screen bg-zinc-950 text-zinc-100 px-5 py-4 flex flex-col gap-4"
     >
       <header className="flex items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <Snowflake className="h-12 w-12 text-sky-400" />
-          <div>
-            <div className="text-sm uppercase tracking-widest text-zinc-400">
+        <div className="flex items-center gap-3">
+          <Snowflake className="h-10 w-10 text-sky-400" />
+          <div className="flex items-baseline gap-3">
+            <span className="text-3xl font-bold tracking-tight text-zinc-50">FrioSafe</span>
+            <span className="hidden md:inline text-sm uppercase tracking-widest text-zinc-500">
               {data.tenant_nome ?? "—"}
-            </div>
-            <h1 className="text-4xl font-bold tracking-tight">
-              Monitoramento de Câmaras Frias
-            </h1>
+            </span>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-6xl font-bold tabular-nums leading-none">{clockTxt}</div>
-          <div className="text-sm text-zinc-400 mt-2 capitalize">{dateTxt}</div>
+          <div className="text-4xl font-bold tabular-nums leading-none text-zinc-100">{clockTxt}</div>
+          <div className="text-xs text-zinc-300 mt-1.5 capitalize">{dateTxt}</div>
         </div>
       </header>
 
-      <section className="grid grid-cols-4 gap-4">
-        <Tile testId="tile-ok" label="OK" count={liveSummary.ok} tone="green" />
-        <Tile testId="tile-yellow" label="Atenção" count={liveSummary.yellow} tone="yellow" />
-        <Tile testId="tile-orange" label="Alerta" count={liveSummary.orange} tone="orange" />
-        <Tile
-          testId="tile-red"
-          label="Crítico"
-          count={liveSummary.red}
-          tone="red"
-          pulse={liveSummary.red > 0}
-        />
+      <section>
+        <h2 className="text-sm uppercase tracking-widest text-zinc-400 mb-2">
+          Status dos colaboradores
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Tile testId="tile-inside" label="Dentro" count={liveSummary.ok} tone="green" />
+          <Tile testId="tile-attention" label="Atenção" count={attention} tone="yellow" />
+          <Tile
+            testId="tile-alert"
+            label="Alerta — sair"
+            count={liveSummary.red}
+            tone="red"
+            pulse={liveSummary.red > 0}
+          />
+          <Tile testId="tile-break" label="Em pausa" count={onBreak} tone="blue" />
+        </div>
       </section>
 
       <section className="flex-1">
@@ -479,7 +497,7 @@ export default function Kiosk() {
         ) : (
           <div
             data-testid="kiosk-grid"
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"
           >
             {enrichedInside.map((e, i) => (
               <PersonCard
@@ -494,32 +512,16 @@ export default function Kiosk() {
         )}
       </section>
 
-      <footer className="flex items-center justify-between gap-4 rounded-2xl border border-emerald-700/50 bg-emerald-900/20 px-6 py-4">
-        <div className="flex items-center gap-3 text-emerald-200">
-          <Sparkles className="h-6 w-6" />
-          <div className="text-lg">
-            Hoje:{" "}
-            <span className="font-semibold tabular-nums">
-              {data.daily_pride.thermal_breaks_today}
-            </span>{" "}
-            pausas térmicas cumpridas ·{" "}
-            <span className="font-semibold tabular-nums">
-              {data.daily_pride.external_readings_today}
-            </span>{" "}
-            leituras externas registradas
-          </div>
-        </div>
-        <div
-          data-testid="kiosk-age"
-          className={`text-xs flex items-center gap-2 ${
-            consecutiveFailures > 0 ? "text-amber-400" : "text-zinc-500"
-          }`}
-        >
-          {consecutiveFailures > 0 && <WifiOff className="h-4 w-4" />}
-          atualizado há {ageSec}s
-          {consecutiveFailures > 0 && ` · reconectando (tentativa ${consecutiveFailures})`}
-        </div>
-      </footer>
+      <div
+        data-testid="kiosk-age"
+        className={`text-[11px] flex items-center justify-end gap-2 ${
+          consecutiveFailures > 0 ? "text-amber-400" : "text-zinc-600"
+        }`}
+      >
+        {consecutiveFailures > 0 && <WifiOff className="h-3.5 w-3.5" />}
+        atualizado há {ageSec}s
+        {consecutiveFailures > 0 && ` · reconectando (tentativa ${consecutiveFailures})`}
+      </div>
     </div>
   );
 }

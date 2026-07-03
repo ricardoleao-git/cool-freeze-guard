@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     // best-effort touch
     supabase.from("kiosk_tokens").update({ last_used_at: new Date().toISOString() }).eq("id", tok.id).then(() => {});
 
-    const [{ data: tenant }, { data: areas }, { data: insideRaw }] = await Promise.all([
+    const [{ data: tenant }, { data: areas }, { data: insideRaw }, { count: onBreakCount }] = await Promise.all([
       supabase.from("tenants").select("name").eq("id", tenantId).maybeSingle(),
       supabase
         .from("cold_areas")
@@ -83,6 +83,11 @@ Deno.serve(async (req) => {
         // "inside" cobre exposição normal; yellow/orange/blocked são estados
         // de exposição prolongada — o colaborador continua dentro da câmara.
         .in("current_status", ["inside", "yellow", "orange", "blocked"]),
+      supabase
+        .from("employees")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenantId)
+        .eq("current_status", "thermal_break"),
     ]);
 
     const areaMap = new Map<string, any>();
@@ -145,6 +150,7 @@ Deno.serve(async (req) => {
         })),
         inside,
         summary,
+        on_break: onBreakCount ?? 0,
         daily_pride: {
           thermal_breaks_today: breaksCount ?? 0,
           external_readings_today: externalCount ?? 0,
