@@ -323,14 +323,14 @@ export default function Simulator() {
               <Button
                 variant="outline" disabled={!emp}
                 className={cn(lastAction === "exit" && btnActive)}
-                onClick={() => run("exit", () => simulateExit(emp), "Saída simulada")}
+                onClick={() => run("exit")}
               >
                 <LogOut className="h-4 w-4 mr-2" /> Saída
               </Button>
               <Button
                 variant="outline" disabled={!emp || !isInside}
                 className={cn(lastAction === "plus10" && btnActive)}
-                onClick={() => run("plus10", () => shiftInsideMinutes(10), "+10 min aplicados")}
+                onClick={() => run("plus10")}
                 title={isInside ? "Adiciona 10 min ao tempo dentro" : "Registre uma entrada primeiro"}
               >
                 <Plus className="h-4 w-4 mr-2" /> 10 min
@@ -338,7 +338,7 @@ export default function Simulator() {
               <Button
                 variant="outline" disabled={!emp || !isInside}
                 className={cn(lastAction === "minus10" && btnActive)}
-                onClick={() => run("minus10", () => shiftInsideMinutes(-10), "-10 min aplicados")}
+                onClick={() => run("minus10")}
                 title={isInside ? "Remove 10 min do tempo dentro" : "Registre uma entrada primeiro"}
               >
                 <Minus className="h-4 w-4 mr-2" /> 10 min
@@ -349,7 +349,7 @@ export default function Simulator() {
                   "border-status-yellow/60 text-status-yellow hover:bg-status-yellow/10",
                   lastAction === "yellow" && btnActive,
                 )}
-                onClick={() => run("yellow", () => forceStatus(emp, "yellow"), "Status forçado: amarelo")}
+                onClick={() => run("yellow")}
               >
                 <AlertTriangle className="h-4 w-4 mr-2" /> Amarelo
               </Button>
@@ -359,7 +359,7 @@ export default function Simulator() {
                   "border-status-orange/60 text-status-orange hover:bg-status-orange/10",
                   lastAction === "orange" && btnActive,
                 )}
-                onClick={() => run("orange", () => forceStatus(emp, "orange"), "Status forçado: laranja")}
+                onClick={() => run("orange")}
               >
                 <AlertTriangle className="h-4 w-4 mr-2" /> Laranja
               </Button>
@@ -369,7 +369,7 @@ export default function Simulator() {
                   "border-status-red/60 text-status-red hover:bg-status-red/10",
                   lastAction === "blocked" && btnActive,
                 )}
-                onClick={() => run("blocked", () => forceStatus(emp, "blocked"), "Status forçado: bloqueio")}
+                onClick={() => run("blocked")}
               >
                 <ShieldAlert className="h-4 w-4 mr-2" /> Bloqueio
               </Button>
