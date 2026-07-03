@@ -448,11 +448,8 @@ export default function Kiosk() {
               {data.tenant_nome ?? "—"}
             </span>
           </div>
-
-              {data.tenant_nome ?? "—"}
-            </span>
-          </div>
         </div>
+
         <div className="text-right">
           <div className="text-4xl font-bold tabular-nums leading-none text-zinc-100">{clockTxt}</div>
           <div className="text-xs text-zinc-300 mt-1.5 capitalize">{dateTxt}</div>
