@@ -194,26 +194,27 @@ function PersonCard({
       data-testid="kiosk-person"
       data-risk={risk}
       data-name={person.primeiro_nome}
-      className={`rounded-2xl border-2 p-4 flex flex-col gap-3 ${tone}`}
+      className={`rounded-xl sm:rounded-2xl border-2 p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 ${tone}`}
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4">
         <div className="flex-1 min-w-0">
-          <div className="text-2xl font-bold text-zinc-50 truncate leading-tight">
+          <div className="text-lg sm:text-xl md:text-2xl font-bold text-zinc-50 truncate leading-tight">
             {person.primeiro_nome}
           </div>
-          <div className="text-sm text-zinc-400 mt-0.5">
+          <div className="text-xs sm:text-sm text-zinc-400 mt-0.5">
             entrou às <span className="tabular-nums text-zinc-300">{enteredAt}</span>
           </div>
         </div>
         <div className={`text-right ${timeTone}`}>
-          <div className="text-3xl font-bold tabular-nums leading-none">
+          <div className="text-2xl sm:text-3xl font-bold tabular-nums leading-none">
             {fmt(minutes)}
           </div>
         </div>
       </div>
-      <div className="pt-2 border-t border-zinc-700/60 text-xs uppercase tracking-widest text-zinc-400 truncate">
+      <div className="pt-1.5 sm:pt-2 border-t border-zinc-700/60 text-[10px] sm:text-xs uppercase tracking-widest text-zinc-400 truncate">
         {areaName}
       </div>
+
     </div>
   );
 }
