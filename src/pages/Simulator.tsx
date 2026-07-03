@@ -18,6 +18,24 @@ import { cn } from "@/lib/utils";
 
 type ActionKey = "entry" | "exit" | "plus10" | "minus10" | "yellow" | "orange" | "blocked";
 
+type QueueItem = {
+  id: string;
+  kind: ActionKey;
+  empId: string;
+  empName: string;
+  createdAt: number;
+  attempts: number;
+  lastError?: string;
+};
+
+const QUEUE_STORAGE_KEY = (tenant: string) => `sim-queue:v1:${tenant}`;
+const QUEUE_RETRY_MS = 5_000;
+const ACTION_LABEL: Record<ActionKey, string> = {
+  entry: "Entrada", exit: "Saída",
+  plus10: "+10 min", minus10: "-10 min",
+  yellow: "Status amarelo", orange: "Status laranja", blocked: "Bloqueio",
+};
+
 export default function Simulator() {
   const { profile } = useAuth();
   const {
