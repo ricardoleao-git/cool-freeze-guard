@@ -93,14 +93,54 @@ Deno.serve(async (req) => {
           ? body.payload.label.trim().slice(0, 120)
           : null;
       const token = randomToken();
+      const pairingCode = await generateUniquePairingCode(admin, tenantId);
+      const pairingExpiresAt = new Date(Date.now() + PAIRING_TTL_MS).toISOString();
       const { data, error } = await admin
         .from("kiosk_tokens")
-        .insert({ tenant_id: tenantId, token, label, created_by_user_id: userId })
+        .insert({
+          tenant_id: tenantId,
+          token,
+          label,
+          created_by_user_id: userId,
+          pairing_code: pairingCode,
+          pairing_expires_at: pairingExpiresAt,
+        })
         .select("id, label, active, created_at")
         .single();
       if (error) return fail(500, "create_failed", error.message);
       return new Response(
-        JSON.stringify({ ok: true, id: data.id, token, label: data.label, created_at: data.created_at }),
+        JSON.stringify({
+          ok: true,
+          id: data.id,
+          token,
+          pairing_code: pairingCode,
+          pairing_expires_at: pairingExpiresAt,
+          label: data.label,
+          created_at: data.created_at,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    if (action === "regenerate_code") {
+      const tokenId = body?.payload?.token_id;
+      if (!tokenId) return fail(400, "missing_token_id");
+      const pairingCode = await generateUniquePairingCode(admin, tenantId);
+      const pairingExpiresAt = new Date(Date.now() + PAIRING_TTL_MS).toISOString();
+      const { error } = await admin
+        .from("kiosk_tokens")
+        .update({
+          pairing_code: pairingCode,
+          pairing_expires_at: pairingExpiresAt,
+          paired_at: null,
+          paired_ip: null,
+          paired_user_agent: null,
+        })
+        .eq("id", tokenId)
+        .eq("tenant_id", tenantId);
+      if (error) return fail(500, "regenerate_failed", error.message);
+      return new Response(
+        JSON.stringify({ ok: true, pairing_code: pairingCode, pairing_expires_at: pairingExpiresAt }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
