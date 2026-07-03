@@ -150,6 +150,7 @@ Deno.serve(async (req) => {
         })),
         inside,
         summary,
+        on_break: onBreakCount ?? 0,
         daily_pride: {
           thermal_breaks_today: breaksCount ?? 0,
           external_readings_today: externalCount ?? 0,
