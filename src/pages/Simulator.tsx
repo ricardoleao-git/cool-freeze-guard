@@ -104,38 +104,138 @@ export default function Simulator() {
   };
   useEffect(() => () => { if (clearTimerRef.current) clearTimeout(clearTimerRef.current); }, []);
 
-  const run = async (key: ActionKey, fn: () => Promise<void> | void, okMsg: string) => {
-    flash(key);
+  // -----------------------------------------------------------------
+  // Fila persistente de eventos (localStorage) — se a rede/DB falharem,
+  // as ações ficam enfileiradas e um worker tenta reprocessá-las a cada
+  // QUEUE_RETRY_MS. Ao concluir, dispara broadcast para o painel externo.
+  // -----------------------------------------------------------------
+  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const queueRef = useRef<QueueItem[]>([]);
+  const processingRef = useRef(false);
+  const employeesRef = useRef(employees);
+  useEffect(() => { employeesRef.current = employees; }, [employees]);
+
+  // Hidrata a fila do localStorage quando o tenant muda.
+  useEffect(() => {
+    if (!tenantId) return;
     try {
-      await fn();
-      broadcastRefresh();
-      toast.success(okMsg);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Falha ao simular ação");
+      const raw = localStorage.getItem(QUEUE_STORAGE_KEY(tenantId));
+      const parsed: QueueItem[] = raw ? JSON.parse(raw) : [];
+      queueRef.current = parsed;
+      setQueue(parsed);
+    } catch { /* noop */ }
+  }, [tenantId]);
+
+  const persistQueue = useCallback((next: QueueItem[]) => {
+    queueRef.current = next;
+    setQueue(next);
+    if (tenantId) {
+      try { localStorage.setItem(QUEUE_STORAGE_KEY(tenantId), JSON.stringify(next)); }
+      catch { /* noop */ }
     }
+  }, [tenantId]);
+
+  // Executor de uma ação individual (uma vez). Levanta em falha para retry.
+  const executeAction = useCallback(async (item: QueueItem) => {
+    const emps = employeesRef.current;
+    const target = emps.find(e => e.id === item.empId);
+    switch (item.kind) {
+      case "entry":   await simulateEntry(item.empId); break;
+      case "exit":    await simulateExit(item.empId); break;
+      case "yellow":  await forceStatus(item.empId, "yellow"); break;
+      case "orange":  await forceStatus(item.empId, "orange"); break;
+      case "blocked": await forceStatus(item.empId, "blocked"); break;
+      case "plus10":
+      case "minus10": {
+        if (!tenantId) throw new Error("Tenant não carregado");
+        if (!target || !target.inside_since ||
+            !["inside","yellow","orange","blocked"].includes(target.current_status)) {
+          throw new Error("Colaborador não está dentro");
+        }
+        const delta = item.kind === "plus10" ? 10 : -10;
+        const nowMs = Date.now();
+        const shiftedMs = target.inside_since - delta * 60_000;
+        const newInsideSince = new Date(Math.min(nowMs, shiftedMs)).toISOString();
+        const newAcc = Math.max(0, target.accumulated_minutes + delta);
+        const { error } = await supabase
+          .from("employees")
+          .update({ inside_since: newInsideSince, accumulated_minutes: newAcc })
+          .eq("id", target.id)
+          .eq("tenant_id", tenantId);
+        if (error) throw error;
+        break;
+      }
+    }
+  }, [simulateEntry, simulateExit, forceStatus, tenantId]);
+
+  const broadcastRefresh = useCallback(() => {
+    channelRef.current?.send({ type: "broadcast", event: "refresh", payload: { ts: Date.now() } });
+  }, []);
+
+  // Worker que drena a fila (FIFO). Executa 1 por vez para preservar ordem.
+  const processQueue = useCallback(async () => {
+    if (processingRef.current) return;
+    if (queueRef.current.length === 0) return;
+    processingRef.current = true;
+    try {
+      while (queueRef.current.length > 0) {
+        const head = queueRef.current[0];
+        try {
+          await executeAction(head);
+          persistQueue(queueRef.current.slice(1));
+          broadcastRefresh();
+        } catch (e: any) {
+          const updated: QueueItem = {
+            ...head,
+            attempts: head.attempts + 1,
+            lastError: e?.message ?? "erro desconhecido",
+          };
+          persistQueue([updated, ...queueRef.current.slice(1)]);
+          // Interrompe o loop — retry em QUEUE_RETRY_MS.
+          break;
+        }
+      }
+    } finally {
+      processingRef.current = false;
+    }
+  }, [executeAction, persistQueue, broadcastRefresh]);
+
+  // Retry periódico + retry ao voltar online.
+  useEffect(() => {
+    const id = setInterval(() => { void processQueue(); }, QUEUE_RETRY_MS);
+    const onOnline = () => { void processQueue(); };
+    window.addEventListener("online", onOnline);
+    return () => { clearInterval(id); window.removeEventListener("online", onOnline); };
+  }, [processQueue]);
+
+  // Enfileira e tenta processar imediatamente.
+  const enqueue = useCallback((kind: ActionKey, empId: string) => {
+    const target = employeesRef.current.find(e => e.id === empId);
+    const item: QueueItem = {
+      id: crypto.randomUUID(),
+      kind, empId,
+      empName: target?.name ?? "—",
+      createdAt: Date.now(),
+      attempts: 0,
+    };
+    persistQueue([...queueRef.current, item]);
+    void processQueue();
+  }, [persistQueue, processQueue]);
+
+  const run = (key: ActionKey) => {
+    flash(key);
+    if (!emp) return;
+    enqueue(key, emp);
+    toast.success(`${ACTION_LABEL[key]} enfileirada`, {
+      description: queueRef.current.length > 1
+        ? `${queueRef.current.length} eventos aguardando processamento`
+        : "Aplicando ao painel…",
+    });
   };
 
-  // Desloca o inside_since do colaborador selecionado em `deltaMin` minutos:
-  //   +10 min = colaborador "está dentro há 10 min a mais" (inside_since -= 10min).
-  //   -10 min = inverso (com piso em `now`).
-  // Também ajusta accumulated_minutes para manter coerência com o painel.
-  const shiftInsideMinutes = async (deltaMin: number) => {
-    if (!selected || !tenantId) return;
-    if (!isInside || !selected.inside_since) {
-      toast.error("O colaborador precisa estar dentro da câmara para ajustar o tempo.");
-      return;
-    }
-    const nowMs = Date.now();
-    const shiftedMs = selected.inside_since - deltaMin * 60_000;
-    const newInsideSince = new Date(Math.min(nowMs, shiftedMs)).toISOString();
-    const newAcc = Math.max(0, selected.accumulated_minutes + deltaMin);
-    const { error } = await supabase
-      .from("employees")
-      .update({ inside_since: newInsideSince, accumulated_minutes: newAcc })
-      .eq("id", selected.id)
-      .eq("tenant_id", tenantId);
-    if (error) throw error;
-  };
+  const retryNow = () => { void processQueue(); };
+  const clearFailed = () => persistQueue([]);
+
 
   const noSeed = !loading && (employees.length === 0 || coldAreas.length === 0);
   const btnActive = "ring-2 ring-primary ring-offset-2 ring-offset-background";
