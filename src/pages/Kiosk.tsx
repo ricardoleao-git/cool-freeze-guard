@@ -196,17 +196,6 @@ function PersonCard({
       className={`rounded-2xl border-2 p-4 flex flex-col gap-3 ${tone}`}
     >
       <div className="flex items-center gap-4">
-        {person.avatar ? (
-          <img
-            src={person.avatar}
-            alt=""
-            className="h-16 w-16 rounded-full object-cover border-2 border-zinc-700"
-          />
-        ) : (
-          <div className="h-16 w-16 rounded-full bg-zinc-800 border-2 border-zinc-700 grid place-items-center text-xl font-semibold text-zinc-300">
-            {initials(person.primeiro_nome)}
-          </div>
-        )}
         <div className="flex-1 min-w-0">
           <div className="text-2xl font-bold text-zinc-50 truncate leading-tight">
             {person.primeiro_nome}
@@ -227,6 +216,7 @@ function PersonCard({
     </div>
   );
 }
+
 
 export default function Kiosk() {
   const [params] = useSearchParams();
@@ -449,16 +439,17 @@ export default function Kiosk() {
       data-testid="kiosk-panel"
       className="min-h-screen bg-zinc-950 text-zinc-100 px-5 py-4 flex flex-col gap-4"
     >
-      <header className="flex items-center justify-between gap-6">
+      <header className="flex items-center justify-between gap-6 pb-4 border-b border-zinc-800">
         <div className="flex items-center gap-3">
           <Snowflake className="h-10 w-10 text-sky-400" />
-          <div className="flex items-baseline gap-3">
+          <div className="flex flex-col leading-tight">
             <span className="text-3xl font-bold tracking-tight text-zinc-50">FrioSafe</span>
-            <span className="hidden md:inline text-sm uppercase tracking-widest text-zinc-500">
+            <span className="text-xs uppercase tracking-widest text-zinc-500 mt-0.5">
               {data.tenant_nome ?? "—"}
             </span>
           </div>
         </div>
+
         <div className="text-right">
           <div className="text-4xl font-bold tabular-nums leading-none text-zinc-100">{clockTxt}</div>
           <div className="text-xs text-zinc-300 mt-1.5 capitalize">{dateTxt}</div>
