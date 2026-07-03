@@ -27,6 +27,7 @@ const groups = [
       { to: "/resumo-diario", title: "Resumo Diário (RH/SST)", icon: Stethoscope },
       { to: "/meu-dia", title: "Meu Dia (Colaborador)", icon: Bell },
       { to: "/extrato", title: "Extrato de Exposição", icon: Receipt },
+      { to: "/simulador", title: "Simulador ao vivo", icon: FlaskConical },
     ],
   },
   {
