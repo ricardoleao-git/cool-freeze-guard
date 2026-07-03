@@ -58,6 +58,22 @@ export default function Simulator() {
   const { employees, coldAreas, units } = useTenantScoped();
   const [emp, setEmp] = useState<string>("");
   useEffect(() => { if (!emp && employees[0]) setEmp(employees[0].id); }, [employees, emp]);
+  const selected = useMemo(() => employees.find(e => e.id === emp), [employees, emp]);
+  const isInside = !!selected && ["inside", "yellow", "orange", "blocked"].includes(selected.current_status);
+
+  // Canal de broadcast: notifica painéis TV para refazer o fetch imediatamente.
+  const tenantId = profile?.tenant_id ?? null;
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  useEffect(() => {
+    if (!tenantId) return;
+    const ch = supabase.channel(`kiosk:${tenantId}`, { config: { broadcast: { self: false } } });
+    ch.subscribe();
+    channelRef.current = ch;
+    return () => { supabase.removeChannel(ch); channelRef.current = null; };
+  }, [tenantId]);
+  const broadcastRefresh = () => {
+    channelRef.current?.send({ type: "broadcast", event: "refresh", payload: { ts: Date.now() } });
+  };
 
   // Destaca apenas o último botão clicado (por ~2s).
   const [lastAction, setLastAction] = useState<ActionKey | null>(null);
@@ -73,14 +89,38 @@ export default function Simulator() {
     flash(key);
     try {
       await fn();
+      broadcastRefresh();
       toast.success(okMsg);
     } catch (e: any) {
       toast.error(e?.message ?? "Falha ao simular ação");
     }
   };
 
+  // Desloca o inside_since do colaborador selecionado em `deltaMin` minutos:
+  //   +10 min = colaborador "está dentro há 10 min a mais" (inside_since -= 10min).
+  //   -10 min = inverso (com piso em `now`).
+  // Também ajusta accumulated_minutes para manter coerência com o painel.
+  const shiftInsideMinutes = async (deltaMin: number) => {
+    if (!selected || !tenantId) return;
+    if (!isInside || !selected.inside_since) {
+      toast.error("O colaborador precisa estar dentro da câmara para ajustar o tempo.");
+      return;
+    }
+    const nowMs = Date.now();
+    const shiftedMs = selected.inside_since - deltaMin * 60_000;
+    const newInsideSince = new Date(Math.min(nowMs, shiftedMs)).toISOString();
+    const newAcc = Math.max(0, selected.accumulated_minutes + deltaMin);
+    const { error } = await supabase
+      .from("employees")
+      .update({ inside_since: newInsideSince, accumulated_minutes: newAcc })
+      .eq("id", selected.id)
+      .eq("tenant_id", tenantId);
+    if (error) throw error;
+  };
+
   const noSeed = !loading && (employees.length === 0 || coldAreas.length === 0);
   const btnActive = "ring-2 ring-primary ring-offset-2 ring-offset-background";
+
 
   return (
     <div className="container py-6 md:py-8">
