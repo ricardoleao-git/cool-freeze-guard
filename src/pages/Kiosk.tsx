@@ -291,19 +291,36 @@ export default function Kiosk() {
     };
   }, [token]);
 
-  // Realtime: assim que sabemos o tenant_id, assinamos um canal de broadcast
-  // "kiosk:<tenant>" — o simulador envia um "refresh" após cada mutação e o
-  // painel dispara uma releitura imediata, sem esperar o poll de 60s.
+  // Realtime em duas camadas + rede de segurança:
+  //  (a) postgres_changes em employees/access_events do tenant — persistente via WAL,
+  //      entrega assim que o Realtime reconecta, mesmo se o cliente ficou offline
+  //      alguns segundos.
+  //  (b) broadcast "kiosk:<tenant>" — disparado pelo simulador, latência mínima
+  //      (mas efêmero: se o painel estiver desconectado, o evento é perdido).
+  //  (c) polling a cada 60s — fallback final caso realtime esteja indisponível.
   const tenantId = data?.tenant_id ?? null;
   useEffect(() => {
     if (!tenantId) return;
+    // debounce para colapsar rajadas (várias UPDATEs seguidos = 1 reload)
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const kick = () => {
+      if (t) clearTimeout(t);
+      t = setTimeout(() => reloadRef.current?.(), 250);
+    };
     const channel = supabase
       .channel(`kiosk:${tenantId}`, { config: { broadcast: { self: false } } })
-      .on("broadcast", { event: "refresh" }, () => {
-        reloadRef.current?.();
-      })
+      .on("broadcast", { event: "refresh" }, kick)
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "employees", filter: `tenant_id=eq.${tenantId}` },
+        kick)
+      .on("postgres_changes",
+        { event: "INSERT", schema: "public", table: "access_events", filter: `tenant_id=eq.${tenantId}` },
+        kick)
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (t) clearTimeout(t);
+      supabase.removeChannel(channel);
+    };
   }, [tenantId]);
 
   useEffect(() => {
