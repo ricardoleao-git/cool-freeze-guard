@@ -316,7 +316,7 @@ export default function Simulator() {
               <Button
                 variant="outline" disabled={!emp}
                 className={cn(lastAction === "entry" && btnActive)}
-                onClick={() => run("entry", () => simulateEntry(emp), "Entrada simulada")}
+                onClick={() => run("entry")}
               >
                 <LogIn className="h-4 w-4 mr-2" /> Entrada
               </Button>
