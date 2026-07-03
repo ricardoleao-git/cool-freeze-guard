@@ -2,25 +2,25 @@ import { PageHeader } from "@/components/PageHeader";
 import { useDemo, useTenantScoped } from "@/lib/demo-store";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { FlaskConical, LogIn, LogOut, FastForward, AlertTriangle, ShieldAlert, Play, Loader2, ExternalLink } from "lucide-react";
+import { FlaskConical, LogIn, LogOut, Plus, Minus, AlertTriangle, ShieldAlert, Play, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { DemoLiveStatusPanel } from "@/components/DemoLiveStatusPanel";
 import { cn } from "@/lib/utils";
 
-type ActionKey = "entry" | "exit" | "advance" | "yellow" | "orange" | "blocked";
+type ActionKey = "entry" | "exit" | "plus10" | "minus10" | "yellow" | "orange" | "blocked";
 
 export default function Simulator() {
   const { profile } = useAuth();
   const {
-    simulateEntry, simulateExit, advanceMinutes, forceStatus,
+    simulateEntry, simulateExit, forceStatus,
     timeScale, setTimeScale, setActiveTenantId, loading,
   } = useDemo();
 
