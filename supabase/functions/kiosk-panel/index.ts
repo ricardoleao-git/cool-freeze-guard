@@ -78,9 +78,11 @@ Deno.serve(async (req) => {
         .eq("tenant_id", tenantId),
       supabase
         .from("employees")
-        .select("name, avatar, current_area_id, inside_since")
+        .select("name, avatar, current_area_id, inside_since, current_status")
         .eq("tenant_id", tenantId)
-        .eq("current_status", "inside"),
+        // "inside" cobre exposição normal; yellow/orange/blocked são estados
+        // de exposição prolongada — o colaborador continua dentro da câmara.
+        .in("current_status", ["inside", "yellow", "orange", "blocked"]),
     ]);
 
     const areaMap = new Map<string, any>();
