@@ -439,40 +439,48 @@ export default function Kiosk() {
   });
   const ageSec = ageSeconds(lastServerTimeRef.current, now, offsetRef.current);
 
+  const onBreak = data.on_break ?? 0;
+  // "Alerta" (vermelho) = ultrapassou o tempo (limite atingido) => risk red
+  // "Atenção" (amarelo) = yellow + orange
+  const attention = liveSummary.yellow + liveSummary.orange;
+
   return (
     <div
       data-testid="kiosk-panel"
-      className="min-h-screen bg-zinc-950 text-zinc-100 p-8 flex flex-col gap-6"
+      className="min-h-screen bg-zinc-950 text-zinc-100 px-5 py-4 flex flex-col gap-4"
     >
       <header className="flex items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <Snowflake className="h-12 w-12 text-sky-400" />
-          <div>
-            <div className="text-sm uppercase tracking-widest text-zinc-400">
+        <div className="flex items-center gap-3">
+          <Snowflake className="h-10 w-10 text-sky-400" />
+          <div className="flex items-baseline gap-3">
+            <span className="text-3xl font-bold tracking-tight text-zinc-50">FrioSafe</span>
+            <span className="hidden md:inline text-sm uppercase tracking-widest text-zinc-500">
               {data.tenant_nome ?? "—"}
-            </div>
-            <h1 className="text-4xl font-bold tracking-tight">
-              Monitoramento de Câmaras Frias
-            </h1>
+            </span>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-6xl font-bold tabular-nums leading-none">{clockTxt}</div>
-          <div className="text-sm text-zinc-400 mt-2 capitalize">{dateTxt}</div>
+          <div className="text-4xl font-bold tabular-nums leading-none text-zinc-100">{clockTxt}</div>
+          <div className="text-xs text-zinc-300 mt-1.5 capitalize">{dateTxt}</div>
         </div>
       </header>
 
-      <section className="grid grid-cols-4 gap-4">
-        <Tile testId="tile-ok" label="OK" count={liveSummary.ok} tone="green" />
-        <Tile testId="tile-yellow" label="Atenção" count={liveSummary.yellow} tone="yellow" />
-        <Tile testId="tile-orange" label="Alerta" count={liveSummary.orange} tone="orange" />
-        <Tile
-          testId="tile-red"
-          label="Crítico"
-          count={liveSummary.red}
-          tone="red"
-          pulse={liveSummary.red > 0}
-        />
+      <section>
+        <h2 className="text-sm uppercase tracking-widest text-zinc-400 mb-2">
+          Status dos colaboradores
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Tile testId="tile-inside" label="Dentro" count={liveSummary.ok} tone="green" />
+          <Tile testId="tile-attention" label="Atenção" count={attention} tone="yellow" />
+          <Tile
+            testId="tile-alert"
+            label="Alerta — sair"
+            count={liveSummary.red}
+            tone="red"
+            pulse={liveSummary.red > 0}
+          />
+          <Tile testId="tile-break" label="Em pausa" count={onBreak} tone="blue" />
+        </div>
       </section>
 
       <section className="flex-1">
@@ -489,7 +497,7 @@ export default function Kiosk() {
         ) : (
           <div
             data-testid="kiosk-grid"
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"
           >
             {enrichedInside.map((e, i) => (
               <PersonCard
@@ -504,32 +512,16 @@ export default function Kiosk() {
         )}
       </section>
 
-      <footer className="flex items-center justify-between gap-4 rounded-2xl border border-emerald-700/50 bg-emerald-900/20 px-6 py-4">
-        <div className="flex items-center gap-3 text-emerald-200">
-          <Sparkles className="h-6 w-6" />
-          <div className="text-lg">
-            Hoje:{" "}
-            <span className="font-semibold tabular-nums">
-              {data.daily_pride.thermal_breaks_today}
-            </span>{" "}
-            pausas térmicas cumpridas ·{" "}
-            <span className="font-semibold tabular-nums">
-              {data.daily_pride.external_readings_today}
-            </span>{" "}
-            leituras externas registradas
-          </div>
-        </div>
-        <div
-          data-testid="kiosk-age"
-          className={`text-xs flex items-center gap-2 ${
-            consecutiveFailures > 0 ? "text-amber-400" : "text-zinc-500"
-          }`}
-        >
-          {consecutiveFailures > 0 && <WifiOff className="h-4 w-4" />}
-          atualizado há {ageSec}s
-          {consecutiveFailures > 0 && ` · reconectando (tentativa ${consecutiveFailures})`}
-        </div>
-      </footer>
+      <div
+        data-testid="kiosk-age"
+        className={`text-[11px] flex items-center justify-end gap-2 ${
+          consecutiveFailures > 0 ? "text-amber-400" : "text-zinc-600"
+        }`}
+      >
+        {consecutiveFailures > 0 && <WifiOff className="h-3.5 w-3.5" />}
+        atualizado há {ageSec}s
+        {consecutiveFailures > 0 && ` · reconectando (tentativa ${consecutiveFailures})`}
+      </div>
     </div>
   );
 }
