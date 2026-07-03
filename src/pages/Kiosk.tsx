@@ -439,12 +439,16 @@ export default function Kiosk() {
       data-testid="kiosk-panel"
       className="min-h-screen bg-zinc-950 text-zinc-100 px-5 py-4 flex flex-col gap-4"
     >
-      <header className="flex items-center justify-between gap-6">
+      <header className="flex items-center justify-between gap-6 pb-4 border-b border-zinc-800">
         <div className="flex items-center gap-3">
           <Snowflake className="h-10 w-10 text-sky-400" />
-          <div className="flex items-baseline gap-3">
+          <div className="flex flex-col leading-tight">
             <span className="text-3xl font-bold tracking-tight text-zinc-50">FrioSafe</span>
-            <span className="hidden md:inline text-sm uppercase tracking-widest text-zinc-500">
+            <span className="text-xs uppercase tracking-widest text-zinc-500 mt-0.5">
+              {data.tenant_nome ?? "—"}
+            </span>
+          </div>
+
               {data.tenant_nome ?? "—"}
             </span>
           </div>
