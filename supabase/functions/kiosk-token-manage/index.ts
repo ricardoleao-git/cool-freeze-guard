@@ -23,6 +23,31 @@ function randomToken(): string {
   return b64;
 }
 
+function randomPairingCode(): string {
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return String(buf[0] % 1_000_000).padStart(6, "0");
+}
+
+const PAIRING_TTL_MS = 15 * 60 * 1000;
+
+async function generateUniquePairingCode(
+  admin: ReturnType<typeof createClient>,
+  tenantId: string,
+): Promise<string> {
+  for (let i = 0; i < 8; i++) {
+    const code = randomPairingCode();
+    const { data } = await admin
+      .from("kiosk_tokens")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .eq("pairing_code", code)
+      .maybeSingle();
+    if (!data) return code;
+  }
+  throw new Error("could_not_allocate_code");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return fail(405, "method_not_allowed");
