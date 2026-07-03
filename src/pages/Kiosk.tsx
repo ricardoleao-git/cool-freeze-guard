@@ -196,17 +196,6 @@ function PersonCard({
       className={`rounded-2xl border-2 p-4 flex flex-col gap-3 ${tone}`}
     >
       <div className="flex items-center gap-4">
-        {person.avatar ? (
-          <img
-            src={person.avatar}
-            alt=""
-            className="h-16 w-16 rounded-full object-cover border-2 border-zinc-700"
-          />
-        ) : (
-          <div className="h-16 w-16 rounded-full bg-zinc-800 border-2 border-zinc-700 grid place-items-center text-xl font-semibold text-zinc-300">
-            {initials(person.primeiro_nome)}
-          </div>
-        )}
         <div className="flex-1 min-w-0">
           <div className="text-2xl font-bold text-zinc-50 truncate leading-tight">
             {person.primeiro_nome}
@@ -227,6 +216,7 @@ function PersonCard({
     </div>
   );
 }
+
 
 export default function Kiosk() {
   const [params] = useSearchParams();
