@@ -229,13 +229,20 @@ export default function Kiosk() {
   const offsetRef = useRef(0); // serverTime - clientTime ms
   const lastServerTimeRef = useRef<number | null>(null);
 
+  // ref to trigger an immediate refetch from outside the polling loop
+  const reloadRef = useRef<() => void>(() => {});
+
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let failures = 0;
+    let inFlight = false;
 
     async function load() {
+      if (inFlight) return;
+      inFlight = true;
+      if (timer) { clearTimeout(timer); timer = null; }
       try {
         const res = await fetch(FN_URL, {
           method: "POST",
@@ -255,10 +262,6 @@ export default function Kiosk() {
         if (!res.ok) throw new Error(`http_${res.status}`);
         const json = (await res.json()) as Payload;
         if (cancelled) return;
-        // On success we update the in-memory snapshot. On failure we deliberately
-        // keep the previous `data`, `offsetRef` and `lastServerTimeRef` so the kiosk
-        // continues to show the last semáforo and grid while the "atualizado há Ns"
-        // label keeps growing — only the next successful poll resets it.
         const serverMs = new Date(json.server_time).getTime();
         offsetRef.current = computeOffsetMs(json.server_time, Date.now());
         lastServerTimeRef.current = serverMs;
@@ -270,6 +273,7 @@ export default function Kiosk() {
         failures += 1;
         setConsecutiveFailures(failures);
       } finally {
+        inFlight = false;
         if (cancelled) return;
         const delay =
           failures === 0
@@ -279,6 +283,7 @@ export default function Kiosk() {
       }
     }
 
+    reloadRef.current = load;
     load();
     return () => {
       cancelled = true;
@@ -286,10 +291,26 @@ export default function Kiosk() {
     };
   }, [token]);
 
+  // Realtime: assim que sabemos o tenant_id, assinamos um canal de broadcast
+  // "kiosk:<tenant>" — o simulador envia um "refresh" após cada mutação e o
+  // painel dispara uma releitura imediata, sem esperar o poll de 60s.
+  const tenantId = data?.tenant_id ?? null;
+  useEffect(() => {
+    if (!tenantId) return;
+    const channel = supabase
+      .channel(`kiosk:${tenantId}`, { config: { broadcast: { self: false } } })
+      .on("broadcast", { event: "refresh" }, () => {
+        reloadRef.current?.();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [tenantId]);
+
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
+
 
   const areasById = useMemo(() => {
     const m = new Map<string, Area>();
