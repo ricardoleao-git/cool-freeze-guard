@@ -131,25 +131,25 @@ function Tile({
 }: {
   label: string;
   count: number;
-  tone: "green" | "yellow" | "orange" | "red";
+  tone: "green" | "yellow" | "red" | "blue";
   pulse?: boolean;
   testId?: string;
 }) {
   const map = {
-    green: "bg-emerald-600/20 border-emerald-500/60 text-emerald-300",
-    yellow: "bg-amber-500/20 border-amber-500/60 text-amber-200",
-    orange: "bg-orange-600/25 border-orange-500/70 text-orange-200",
-    red: "bg-rose-700/25 border-rose-500/80 text-rose-200",
+    green: "bg-emerald-600/15 border-emerald-500/50 text-emerald-300",
+    yellow: "bg-amber-500/15 border-amber-500/50 text-amber-200",
+    red: "bg-rose-700/20 border-rose-500/70 text-rose-200",
+    blue: "bg-sky-600/15 border-sky-500/50 text-sky-200",
   } as const;
   return (
     <div
       data-testid={testId}
-      className={`rounded-2xl border-2 px-6 py-5 ${map[tone]} ${
+      className={`rounded-2xl border-2 px-5 py-4 ${map[tone]} ${
         pulse ? "animate-pulse" : ""
       }`}
     >
       <div className="text-xs uppercase tracking-widest opacity-80">{label}</div>
-      <div className="mt-1 text-6xl font-bold tabular-nums">{count}</div>
+      <div className="mt-1 text-5xl font-bold tabular-nums">{count}</div>
     </div>
   );
 }
@@ -167,12 +167,12 @@ function PersonCard({
 }) {
   const tone =
     risk === "red"
-      ? "border-rose-500 bg-rose-900/30 animate-pulse"
+      ? "border-rose-500 bg-rose-900/25 animate-pulse"
       : risk === "orange"
-      ? "border-orange-500 bg-orange-900/25"
+      ? "border-orange-500 bg-orange-900/20"
       : risk === "yellow"
-      ? "border-amber-400 bg-amber-900/20"
-      : "border-emerald-500/60 bg-emerald-900/15";
+      ? "border-amber-400 bg-amber-900/15"
+      : "border-emerald-500/60 bg-emerald-900/10";
   const timeTone =
     risk === "red"
       ? "text-rose-200"
@@ -181,39 +181,48 @@ function PersonCard({
       : risk === "yellow"
       ? "text-amber-200"
       : "text-emerald-200";
+  const enteredAt = person.inside_since
+    ? new Date(person.inside_since).toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "—";
+  const areaName = person.area_nome ?? area?.name ?? "—";
   return (
     <div
       data-testid="kiosk-person"
       data-risk={risk}
       data-name={person.primeiro_nome}
-      className={`rounded-2xl border-2 p-5 flex items-center gap-5 ${tone}`}
+      className={`rounded-2xl border-2 p-4 flex flex-col gap-3 ${tone}`}
     >
-      {person.avatar ? (
-        <img
-          src={person.avatar}
-          alt=""
-          className="h-24 w-24 rounded-full object-cover border-2 border-zinc-700"
-        />
-      ) : (
-        <div className="h-24 w-24 rounded-full bg-zinc-800 border-2 border-zinc-700 grid place-items-center text-3xl font-semibold text-zinc-300">
-          {initials(person.primeiro_nome)}
+      <div className="flex items-center gap-4">
+        {person.avatar ? (
+          <img
+            src={person.avatar}
+            alt=""
+            className="h-16 w-16 rounded-full object-cover border-2 border-zinc-700"
+          />
+        ) : (
+          <div className="h-16 w-16 rounded-full bg-zinc-800 border-2 border-zinc-700 grid place-items-center text-xl font-semibold text-zinc-300">
+            {initials(person.primeiro_nome)}
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="text-2xl font-bold text-zinc-50 truncate leading-tight">
+            {person.primeiro_nome}
+          </div>
+          <div className="text-sm text-zinc-400 mt-0.5">
+            entrou às <span className="tabular-nums text-zinc-300">{enteredAt}</span>
+          </div>
         </div>
-      )}
-      <div className="flex-1 min-w-0">
-        <div className="text-3xl font-bold text-zinc-50 truncate">
-          {person.primeiro_nome}
-        </div>
-        <div className="text-lg text-zinc-400 truncate">
-          {person.area_nome ?? area?.name ?? "—"}
+        <div className={`text-right ${timeTone}`}>
+          <div className="text-3xl font-bold tabular-nums leading-none">
+            {fmt(minutes)}
+          </div>
         </div>
       </div>
-      <div className={`text-right ${timeTone}`}>
-        <div className="text-5xl font-bold tabular-nums leading-none">
-          {fmt(minutes)}
-        </div>
-        <div className="text-xs uppercase tracking-widest mt-1 opacity-80">
-          tempo dentro
-        </div>
+      <div className="pt-2 border-t border-zinc-700/60 text-xs uppercase tracking-widest text-zinc-400 truncate">
+        {areaName}
       </div>
     </div>
   );
