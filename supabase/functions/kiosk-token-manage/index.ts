@@ -162,7 +162,9 @@ Deno.serve(async (req) => {
     if (action === "list") {
       const { data, error } = await admin
         .from("kiosk_tokens")
-        .select("id, label, active, last_used_at, created_at, revoked_at, created_by_user_id, token")
+        .select(
+          "id, label, active, last_used_at, created_at, revoked_at, created_by_user_id, token, pairing_code, pairing_expires_at, paired_at, paired_ip, paired_user_agent",
+        )
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
       if (error) return fail(500, "list_failed", error.message);
@@ -190,6 +192,11 @@ Deno.serve(async (req) => {
         revoked_at: r.revoked_at,
         created_by: r.created_by_user_id ? nameMap.get(r.created_by_user_id) ?? null : null,
         token_hint: r.token ? `…${String(r.token).slice(-6)}` : null,
+        pairing_code: r.pairing_code,
+        pairing_expires_at: r.pairing_expires_at,
+        paired_at: r.paired_at,
+        paired_ip: r.paired_ip,
+        paired_user_agent: r.paired_user_agent,
       }));
       return new Response(JSON.stringify({ ok: true, items }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
