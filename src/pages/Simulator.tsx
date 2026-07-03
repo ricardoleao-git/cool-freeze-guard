@@ -90,9 +90,6 @@ export default function Simulator() {
     channelRef.current = ch;
     return () => { supabase.removeChannel(ch); channelRef.current = null; };
   }, [tenantId]);
-  const broadcastRefresh = () => {
-    channelRef.current?.send({ type: "broadcast", event: "refresh", payload: { ts: Date.now() } });
-  };
 
   // Destaca apenas o último botão clicado (por ~2s).
   const [lastAction, setLastAction] = useState<ActionKey | null>(null);
