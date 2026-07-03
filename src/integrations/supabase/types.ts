@@ -1251,6 +1251,11 @@ export type Database = {
           id: string
           label: string | null
           last_used_at: string | null
+          paired_at: string | null
+          paired_ip: unknown
+          paired_user_agent: string | null
+          pairing_code: string | null
+          pairing_expires_at: string | null
           revoked_at: string | null
           tenant_id: string
           token: string
@@ -1262,6 +1267,11 @@ export type Database = {
           id?: string
           label?: string | null
           last_used_at?: string | null
+          paired_at?: string | null
+          paired_ip?: unknown
+          paired_user_agent?: string | null
+          pairing_code?: string | null
+          pairing_expires_at?: string | null
           revoked_at?: string | null
           tenant_id: string
           token: string
@@ -1273,6 +1283,11 @@ export type Database = {
           id?: string
           label?: string | null
           last_used_at?: string | null
+          paired_at?: string | null
+          paired_ip?: unknown
+          paired_user_agent?: string | null
+          pairing_code?: string | null
+          pairing_expires_at?: string | null
           revoked_at?: string | null
           tenant_id?: string
           token?: string
