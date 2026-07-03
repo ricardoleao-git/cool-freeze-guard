@@ -1,9 +1,19 @@
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { ShieldAlert, LogOut } from "lucide-react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function NoPermission() {
-  const { profile, signOut } = useAuth();
+  const { profile, roles, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (roles.length > 0 && (profile?.tenant_id || roles.includes("super_admin"))) {
+      navigate("/", { replace: true });
+    }
+  }, [navigate, profile?.tenant_id, roles]);
+
   return (
     <div className="min-h-screen grid place-items-center bg-background p-6">
       <div className="max-w-md w-full text-center space-y-5">

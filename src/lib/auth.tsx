@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const authLoadSeq = useRef(0);
   const { pathname } = useLocation();
   const isDemo = pathname === "/demo" || pathname.startsWith("/demo/");
 
@@ -64,24 +65,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRoles((rls ?? []).map((r: any) => r.role as AppRole));
   }, []);
 
+  const clearIdentity = useCallback(() => {
+    setSession(null);
+    setProfile(null);
+    setRoles([]);
+  }, []);
+
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
+      const seq = ++authLoadSeq.current;
       if (s?.user) {
-        setTimeout(() => { loadProfile(s.user.id); }, 0);
+        setLoading(true);
+        setSession(s);
+        setTimeout(() => {
+          loadProfile(s.user.id).finally(() => {
+            if (authLoadSeq.current === seq) setLoading(false);
+          });
+        }, 0);
       } else {
-        setProfile(null);
-        setRoles([]);
+        clearIdentity();
+        setLoading(false);
       }
-      setLoading(false);
     });
     supabase.auth.getSession().then(async ({ data }) => {
+      const seq = ++authLoadSeq.current;
       setSession(data.session);
       if (data.session?.user) await loadProfile(data.session.user.id);
-      setLoading(false);
+      if (authLoadSeq.current === seq) setLoading(false);
     });
     return () => sub.subscription.unsubscribe();
-  }, [loadProfile]);
+  }, [clearIdentity, loadProfile]);
 
   const refresh = useCallback(async () => {
     if (session?.user) await loadProfile(session.user.id);
