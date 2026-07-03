@@ -133,6 +133,7 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({
+        tenant_id: tenantId,
         tenant_nome: tenant?.name ?? null,
         server_time: new Date().toISOString(),
         areas: (areas ?? []).map((a: any) => ({
