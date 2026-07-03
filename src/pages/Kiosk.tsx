@@ -429,7 +429,7 @@ export default function Kiosk() {
     day: "2-digit",
     month: "long",
   });
-  const ageSec = ageSeconds(lastServerTimeRef.current, now, offsetRef.current);
+  
 
   const onBreak = data.on_break ?? 0;
   // "Alerta" (vermelho) = ultrapassou o tempo (limite atingido) => risk red
