@@ -176,11 +176,11 @@ export const fmtDayHeader = (iso: string) =>
 /** Cor semântica do status de exposição. */
 export function statusTone(status?: string | null) {
   switch (status) {
-    case "blocked": return { label: "Limite excedido", cls: "text-danger", bg: "bg-danger/10 border-danger/30" };
-    case "orange": return { label: "Atenção alta", cls: "text-warning", bg: "bg-warning/10 border-warning/30" };
-    case "yellow": return { label: "Atenção", cls: "text-warning", bg: "bg-warning/10 border-warning/30" };
-    case "inside": return { label: "Em área fria", cls: "text-success", bg: "bg-success/10 border-success/30" };
-    case "on_break": return { label: "Em pausa térmica", cls: "text-primary", bg: "bg-primary/10 border-primary/30" };
+    case "blocked": return { label: "Limite excedido", cls: "text-status-red", bg: "bg-status-red/10 border-status-red/40" };
+    case "orange": return { label: "Atenção alta", cls: "text-status-orange", bg: "bg-status-orange/10 border-status-orange/40" };
+    case "yellow": return { label: "Atenção", cls: "text-status-yellow", bg: "bg-status-yellow/10 border-status-yellow/40" };
+    case "inside": return { label: "Em área fria", cls: "text-status-ok", bg: "bg-status-ok/10 border-status-ok/40" };
+    case "on_break": return { label: "Em pausa térmica", cls: "text-status-break", bg: "bg-status-break/10 border-status-break/40" };
     default: return { label: "Fora de área fria", cls: "text-muted-foreground", bg: "bg-muted/40 border-border" };
   }
 }
