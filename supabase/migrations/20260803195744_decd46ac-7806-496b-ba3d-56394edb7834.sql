@@ -1,0 +1,1 @@
+UPDATE public.employees SET current_status='yellow', inside_since=now() - interval '82 minutes', accumulated_minutes=82, current_area_id='demo-c1' WHERE id='demo-e3';
