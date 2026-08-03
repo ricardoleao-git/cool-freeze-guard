@@ -781,6 +781,7 @@ export type Database = {
           accumulated_minutes: number
           avatar: string
           break_started_at: string | null
+          cpf: string | null
           created_at: string
           current_area_id: string | null
           current_status: string
@@ -793,6 +794,12 @@ export type Database = {
           pin_hash: string | null
           pin_locked_until: string | null
           pin_set_at: string | null
+          portal_failed_attempts: number
+          portal_last_login_at: string | null
+          portal_locked_until: string | null
+          portal_must_change_password: boolean
+          portal_password_hash: string | null
+          portal_password_set_at: string | null
           position: string
           registration_number: string
           status: string
@@ -804,6 +811,7 @@ export type Database = {
           accumulated_minutes?: number
           avatar?: string
           break_started_at?: string | null
+          cpf?: string | null
           created_at?: string
           current_area_id?: string | null
           current_status?: string
@@ -816,6 +824,12 @@ export type Database = {
           pin_hash?: string | null
           pin_locked_until?: string | null
           pin_set_at?: string | null
+          portal_failed_attempts?: number
+          portal_last_login_at?: string | null
+          portal_locked_until?: string | null
+          portal_must_change_password?: boolean
+          portal_password_hash?: string | null
+          portal_password_set_at?: string | null
           position?: string
           registration_number: string
           status?: string
@@ -827,6 +841,7 @@ export type Database = {
           accumulated_minutes?: number
           avatar?: string
           break_started_at?: string | null
+          cpf?: string | null
           created_at?: string
           current_area_id?: string | null
           current_status?: string
@@ -839,6 +854,12 @@ export type Database = {
           pin_hash?: string | null
           pin_locked_until?: string | null
           pin_set_at?: string | null
+          portal_failed_attempts?: number
+          portal_last_login_at?: string | null
+          portal_locked_until?: string | null
+          portal_must_change_password?: boolean
+          portal_password_hash?: string | null
+          portal_password_set_at?: string | null
           position?: string
           registration_number?: string
           status?: string
