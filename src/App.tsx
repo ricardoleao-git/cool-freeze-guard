@@ -40,6 +40,13 @@ import Kiosk from "./pages/Kiosk";
 import KioskTokens from "./pages/KioskTokens";
 import Simulator from "./pages/Simulator";
 import KioskLogin from "./pages/KioskLogin";
+import { PortalProvider } from "@/lib/portal";
+import PortalLogin from "./pages/portal/PortalLogin";
+import PortalLayout from "./pages/portal/PortalLayout";
+import PortalHome from "./pages/portal/PortalHome";
+import PortalStatement from "./pages/portal/PortalStatement";
+import PortalOccurrences from "./pages/portal/PortalOccurrences";
+import PortalProfile from "./pages/portal/PortalProfile";
 
 const queryClient = new QueryClient();
 
