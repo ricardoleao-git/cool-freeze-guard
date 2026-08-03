@@ -154,14 +154,14 @@ export default function PortalLogin() {
               </p>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-white/85">Nova senha</Label>
-              <Input type="password" autoComplete="new-password" minLength={6}
+              <Label htmlFor="np1" className="text-white/85">Nova senha</Label>
+              <Input id="np1" type="password" autoComplete="new-password" minLength={6}
                 className="h-14 text-lg bg-white/10 border-white/25 text-white"
                 value={p1} onChange={(e) => setP1(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-white/85">Confirmar nova senha</Label>
-              <Input type="password" autoComplete="new-password" minLength={6}
+              <Label htmlFor="np2" className="text-white/85">Confirmar nova senha</Label>
+              <Input id="np2" type="password" autoComplete="new-password" minLength={6}
                 className="h-14 text-lg bg-white/10 border-white/25 text-white"
                 value={p2} onChange={(e) => setP2(e.target.value)} required />
             </div>

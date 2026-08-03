@@ -108,12 +108,12 @@ export default function PortalProfile() {
           </DialogHeader>
           <form onSubmit={submitPwd} className="space-y-3">
             <div className="space-y-1.5">
-              <Label>Nova senha</Label>
-              <Input type="password" className="h-12" value={p1} onChange={(e) => setP1(e.target.value)} required minLength={6} />
+              <Label htmlFor="pp1">Nova senha</Label>
+              <Input id="pp1" type="password" className="h-12" value={p1} onChange={(e) => setP1(e.target.value)} required minLength={6} />
             </div>
             <div className="space-y-1.5">
-              <Label>Confirmar nova senha</Label>
-              <Input type="password" className="h-12" value={p2} onChange={(e) => setP2(e.target.value)} required minLength={6} />
+              <Label htmlFor="pp2">Confirmar nova senha</Label>
+              <Input id="pp2" type="password" className="h-12" value={p2} onChange={(e) => setP2(e.target.value)} required minLength={6} />
             </div>
             <DialogFooter className="gap-2">
               <Button type="button" variant="ghost" onClick={() => setPwdOpen(false)} disabled={saving}>Cancelar</Button>
