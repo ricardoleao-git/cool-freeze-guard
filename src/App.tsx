@@ -68,6 +68,16 @@ const App = () => (
               <Route path="/painel-tv" element={<PublicPanel />} />
               <Route path="/sem-permissao" element={<ProtectedRoute><NoPermission /></ProtectedRoute>} />
 
+              {/* Plataforma do colaborador (mobile-first, login por CPF + senha) */}
+              <Route path="/colaborador" element={<PortalProvider><PortalLogin /></PortalProvider>} />
+              <Route path="/colaborador" element={<PortalProvider><PortalLayout /></PortalProvider>}>
+                <Route path="inicio" element={<PortalHome />} />
+                <Route path="extrato" element={<PortalStatement />} />
+                <Route path="ocorrencias" element={<PortalOccurrences />} />
+                <Route path="perfil" element={<PortalProfile />} />
+              </Route>
+
+
 
               {/* Modo de demonstração público: navegação completa, sem login,
                   escopado ao tenant 'demo-tenant'. */}
